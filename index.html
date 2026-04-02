@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>IDs - Indonesian Brothers | Server #2059 | Last War: Survival</title>
+  <meta name="description" content="Official website of IDs - Indonesian Brothers alliance from Last War: Survival, Server #2059. Strength in Unity, Power in Brotherhood.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Suppress errors from browser extensions (e.g. MetaMask)
+    window.addEventListener('unhandledrejection', function(e) {
+      if (e && e.reason && typeof e.reason.message === 'string' &&
+          (e.reason.message.includes('MetaMask') || e.reason.message.includes('chrome-extension'))) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</head>
+<body>
+
+  <!-- ============================================
+       NAVBAR
+       ============================================ -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-container">
+      <a href="#hero" class="nav-brand">
+        <span class="holo-logo" data-text="IDs">IDs</span>
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#hero" class="nav-link">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#philosophy" class="nav-link">Philosophy</a></li>
+        <li><a href="#members" class="nav-link">Roster</a></li>
+        <li><a href="#train" class="nav-link">Train</a></li>
+        <li><a href="#allies" class="nav-link">Allies</a></li>
+        <li><a href="#join" class="nav-link nav-link-cta">Join Us</a></li>
+      </ul>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+
+  <!-- ============================================
+       HERO SECTION
+       ============================================ -->
+  <section id="hero" class="hero">
+    <canvas id="hero-canvas" class="hero-canvas"></canvas>
+    <div class="hero-scanlines"></div>
+    <div class="hero-gradient-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-emblem">
+        <img src="assets/philosophy.jpeg" alt="IDs Indonesian Brothers Emblem" class="hero-emblem-img">
+      </div>
+
+      <div class="hero-tag">
+        <span class="tag-diamond">◆</span>
+        LAST WAR: SURVIVAL — ALLIANCE
+        <span class="tag-diamond">◆</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="glitch" data-text="IDs">IDs</span>
+      </h1>
+      <div class="hero-subtitle">INDONESIAN BROTHERS</div>
+      <div class="hero-server">
+        <span class="server-line"></span>
+        SERVER #2059
+        <span class="server-line"></span>
+      </div>
+
+      <p class="hero-slogan" id="hero-slogan"><span class="hero-slogan-cursor" id="slogan-cursor">|</span></p>
+
+      <div class="hero-power">
+        <div class="power-glow"></div>
+        <span class="power-icon">⚡</span>
+        <span class="power-text">5.2B+ ALLIANCE POWER</span>
+      </div>
+
+      <div class="hero-cta">
+        <a href="#about" class="btn-primary">
+          <span class="btn-text">EXPLORE THE BROTHERHOOD</span>
+          <span class="btn-shine"></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="scroll-indicator">
+      <div class="scroll-mouse">
+        <div class="scroll-wheel"></div>
+      </div>
+      <span class="scroll-text">SCROLL</span>
+    </div>
+  </section>
+
+  <!-- Angular Divider -->
+  <div class="section-angle angle-down"></div>
+
+  <!-- ============================================
+       ABOUT / STATS SECTION
+       ============================================ -->
+  <section id="about" class="section section-dark">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">// ABOUT US</span>
+        <h2 class="section-title">ABOUT THE <span class="text-accent">ALLIANCE</span></h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-diamond">◆</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <p class="about-motto reveal">"Strength in Unity, Power in Brotherhood."</p>
+
+      <div class="stats-grid">
+        <div class="stat-card reveal" data-delay="0">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value counter" data-target="5248302236" data-suffix="" data-format="comma">0</div>
+          <div class="stat-label">ALLIANCE POWER</div>
+        </div>
+        <div class="stat-card reveal" data-delay="100">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">👥</div>
+          <div class="stat-value"><span class="counter" data-target="100" data-suffix="" data-format="plain">0</span> / 100</div>
+          <div class="stat-label">MEMBERS</div>
+        </div>
+        <div class="stat-card reveal" data-delay="200">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">⭐</div>
+          <div class="stat-value"><span class="counter" data-target="5.0" data-suffix="" data-format="decimal">0</span></div>
+          <div class="stat-label">RATING</div>
+        </div>
+        <div class="stat-card reveal" data-delay="300">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">🎁</div>
+          <div class="stat-value">Lv. <span class="counter" data-target="23" data-suffix="" data-format="plain">0</span></div>
+          <div class="stat-label">ALLIANCE GIFTS</div>
+        </div>
+        <div class="stat-card reveal" data-delay="400">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">🇮🇩</div>
+          <div class="stat-value">Indonesian</div>
+          <div class="stat-label">LANGUAGE</div>
+        </div>
+        <div class="stat-card reveal" data-delay="500">
+          <div class="stat-card-border"></div>
+          <div class="stat-icon">🌐</div>
+          <div class="stat-value">#<span class="counter" data-target="2059" data-suffix="" data-format="plain">0</span></div>
+          <div class="stat-label">SERVER</div>
+        </div>
+      </div>
+
+      <!-- TOP POWER LEADERBOARD -->
+      <div class="top-power-section reveal">
+        <div class="top-power-header">
+          <span class="top-power-icon">⚔️</span>
+          <h3 class="top-power-title">COMMAND <span class="text-accent">CENTER</span></h3>
+          <span class="top-power-icon">⚔️</span>
+        </div>
+
+        <!-- Featured Duo: King & Leader -->
+        <div class="featured-duo" id="featured-duo">
+          <!-- Rendered by JavaScript -->
+        </div>
+
+        <!-- Other Role Cards -->
+        <div class="role-cards-section" id="role-cards">
+          <!-- Rendered by JavaScript -->
+        </div>
+
+        <div class="top-power-divider">
+          <span class="divider-line"></span>
+          <span class="divider-label">TOP POWER WARRIORS</span>
+          <span class="divider-line"></span>
+        </div>
+
+        <div class="top-power-leaderboard" id="top-power-leaderboard">
+          <!-- Rendered by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Angular Divider -->
+  <div class="section-angle angle-up"></div>
+
+  <!-- ============================================
+       PHILOSOPHY SECTION
+       ============================================ -->
+  <section id="philosophy" class="section section-darker">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">// OUR CREED</span>
+        <h2 class="section-title">OUR <span class="text-accent">PHILOSOPHY</span></h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-diamond">◆</span>
+          <span class="divider-line"></span>
+        </div>
+        <p class="section-subtitle">The meaning behind our emblem — every symbol tells our story.</p>
+      </div>
+
+      <div class="philosophy-content">
+        <div class="philosophy-timeline reveal-left">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-card">
+              <div class="timeline-icon">🛡️</div>
+              <div class="timeline-body">
+                <h3 class="timeline-title">THE SHIELD</h3>
+                <p class="timeline-desc">Represents strength, protection, and resilience. We guard our brothers and sisters against any threat.</p>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-card">
+              <div class="timeline-icon">🔴⚪</div>
+              <div class="timeline-body">
+                <h3 class="timeline-title">RED &amp; WHITE</h3>
+                <p class="timeline-desc">Symbolizes courage, honor, and the spirit of unity — the colors of our Indonesian pride.</p>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-card">
+              <div class="timeline-icon">🦅</div>
+              <div class="timeline-body">
+                <h3 class="timeline-title">RIGHT &amp; LEFT WINGS</h3>
+                <p class="timeline-desc">Symbolizes freedom, progress, and mutual support. Together, we soar beyond limits.</p>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-icon">🏠</div>
+              <div class="timeline-body">
+                <h3 class="timeline-title">#2059</h3>
+                <p class="timeline-desc">Our identity. Our server. Our home. Where legends are born and brotherhood thrives.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="philosophy-image reveal-right">
+          <div class="philosophy-frame">
+            <img src="assets/alliance-info.jpeg" alt="The Philosophy of Indonesian Brothers" loading="lazy">
+            <div class="philosophy-frame-border"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="philosophy-tagline reveal">
+        <span class="tagline-text">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Angular Divider -->
+  <div class="section-angle angle-down"></div>
+
+  <!-- ============================================
+       MEMBERS / ROSTER SECTION
+       ============================================ -->
+  <section id="members" class="section section-dark">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">// TEAM ROSTER</span>
+        <h2 class="section-title">OUR <span class="text-accent">WARRIORS</span></h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-diamond">◆</span>
+          <span class="divider-line"></span>
+        </div>
+        <p class="section-subtitle">100 strong. Every rank earned, every battle remembered.</p>
+      </div>
+
+      <div class="members-controls reveal">
+        <div class="search-bar">
+          <span class="search-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </span>
+          <input type="text" id="member-search" placeholder="Search warriors by name..." autocomplete="off">
+          <span class="search-glow"></span>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-btn active" data-rank="All">ALL <span class="count">(100)</span></button>
+          <button class="filter-btn" data-rank="R5">👑 R5 <span class="count">(1)</span></button>
+          <button class="filter-btn" data-rank="R4">⚔️ R4 <span class="count">(10)</span></button>
+          <button class="filter-btn" data-rank="R3">🛡️ R3 <span class="count">(44)</span></button>
+          <button class="filter-btn" data-rank="R2">🗡️ R2 <span class="count">(38)</span></button>
+          <button class="filter-btn" data-rank="R1">💤 R1 <span class="count">(7)</span></button>
+        </div>
+      </div>
+
+      <div class="member-count-display" id="member-count">
+        Showing <span>100</span> of <span>100</span> warriors
+      </div>
+
+      <div class="members-grid" id="members-grid">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       TRAIN LOTTERY SECTION
+       ============================================ -->
+  <section id="train" class="section section-dark">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">// TRAINING GROUND</span>
+        <h2 class="section-title">TRAIN <span class="text-accent">LOTTERY</span></h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-diamond">◆</span>
+          <span class="divider-line"></span>
+        </div>
+        <p class="section-subtitle">Spin the wheel of fate — who will be chosen for the next training mission?</p>
+      </div>
+
+      <div class="train-lottery-container reveal">
+        <!-- Slot Machine Display -->
+        <div class="slot-machine">
+          <div class="slot-frame">
+            <div class="slot-glow"></div>
+            <div class="slot-header">
+              <span class="slot-icon">🎰</span>
+              <span class="slot-title">WARRIOR SELECTOR</span>
+              <span class="slot-icon">🎰</span>
+            </div>
+            <div class="slot-window">
+              <div class="slot-reel" id="slot-reel">
+                <div class="slot-item slot-placeholder">??? PRESS SPIN ???</div>
+              </div>
+            </div>
+            <div class="slot-footer">
+              <div class="slot-count-selector">
+                <label class="slot-label">Warriors to pick:</label>
+                <div class="slot-count-btns">
+                  <button class="slot-count-btn active" data-count="1">1</button>
+                  <button class="slot-count-btn" data-count="3">3</button>
+                  <button class="slot-count-btn" data-count="5">5</button>
+                  <button class="slot-count-btn" data-count="10">10</button>
+                </div>
+              </div>
+              <div class="slot-rank-filter">
+                <label class="slot-label">Filter by rank:</label>
+                <div class="slot-rank-btns">
+                  <button class="slot-rank-btn active" data-rank="All">ALL</button>
+                  <button class="slot-rank-btn" data-rank="R5">R5</button>
+                  <button class="slot-rank-btn" data-rank="R4">R4</button>
+                  <button class="slot-rank-btn" data-rank="R3">R3</button>
+                  <button class="slot-rank-btn" data-rank="R2">R2</button>
+                  <button class="slot-rank-btn" data-rank="R1">R1</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="spin-btn" id="spin-btn">
+            <span class="spin-btn-text">⚡ SPIN ⚡</span>
+            <span class="spin-btn-glow"></span>
+          </button>
+        </div>
+
+        <!-- Results Display -->
+        <div class="lottery-results" id="lottery-results">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- History -->
+        <div class="lottery-history" id="lottery-history">
+          <div class="history-header">
+            <span class="history-icon">📜</span>
+            <span>SPIN HISTORY</span>
+          </div>
+          <div class="history-list" id="history-list">
+            <div class="history-empty">No spins yet — try your luck!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Angular Divider -->
+  <div class="section-angle angle-up"></div>
+
+  <!-- ============================================
+       ALLIES SECTION
+       ============================================ -->
+  <section id="allies" class="section section-darker">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">// DIPLOMACY</span>
+        <h2 class="section-title">OUR <span class="text-accent">ALLIES</span></h2>
+        <div class="section-divider">
+          <span class="divider-line"></span>
+          <span class="divider-diamond">◆</span>
+          <span class="divider-line"></span>
+        </div>
+        <p class="section-subtitle">Bonds forged in fire. Alliances built on trust.</p>
+      </div>
+
+      <div class="allies-content">
+        <div class="allies-info reveal-left">
+          <div class="ally-banner">
+            <div class="ally-banner-accent"></div>
+            <div class="ally-banner-content">
+              <div class="ally-server">SERVER #2047</div>
+              <div class="ally-name">TOOR</div>
+            </div>
+            <div class="ally-banner-glow"></div>
+          </div>
+          <div class="ally-banner">
+            <div class="ally-banner-accent"></div>
+            <div class="ally-banner-content">
+              <div class="ally-server">SERVER #2058</div>
+              <div class="ally-name">PING</div>
+            </div>
+            <div class="ally-banner-glow"></div>
+          </div>
+          <p class="allies-description">
+            Our diplomatic bonds extend beyond our own borders. Through mutual respect, shared strategies,
+            and battlefield camaraderie, we have formed unbreakable alliances with <strong>TOOR</strong> from
+            Server #2047 and <strong>PING</strong> from Server #2058. Together, we protect our interests and
+            stand united against any threat that dares challenge our combined strength.
+          </p>
+        </div>
+        <div class="allies-image reveal-right">
+          <div class="allies-frame">
+            <img src="assets/alliance-detail.jpeg" alt="IDs Allied Alliances - TOOR #2047 & PING #2058" loading="lazy">
+            <div class="allies-frame-border"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Angular Divider -->
+  <div class="section-angle angle-down"></div>
+
+  <!-- ============================================
+       FOOTER / JOIN US
+       ============================================ -->
+  <footer id="join" class="footer">
+    <div class="footer-glow"></div>
+    <div class="container">
+      <div class="join-section reveal">
+        <div class="join-icon-wrapper">
+          <div class="join-hex">
+            <span>⚔️</span>
+          </div>
+        </div>
+        <h2 class="join-title">JOIN THE <span class="text-accent">BROTHERHOOD</span></h2>
+        <p class="join-desc">
+          We are always looking for dedicated warriors to strengthen our ranks.<br>
+          Reach out to our recruiters and become part of the IDs family.
+        </p>
+        <div class="contact-info">
+          <div class="contact-card">
+            <div class="contact-card-border"></div>
+            <div class="contact-label">🔱 RECRUITER</div>
+            <div class="contact-name">JuAnCuk Boy</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-tagline">
+        <span class="tagline-glow">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="footer-line"></span>
+        <p>© 2026 IDs - Indonesian Brothers | Server #2059 | Last War: Survival</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
