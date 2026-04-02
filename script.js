@@ -444,6 +444,8 @@ function initParticleCanvas() {
     }
 
     // Draw connections
+    // Skip connection lines on mobile for performance
+    if (window.innerWidth > 768)
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const dx = particles[i].x - particles[j].x;
@@ -596,9 +598,24 @@ function initMobileNav() {
     }
   });
 
-  // Close on link click
+  // Close on link click, then smooth scroll after menu animation finishes
   navLinks.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", closeNav);
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const href = link.getAttribute("href");
+      closeNav();
+      // Wait for menu close animation to finish before scrolling
+      setTimeout(() => {
+        if (href && href !== "#") {
+          const target = document.querySelector(href);
+          if (target) {
+            const navHeight = document.querySelector('.navbar') ? document.querySelector('.navbar').offsetHeight : 70;
+            const targetPos = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({ top: targetPos, behavior: "smooth" });
+          }
+        }
+      }, 350);
+    });
   });
 
   // Close on overlay click
@@ -1055,27 +1072,34 @@ function initTrainLottery() {
           currEl.style.filter = "blur(10px)";
           currEl.textContent = winner.name;
           currEl.className = "slot-item spin-curr spin-winner-name";
-          void currEl.offsetWidth;
-          currEl.style.transition = "transform 0.7s cubic-bezier(0.17,0.67,0.35,1.5), opacity 0.3s ease-out, filter 0.4s ease-out";
-          currEl.style.transform = "scale(1.15) rotateX(0deg)";
-          currEl.style.opacity = "1";
-          currEl.style.filter = "blur(0)";
-          slotFrame.className = "slot-frame spin-winner-explode";
-          const flash = document.createElement("div");
-          flash.className = "winner-flash";
-          document.body.appendChild(flash);
-          setTimeout(() => flash.remove(), 900);
+          // Use rAF double-frame instead of forced reflow for better mobile perf
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              currEl.style.transition = "transform 0.7s cubic-bezier(0.17,0.67,0.35,1.5), opacity 0.3s ease-out, filter 0.4s ease-out";
+              currEl.style.transform = "scale(1.15) rotateX(0deg)";
+              currEl.style.opacity = "1";
+              currEl.style.filter = "blur(0)";
+              slotFrame.className = "slot-frame spin-winner-explode";
+            });
+          });
+          if (window.innerWidth > 768) {
+            const flash = document.createElement("div");
+            flash.className = "winner-flash";
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 900);
+          }
           resultsContainer.classList.add("winner-active");
           setTimeout(() => resultsContainer.classList.remove("winner-active"), 700);
           launchConfetti();
-          setTimeout(launchConfetti, 400);
+          if (window.innerWidth > 768) setTimeout(launchConfetti, 400);
           setTimeout(() => {
             const card = document.createElement("div");
             card.className = "result-card";
             card.style.animationDelay = "0s";
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
             card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
-            for (let s = 0; s < 6; s++) {
+            const sparkleCount = window.innerWidth <= 768 ? 2 : 6;
+            for (let s = 0; s < sparkleCount; s++) {
               const sparkle = document.createElement("div");
               sparkle.className = "result-sparkle";
               sparkle.style.setProperty("--sx", (Math.random()-0.5)*80+"px");
@@ -1087,7 +1111,7 @@ function initTrainLottery() {
               card.appendChild(sparkle);
             }
             resultsContainer.appendChild(card);
-            if (wIdx === 0) launchConfetti();
+            if (wIdx === 0 && window.innerWidth > 768) launchConfetti();
             wIdx++;
             if (wIdx < count) {
               setTimeout(() => {
@@ -1120,14 +1144,14 @@ function initTrainLottery() {
         currEl.style.transform = "translateY(22px)";
         currEl.style.opacity = "0.3";
         currEl.textContent = centerName;
-        currEl.style.filter = p === "turbo" ? "blur(1.5px)" : "none";
+        currEl.style.filter = (p === "turbo" && window.innerWidth > 768) ? "blur(1.5px)" : "none";
         void currEl.offsetWidth;
         currEl.style.transition = "transform " + slideDur + "ms ease-out, opacity " + slideDur + "ms ease-out";
         currEl.style.transform = "translateY(0)";
         currEl.style.opacity = "1";
         if (p === "fakeout") currEl.classList.add("spin-fakeout-glow");
         else currEl.classList.remove("spin-fakeout-glow");
-        if (p === "slow" || p === "fakeout") {
+        if ((p === "slow" || p === "fakeout") && window.innerWidth > 768) {
           const tf = document.createElement("div");
           tf.className = "slot-tick-flash";
           slotReel.parentElement.appendChild(tf);
@@ -1138,7 +1162,14 @@ function initTrainLottery() {
           setTimeout(() => slotFrame.classList.remove("spin-jerk-shake"), 250);
         }
         ti++;
-        if (ti < seq.length) setTimeout(tick, d);
+        if (ti < seq.length) {
+          if (d <= 50) {
+            // For very fast ticks, use rAF for smoother rendering
+            requestAnimationFrame(() => setTimeout(tick, Math.max(d - 16, 0)));
+          } else {
+            setTimeout(tick, d);
+          }
+        }
       }
       tick();
     }
@@ -1190,7 +1221,8 @@ function launchConfetti() {
   ];
   const shapes = ["rect", "circle", "star", "ribbon"];
   const confetti = [];
-  const TOTAL = 150;
+  const isMobile = window.innerWidth <= 768;
+  const TOTAL = isMobile ? 40 : 150;
 
   for (let i = 0; i < TOTAL; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -1214,7 +1246,7 @@ function launchConfetti() {
   }
 
   let frame = 0;
-  const maxFrames = 180;
+  const maxFrames = isMobile ? 100 : 180;
 
   function drawStar(ctx, x, y, size) {
     ctx.beginPath();

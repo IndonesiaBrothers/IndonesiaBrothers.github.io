@@ -2591,6 +2591,8 @@ ul { list-style: none; }
 
 .slot-frame {
   width: 100%;
+  contain: layout style;
+  will-change: transform, box-shadow;
   background: linear-gradient(180deg, rgba(10, 8, 30, 0.98), rgba(15, 10, 40, 0.95));
   border: 2px solid rgba(255, 0, 60, 0.3);
   border-radius: 16px;
@@ -3346,5 +3348,156 @@ ul { list-style: none; }
   }
   body {
     -webkit-text-size-adjust: 100%;
+  }
+}
+
+
+/* ============================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   Simplify GPU-heavy effects for smooth 60fps
+   ============================================ */
+@media (max-width: 768px) {
+  /* Disable spinning conic gradients on mobile */
+  .slot-glow,
+  .result-card::before {
+    animation: none !important;
+    background: none !important;
+  }
+
+  /* Simplify slot frame shadow animations - use border glow instead */
+  .slot-frame.spin-p-turbo {
+    animation: dramaTurboMobile 0.12s ease-in-out infinite alternate !important;
+  }
+  @keyframes dramaTurboMobile {
+    0% { border-color: rgba(255,0,60,0.9); box-shadow: 0 0 25px rgba(255,0,60,0.4); }
+    100% { border-color: rgba(0,240,255,0.9); box-shadow: 0 0 25px rgba(0,240,255,0.4); }
+  }
+
+  .slot-frame.spin-p-fast {
+    box-shadow: 0 0 20px rgba(255,0,60,0.3) !important;
+  }
+
+  .slot-frame.spin-p-medium {
+    animation: dramaMediumMobile 0.8s ease-in-out infinite !important;
+  }
+  @keyframes dramaMediumMobile {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+    50% { box-shadow: 0 0 35px rgba(0,240,255,0.4); }
+  }
+
+  .slot-frame.spin-p-slow {
+    animation: dramaHeartbeatMobile 0.7s ease-in-out infinite !important;
+  }
+  @keyframes dramaHeartbeatMobile {
+    0% { transform: scale(1); box-shadow: 0 0 20px rgba(255,215,0,0.15); }
+    14% { transform: scale(1.015); box-shadow: 0 0 35px rgba(255,215,0,0.35); }
+    28% { transform: scale(1); box-shadow: 0 0 20px rgba(255,215,0,0.15); }
+    42% { transform: scale(1.01); box-shadow: 0 0 28px rgba(255,215,0,0.25); }
+    56%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,215,0,0.15); }
+  }
+
+  .slot-frame.spin-p-fakeout {
+    box-shadow: 0 0 35px rgba(255,215,0,0.3) !important;
+  }
+
+  /* Simplify fakeout text glow */
+  .spin-fakeout-glow {
+    animation: fakeoutPulseMobile 0.5s ease-in-out infinite !important;
+  }
+  @keyframes fakeoutPulseMobile {
+    0%, 100% { text-shadow: 0 0 15px rgba(255,215,0,0.6); }
+    50% { text-shadow: 0 0 25px rgba(255,215,0,0.8); }
+  }
+
+  /* Simplify winner explosion glow */
+  .spin-winner-explode {
+    animation: winnerGlowMobile 1.5s ease-out forwards !important;
+  }
+  @keyframes winnerGlowMobile {
+    0% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+    15% { box-shadow: 0 0 50px rgba(255,215,0,0.5); }
+    40% { box-shadow: 0 0 35px rgba(255,215,0,0.35); }
+    100% { box-shadow: 0 0 20px rgba(255,215,0,0.2); }
+  }
+
+  /* Simplify winner name glow */
+  .spin-winner-name {
+    text-shadow: 0 0 15px rgba(255,215,0,0.7), 0 0 30px rgba(255,215,0,0.3) !important;
+  }
+
+  /* Simplify result card - remove heavy animations */
+  .result-card {
+    animation: resultExplosionMobile 0.6s cubic-bezier(0.17, 0.67, 0.35, 1.3) forwards !important;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important;
+  }
+  @keyframes resultExplosionMobile {
+    0%   { opacity: 0; transform: scale(0.5) translateX(-20px); }
+    60%  { opacity: 0.9; transform: scale(1.05) translateX(2px); }
+    100% { opacity: 1; transform: scale(1) translateX(0); }
+  }
+
+  .result-card::after {
+    animation: none !important;
+    display: none;
+  }
+
+  .result-card:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15) !important;
+  }
+
+  /* Disable screen shake on mobile (jittery on low-end devices) */
+  .lottery-results.winner-active {
+    animation: none !important;
+  }
+
+  /* Simplify spin button glow */
+  .spin-btn {
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.25) !important;
+  }
+  .spin-btn:hover {
+    box-shadow: 0 0 25px rgba(255, 0, 60, 0.4) !important;
+  }
+
+  /* Simplify shimmer animation */
+  .spin-btn-glow {
+    animation: none !important;
+    display: none;
+  }
+
+  /* Reduce result sparkle animations */
+  .result-sparkle {
+    animation-duration: 4s !important;
+  }
+
+  /* Use GPU compositing hints */
+  .slot-reel,
+  .slot-item,
+  .slot-frame {
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .spin-curr {
+    will-change: transform, opacity;
+  }
+
+  /* Smooth scrolling for the whole page */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Ultra-low-end devices (< 400px) - even more simplified */
+@media (max-width: 400px) {
+  .slot-frame.spin-p-turbo,
+  .slot-frame.spin-p-fast,
+  .slot-frame.spin-p-medium {
+    animation: none !important;
+  }
+
+  .confetti-canvas {
+    display: none !important;
   }
 }
