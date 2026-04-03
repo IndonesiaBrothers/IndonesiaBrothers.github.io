@@ -1305,113 +1305,169 @@ document.addEventListener("DOMContentLoaded", initTrainLottery);
 // ============================================
 // HALL OF FAME - TOP IMPROVE
 // ============================================
+
+function formatPower(num) {
+  if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+  return num.toString();
+}
+
 async function initHofImprove() {
   const container = document.getElementById('hof-improve-leaderboard');
   const weekLabel = document.getElementById('hof-improve-week');
   if (!container) return;
-
+  
   try {
-    // Fetch weekly data
-    const res = await fetch('weeklydata.json?' + Date.now());
-    if (!res.ok) throw new Error('Failed to load weekly data');
-    const weekly = await res.json();
-
-    // Show week label
-    if (weekLabel && weekly.weekLabel) {
-      weekLabel.textContent = weekly.weekLabel;
-    }
-
-    const prevPower = weekly.previousPower || {};
-
-    // Calculate improvements
-    const improvements = [];
-    members.forEach(m => {
-      if (!m.power || m.power === 'N/A') return;
-      const currentPow = parsePower(m.power); // Returns in millions
-      const prevPow = (prevPower[m.name] || 0) / 1000000; // Convert from raw to millions
-
-      if (prevPow <= 0) return; // Skip if no previous data
-
-      const diff = currentPow - prevPow;
-      const pct = ((diff) / prevPow) * 100;
-
-      improvements.push({
-        name: m.name,
-        rank: m.rank,
-        currentPower: m.power,
-        prevPower: prevPow,
-        diff: diff,
-        pct: pct
-      });
-    });
-
-    // Sort by percentage descending
-    improvements.sort((a, b) => b.pct - a.pct);
-
-    // Take top 10
-    const top10 = improvements.slice(0, 10);
-
-    if (top10.length === 0) {
-      container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement minggu ini.</div>';
-      return;
-    }
-
-    const maxPct = Math.max(...top10.map(p => Math.abs(p.pct)));
-
-    container.innerHTML = '';
-    top10.forEach((player, i) => {
-      const pos = i + 1;
-      const rankClass = pos <= 3 ? ' hof-rank-' + pos : '';
-      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
-      const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct) * 100 : 0;
-      const barClass = pos > 3 ? ' hof-improve-bar-default' : '';
-      const arrow = player.pct > 0 ? '▲' : player.pct < 0 ? '▼' : '—';
-      const pctClass = player.pct > 0 ? 'hof-pct-up' : player.pct < 0 ? 'hof-pct-down' : 'hof-pct-same';
-
-      // Format previous power for display
-      const prevDisplay = player.prevPower >= 1000 ? (player.prevPower / 1000).toFixed(1) + 'B' : player.prevPower.toFixed(1) + 'M';
-
-      const row = document.createElement('div');
-      row.className = 'hof-improve-row' + rankClass;
-      row.style.transitionDelay = (i * 0.08) + 's';
-
-      row.innerHTML =
-        '<div class="hof-improve-badge">' + medal + '</div>' +
-        '<div class="hof-improve-info">' +
-          '<div class="hof-improve-name">' + player.name + '</div>' +
-          '<div class="hof-improve-power-detail"><span>' + prevDisplay + '</span> → <span>' + player.currentPower + '</span></div>' +
-        '</div>' +
-        '<div class="hof-improve-bar-wrap">' +
-          '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
-        '</div>' +
-        '<div class="hof-improve-percent ' + pctClass + '">' +
-          '<span class="hof-improve-arrow">' + arrow + '</span>' + Math.abs(player.pct).toFixed(1) + '%' +
-        '</div>';
-
-      container.appendChild(row);
-    });
-
-    // Animate on scroll
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const rows = container.querySelectorAll('.hof-improve-row');
-          rows.forEach((row, i) => {
-            setTimeout(() => {
-              row.classList.add('hof-row-visible');
-              const bar = row.querySelector('.hof-improve-bar');
-              if (bar) bar.style.width = bar.dataset.width + '%';
-            }, i * 100);
+    // Try to load power history first
+    let weeks = [];
+    try {
+      const histResp = await fetch('powerhistory.json?t=' + Date.now());
+      if (histResp.ok) {
+        const history = await histResp.json();
+        weeks = history.weeks || [];
+      }
+    } catch(e) {}
+    
+    if (weeks.length >= 2) {
+      // Use last 2 weeks from history
+      const currentWeek = weeks[weeks.length - 1];
+      const prevWeek = weeks[weeks.length - 2];
+      
+      if (weekLabel) weekLabel.textContent = '📅 ' + currentWeek.weekLabel + ' vs ' + prevWeek.weekLabel;
+      
+      const improvements = [];
+      const currentPower = currentWeek.power || {};
+      const prevPower = prevWeek.power || {};
+      
+      Object.keys(currentPower).forEach(function(name) {
+        const curr = currentPower[name] || 0;
+        const prev = prevPower[name] || 0;
+        if (prev > 0 && curr > 0) {
+          const pct = ((curr - prev) / prev) * 100;
+          improvements.push({
+            name: name,
+            pct: pct,
+            currentPower: formatPower(curr),
+            previousPower: formatPower(prev)
           });
-          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1 });
-    observer.observe(container);
-
-  } catch (err) {
-    console.error('HoF Improve error:', err);
-    container.innerHTML = '<div class="hof-improve-no-data">Data belum tersedia. Admin perlu upload power mingguan.</div>';
+      
+      improvements.sort(function(a, b) { return b.pct - a.pct; });
+      const top10 = improvements.slice(0, 10);
+      
+      if (top10.length === 0) {
+        container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement minggu ini.</div>';
+        return;
+      }
+      
+      const maxPct = Math.max(...top10.map(function(p) { return Math.abs(p.pct); }));
+      container.innerHTML = '';
+      
+      top10.forEach(function(player, i) {
+        const pos = i + 1;
+        const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
+        const rankClass = pos <= 3 ? ' hof-improve-top' + pos : '';
+        const pctClass = player.pct >= 0 ? 'hof-improve-up' : 'hof-improve-down';
+        const arrow = player.pct >= 0 ? '▲' : '▼';
+        const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct * 100) : 0;
+        const barClass = pos > 3 ? ' hof-improve-bar-default' : '';
+        
+        const row = document.createElement('div');
+        row.className = 'hof-improve-row' + rankClass;
+        row.innerHTML =
+          '<div class="hof-improve-badge">' + medal + '</div>' +
+          '<div class="hof-improve-info">' +
+            '<div class="hof-improve-name">' + player.name + '</div>' +
+            '<div class="hof-improve-power-detail"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
+          '</div>' +
+          '<div class="hof-improve-bar-wrap">' +
+            '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
+          '</div>' +
+          '<div class="hof-improve-percent ' + pctClass + '">' +
+            '<span class="hof-improve-arrow">' + arrow + '</span>' + Math.abs(player.pct).toFixed(1) + '%' +
+          '</div>';
+        container.appendChild(row);
+      });
+      
+      // Animate bars
+      setTimeout(function() {
+        container.querySelectorAll('.hof-improve-bar').forEach(function(bar) {
+          bar.style.width = bar.getAttribute('data-width') + '%';
+        });
+      }, 100);
+      
+    } else {
+      // Fallback: use weeklydata.json (old method)
+      const wResp = await fetch('weeklydata.json?t=' + Date.now());
+      if (!wResp.ok) throw new Error('No data');
+      const weekly = await wResp.json();
+      
+      if (weekLabel) weekLabel.textContent = '📅 ' + (weekly.weekLabel || '');
+      
+      const prevPower = weekly.previousPower || {};
+      const improvements = [];
+      
+      members.forEach(function(m) {
+        const curr = parsePower(m.power);
+        const prev = prevPower[m.name] || 0;
+        if (prev > 0 && curr > 0) {
+          const pct = ((curr - prev) / prev) * 100;
+          improvements.push({
+            name: m.name,
+            pct: pct,
+            currentPower: m.power,
+            previousPower: formatPower(prev)
+          });
+        }
+      });
+      
+      improvements.sort(function(a, b) { return b.pct - a.pct; });
+      const top10 = improvements.slice(0, 10);
+      
+      if (top10.length === 0) {
+        container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.</div>';
+        return;
+      }
+      
+      const maxPct = Math.max(...top10.map(function(p) { return Math.abs(p.pct); }));
+      container.innerHTML = '';
+      
+      top10.forEach(function(player, i) {
+        const pos = i + 1;
+        const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
+        const rankClass = pos <= 3 ? ' hof-improve-top' + pos : '';
+        const pctClass = player.pct >= 0 ? 'hof-improve-up' : 'hof-improve-down';
+        const arrow = player.pct >= 0 ? '▲' : '▼';
+        const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct * 100) : 0;
+        const barClass = pos > 3 ? ' hof-improve-bar-default' : '';
+        
+        const row = document.createElement('div');
+        row.className = 'hof-improve-row' + rankClass;
+        row.innerHTML =
+          '<div class="hof-improve-badge">' + medal + '</div>' +
+          '<div class="hof-improve-info">' +
+            '<div class="hof-improve-name">' + player.name + '</div>' +
+            '<div class="hof-improve-power-detail"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
+          '</div>' +
+          '<div class="hof-improve-bar-wrap">' +
+            '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
+          '</div>' +
+          '<div class="hof-improve-percent ' + pctClass + '">' +
+            '<span class="hof-improve-arrow">' + arrow + '</span>' + Math.abs(player.pct).toFixed(1) + '%' +
+          '</div>';
+        container.appendChild(row);
+      });
+      
+      setTimeout(function() {
+        container.querySelectorAll('.hof-improve-bar').forEach(function(bar) {
+          bar.style.width = bar.getAttribute('data-width') + '%';
+        });
+      }, 100);
+    }
+  } catch(err) {
+    container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.</div>';
   }
 }
 
