@@ -6,6 +6,7 @@
   var CONFIG_PATH = "admin-config.json";
   var SCRIPT_PATH = "script.js";
   var WEEKLY_PATH = "weeklydata.json";
+  var HISTORY_PATH = "powerhistory.json";
   var GH_API = "https://api.github.com";
 
   var state = {
@@ -35,6 +36,8 @@
     dirty: false,
     weeklyData: null,
     weeklySHA: null,
+    historySHA: null,
+    powerHistory: null,
     hofSearch: "",
     hofDirty: false
   };
@@ -283,6 +286,20 @@
   }
 
 
+  // === POWER HISTORY ===
+
+  async function loadPowerHistory() {
+    try {
+      var resp = await ghGet("contents/" + HISTORY_PATH);
+      state.historySHA = resp.sha;
+      var text = atob(resp.content.replace(/\n/g, ""));
+      state.powerHistory = JSON.parse(text);
+    } catch(e) {
+      state.powerHistory = { weeks: [] };
+      state.historySHA = null;
+    }
+  }
+
   // === WEEKLY DATA (HALL OF FAME) ===
   async function loadWeeklyData() {
     try {
@@ -321,22 +338,57 @@
     if (!state.weeklyData) return;
     state.weeklyData.weekLabel = getWeekLabel();
     state.weeklyData.lastUpdated = new Date().toISOString().split("T")[0];
+    
+    // Push weeklydata.json
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(state.weeklyData, null, 2))));
-    var payload = { message: "Update weekly data - " + state.weeklyData.weekLabel, content: content };
-    if (state.weeklySHA) payload.sha = state.weeklySHA;
     var resp = await ghPut("contents/" + WEEKLY_PATH, content, state.weeklySHA, "Update weekly data - " + state.weeklyData.weekLabel);
     state.weeklySHA = resp.content.sha;
+    
+    // Push powerhistory.json
+    if (state.powerHistory && state.powerHistory.weeks.length > 0) {
+      var hContent = btoa(unescape(encodeURIComponent(JSON.stringify(state.powerHistory, null, 2))));
+      var hResp = await ghPut("contents/" + HISTORY_PATH, hContent, state.historySHA, "Update power history - " + getWeekLabel());
+      state.historySHA = hResp.content.sha;
+    }
+    
     state.hofDirty = false;
   }
 
   function snapshotCurrentPower() {
     if (!state.weeklyData) return;
-    state.weeklyData.previousPower = {};
+    
+    // Save current power to history
+    var currentPower = {};
     state.players.forEach(function(p) {
-      state.weeklyData.previousPower[p.name] = parsePowerNum(p.power);
+      currentPower[p.name] = parsePowerNum(p.power);
     });
+    
+    // Add to power history
+    if (!state.powerHistory) state.powerHistory = { weeks: [] };
+    var weekLabel = getWeekLabel();
+    
+    // Check if this week already exists - update it
+    var existingIdx = -1;
+    state.powerHistory.weeks.forEach(function(w, i) {
+      if (w.weekLabel === weekLabel) existingIdx = i;
+    });
+    
+    var entry = {
+      weekLabel: weekLabel,
+      date: new Date().toISOString().split("T")[0],
+      power: currentPower
+    };
+    
+    if (existingIdx >= 0) {
+      state.powerHistory.weeks[existingIdx] = entry;
+    } else {
+      state.powerHistory.weeks.push(entry);
+    }
+    
+    // Also update weeklyData previousPower
+    state.weeklyData.previousPower = currentPower;
     state.hofDirty = true;
-    showToast("Power snapshot saved! \ud83d\udcf8");
+    showToast("Power snapshot saved to history! \ud83d\udcf8");
   }
 
   function renderHofTab() {
