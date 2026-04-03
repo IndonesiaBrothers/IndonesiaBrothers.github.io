@@ -1471,6 +1471,139 @@ async function initHofImprove() {
   }
 }
 
+function formatDonationValue(num) {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+  return num.toLocaleString();
+}
+
+async function initHofDonation() {
+  const container = document.getElementById('hof-donation-leaderboard');
+  const weekLabel = document.getElementById('hof-donation-week');
+  if (!container) return;
+  
+  try {
+    const resp = await fetch('weeklydata.json?t=' + Date.now());
+    if (!resp.ok) throw new Error('No data');
+    const weekly = await resp.json();
+    
+    if (weekLabel) weekLabel.textContent = '📅 ' + (weekly.weekLabel || '');
+    
+    const donations = weekly.donations || {};
+    
+    // Sort by value descending, filter non-zero
+    const sorted = Object.entries(donations)
+      .filter(function(e) { return e[1] > 0; })
+      .sort(function(a, b) { return b[1] - a[1]; })
+      .slice(0, 10);
+    
+    if (sorted.length === 0) {
+      container.innerHTML = '<div class="hof-lb-no-data">Belum ada data donasi minggu ini.<br>Data akan muncul setelah admin menginput data donasi.</div>';
+      return;
+    }
+    
+    const maxVal = sorted[0][1];
+    container.innerHTML = '';
+    
+    sorted.forEach(function(entry, i) {
+      const name = entry[0];
+      const val = entry[1];
+      const pos = i + 1;
+      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
+      const rankClass = pos <= 3 ? ' hof-lb-top' + pos : '';
+      const barWidth = maxVal > 0 ? (val / maxVal * 100) : 0;
+      const barColorClass = pos === 1 ? 'hof-lb-bar-gold' : pos === 2 ? 'hof-lb-bar-silver' : pos === 3 ? 'hof-lb-bar-bronze' : 'hof-lb-bar-default';
+      
+      const row = document.createElement('div');
+      row.className = 'hof-lb-row' + rankClass;
+      row.innerHTML =
+        '<div class="hof-lb-badge">' + medal + '</div>' +
+        '<div class="hof-lb-info">' +
+          '<div class="hof-lb-name">' + name + '</div>' +
+        '</div>' +
+        '<div class="hof-lb-bar-wrap">' +
+          '<div class="hof-lb-bar ' + barColorClass + '" data-width="' + barWidth + '"></div>' +
+        '</div>' +
+        '<div class="hof-lb-value">' + formatDonationValue(val) + '</div>';
+      container.appendChild(row);
+    });
+    
+    // Animate bars
+    setTimeout(function() {
+      container.querySelectorAll('.hof-lb-bar').forEach(function(bar) {
+        bar.style.width = bar.getAttribute('data-width') + '%';
+      });
+    }, 100);
+    
+  } catch(err) {
+    container.innerHTML = '<div class="hof-lb-no-data">Belum ada data donasi minggu ini.</div>';
+  }
+}
+
+async function initHofDuel() {
+  const container = document.getElementById('hof-duel-leaderboard');
+  const weekLabel = document.getElementById('hof-duel-week');
+  if (!container) return;
+  
+  try {
+    const resp = await fetch('weeklydata.json?t=' + Date.now());
+    if (!resp.ok) throw new Error('No data');
+    const weekly = await resp.json();
+    
+    if (weekLabel) weekLabel.textContent = '📅 ' + (weekly.weekLabel || '');
+    
+    const daPoints = weekly.daPoints || {};
+    
+    // Sort by value descending, filter non-zero
+    const sorted = Object.entries(daPoints)
+      .filter(function(e) { return e[1] > 0; })
+      .sort(function(a, b) { return b[1] - a[1]; })
+      .slice(0, 10);
+    
+    if (sorted.length === 0) {
+      container.innerHTML = '<div class="hof-lb-no-data">Belum ada data Duel Aliansi minggu ini.<br>Data akan muncul setelah admin menginput poin duel.</div>';
+      return;
+    }
+    
+    const maxVal = sorted[0][1];
+    container.innerHTML = '';
+    
+    sorted.forEach(function(entry, i) {
+      const name = entry[0];
+      const val = entry[1];
+      const pos = i + 1;
+      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
+      const rankClass = pos <= 3 ? ' hof-lb-top' + pos : '';
+      const barWidth = maxVal > 0 ? (val / maxVal * 100) : 0;
+      const barColorClass = pos === 1 ? 'hof-lb-bar-gold' : pos === 2 ? 'hof-lb-bar-silver' : pos === 3 ? 'hof-lb-bar-bronze' : 'hof-lb-bar-default';
+      
+      const row = document.createElement('div');
+      row.className = 'hof-lb-row' + rankClass;
+      row.innerHTML =
+        '<div class="hof-lb-badge">' + medal + '</div>' +
+        '<div class="hof-lb-info">' +
+          '<div class="hof-lb-name">' + name + '</div>' +
+        '</div>' +
+        '<div class="hof-lb-bar-wrap">' +
+          '<div class="hof-lb-bar ' + barColorClass + '" data-width="' + barWidth + '"></div>' +
+        '</div>' +
+        '<div class="hof-lb-value">' + val.toLocaleString() + ' pts</div>';
+      container.appendChild(row);
+    });
+    
+    // Animate bars
+    setTimeout(function() {
+      container.querySelectorAll('.hof-lb-bar').forEach(function(bar) {
+        bar.style.width = bar.getAttribute('data-width') + '%';
+      });
+    }, 100);
+    
+  } catch(err) {
+    container.innerHTML = '<div class="hof-lb-no-data">Belum ada data Duel Aliansi minggu ini.</div>';
+  }
+}
+
+
 // HALL OF FAME TABS
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1491,4 +1624,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Hall of Fame - Top Improve
   initHofImprove();
+  initHofDonation();
+  initHofDuel();
 });
