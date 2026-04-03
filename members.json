@@ -695,8 +695,8 @@
   {
     "name": "Dark Orca",
     "power": "44.1M",
-    "level": "28",
-    "rank": "R1",
+    "level": 28,
+    "rank": "R4",
     "role": "Member"
   }
 ]
