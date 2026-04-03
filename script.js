@@ -1319,7 +1319,7 @@ async function initHofImprove() {
       top10.forEach(function(player, i) {
         const pos = i + 1;
         const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
-        const rankClass = pos <= 3 ? ' hof-improve-top' + pos : '';
+        const rankClass = pos <= 3 ? ' hof-rank-' + pos : '';
         const pctClass = player.pct >= 0 ? 'hof-improve-up' : 'hof-improve-down';
         const arrow = player.pct >= 0 ? '▲' : '▼';
         const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct * 100) : 0;
@@ -1342,12 +1342,20 @@ async function initHofImprove() {
         container.appendChild(row);
       });
       
+      // Animate rows visibility with stagger
+      const rows = container.querySelectorAll('.hof-improve-row');
+      rows.forEach(function(row, idx) {
+        setTimeout(function() {
+          row.classList.add('hof-row-visible');
+        }, idx * 80);
+      });
+      
       // Animate bars
       setTimeout(function() {
         container.querySelectorAll('.hof-improve-bar').forEach(function(bar) {
           bar.style.width = bar.getAttribute('data-width') + '%';
         });
-      }, 100);
+      }, rows.length * 80 + 200);
       
     } else {
       // Fallback: use weeklydata.json (old method)
@@ -1388,7 +1396,7 @@ async function initHofImprove() {
       top10.forEach(function(player, i) {
         const pos = i + 1;
         const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
-        const rankClass = pos <= 3 ? ' hof-improve-top' + pos : '';
+        const rankClass = pos <= 3 ? ' hof-rank-' + pos : '';
         const pctClass = player.pct >= 0 ? 'hof-improve-up' : 'hof-improve-down';
         const arrow = player.pct >= 0 ? '▲' : '▼';
         const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct * 100) : 0;
@@ -1411,11 +1419,20 @@ async function initHofImprove() {
         container.appendChild(row);
       });
       
+      // Animate rows visibility with stagger
+      const rows2 = container.querySelectorAll('.hof-improve-row');
+      rows2.forEach(function(row, idx) {
+        setTimeout(function() {
+          row.classList.add('hof-row-visible');
+        }, idx * 80);
+      });
+      
+      // Animate bars
       setTimeout(function() {
         container.querySelectorAll('.hof-improve-bar').forEach(function(bar) {
           bar.style.width = bar.getAttribute('data-width') + '%';
         });
-      }, 100);
+      }, rows2.length * 80 + 200);
     }
   } catch(err) {
     container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.</div>';
