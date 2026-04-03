@@ -35,59 +35,117 @@
       </div>
     </div>
 
-    <!-- STATS BAR -->
-    <div class="stats-bar" id="statsBar"></div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search player name...">
-      <select class="filter-select" id="rankFilter">
-        <option value="">All Ranks</option>
-        <option value="R5">R5 - Leader</option>
-        <option value="R4">R4 - Officers</option>
-        <option value="R3">R3 - Elite</option>
-        <option value="R2">R2 - Members</option>
-        <option value="R1">R1 - Inactive</option>
-      </select>
-      <button class="btn btn-primary" onclick="toggleAddPlayer()">+ Add Player</button>
-      <button class="btn btn-gold" onclick="pushToGitHub()">🚀 Push Update</button>
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="roster" onclick="switchTab('roster')">📋 Roster</button>
+      <button class="tab-btn" data-tab="screenshot" onclick="switchTab('screenshot')">📸 Screenshot Update</button>
     </div>
 
-    <!-- ADD PLAYER -->
-    <div class="add-player-section" id="addSection" style="display:none;">
-      <div class="add-row">
-        <input type="text" name="name" id="addName" placeholder="Player Name">
-        <input type="text" name="power" id="addPower" placeholder="Power (e.g. 50.0M)">
-        <input type="number" name="level" id="addLevel" placeholder="Lvl" min="1" max="30">
-        <select name="rank" id="addRank">
-          <option value="R1">R1</option>
-          <option value="R2" selected>R2</option>
-          <option value="R3">R3</option>
-          <option value="R4">R4</option>
-          <option value="R5">R5</option>
+    <!-- TAB: ROSTER -->
+    <div class="tab-content active" id="tab-roster">
+      <!-- STATS BAR -->
+      <div class="stats-bar" id="statsBar"></div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search player name...">
+        <select class="filter-select" id="rankFilter">
+          <option value="">All Ranks</option>
+          <option value="R5">R5 - Leader</option>
+          <option value="R4">R4 - Officers</option>
+          <option value="R3">R3 - Elite</option>
+          <option value="R2">R2 - Members</option>
+          <option value="R1">R1 - Inactive</option>
         </select>
-        <input type="text" name="role" id="addRole" placeholder="Role (optional)">
-        <button class="btn btn-success btn-sm" onclick="addPlayer()">✓ Add</button>
-        <button class="btn btn-outline btn-sm" onclick="toggleAddPlayer()">✕ Cancel</button>
+        <button class="btn btn-primary" onclick="toggleAddPlayer()">+ Add Player</button>
+        <button class="btn btn-gold" onclick="pushToGitHub()">🚀 Push Update</button>
+      </div>
+
+      <!-- ADD PLAYER -->
+      <div class="add-player-section" id="addSection" style="display:none;">
+        <div class="add-row">
+          <input type="text" name="name" id="addName" placeholder="Player Name">
+          <input type="text" name="power" id="addPower" placeholder="Power (e.g. 50.0M)">
+          <input type="number" name="level" id="addLevel" placeholder="Lvl" min="1" max="30">
+          <select name="rank" id="addRank">
+            <option value="R1">R1</option>
+            <option value="R2" selected>R2</option>
+            <option value="R3">R3</option>
+            <option value="R4">R4</option>
+            <option value="R5">R5</option>
+          </select>
+          <input type="text" name="role" id="addRole" placeholder="Role (optional)">
+          <button class="btn btn-success btn-sm" onclick="addPlayer()">✓ Add</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddPlayer()">✕ Cancel</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th width="50">#</th>
+              <th onclick="sortBy('name')">Name <span class="sort-arrow" id="sort-name">▲</span></th>
+              <th onclick="sortBy('power')" width="140">Power <span class="sort-arrow" id="sort-power">▲</span></th>
+              <th onclick="sortBy('level')" width="80">Level <span class="sort-arrow" id="sort-level">▲</span></th>
+              <th onclick="sortBy('rank')" width="100">Rank <span class="sort-arrow" id="sort-rank">▲</span></th>
+              <th width="140">Role</th>
+              <th width="80">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="playerTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Loading players...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th width="50">#</th>
-            <th onclick="sortBy('name')">Name <span class="sort-arrow" id="sort-name">▲</span></th>
-            <th onclick="sortBy('power')" width="140">Power <span class="sort-arrow" id="sort-power">▲</span></th>
-            <th onclick="sortBy('level')" width="80">Level <span class="sort-arrow" id="sort-level">▲</span></th>
-            <th onclick="sortBy('rank')" width="100">Rank <span class="sort-arrow" id="sort-rank">▲</span></th>
-            <th width="140">Role</th>
-            <th width="80">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="playerTableBody"></tbody>
-      </table>
+    <!-- TAB: SCREENSHOT UPDATE -->
+    <div class="tab-content" id="tab-screenshot">
+      <div class="screenshot-section">
+        <div class="screenshot-header">
+          <h2>📸 Update via Game Screenshot</h2>
+          <p>Upload screenshots dari halaman <strong>Member List</strong> di game. Data player akan otomatis di-parse dan diupdate.</p>
+        </div>
+
+        <div class="screenshot-upload-area" id="screenshotDropZone">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Drag & drop screenshot di sini</div>
+          <div class="upload-hint">atau klik untuk pilih file</div>
+          <input type="file" id="screenshotInput" accept="image/*" multiple style="display:none;">
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="screenshot-previews" id="screenshotPreviews"></div>
+
+        <!-- SEND BUTTON -->
+        <div class="screenshot-actions" id="screenshotActions" style="display:none;">
+          <button class="btn btn-gold btn-lg" onclick="sendScreenshots()">
+            🚀 Process & Update Data
+          </button>
+          <button class="btn btn-outline" onclick="clearScreenshots()">✕ Clear</button>
+        </div>
+
+        <!-- STATUS -->
+        <div class="screenshot-status" id="screenshotStatus" style="display:none;">
+          <div class="status-spinner"></div>
+          <div class="status-text" id="statusText">Processing screenshots...</div>
+          <div class="status-hint">Data akan diupdate dalam 1-2 menit. Refresh halaman untuk melihat perubahan.</div>
+        </div>
+
+        <!-- INSTRUCTIONS -->
+        <div class="screenshot-instructions">
+          <h3>📝 Cara Upload</h3>
+          <ol>
+            <li>Buka game Last War → Alliance → Member List</li>
+            <li>Screenshot halaman member list (bisa beberapa screenshot untuk semua member)</li>
+            <li>Upload semua screenshot di sini</li>
+            <li>Klik <strong>"Process & Update Data"</strong></li>
+            <li>Tunggu 1-2 menit, lalu refresh halaman</li>
+          </ol>
+        </div>
+      </div>
     </div>
 
     <!-- CONFIG MODAL -->
@@ -95,11 +153,11 @@
       <div class="config-box">
         <label>Webhook URL (from Tasklet)</label>
         <input type="text" id="webhookUrl" placeholder="https://webhooks.tasklet.ai/v1/public/webhook?token=..." oninput="saveConfig()">
-        <div class="hint">Copy the webhook URL from your Tasklet trigger settings and paste it here. This is required to push updates.</div>
+        <div class="hint">Copy the webhook URL dari pengaturan trigger di Tasklet dan paste di sini. Diperlukan untuk push update.</div>
         <br>
         <label>Admin Password</label>
         <input type="password" id="configPassword" placeholder="Set new password..." oninput="saveConfig()">
-        <div class="hint">Change the admin panel password. Default: ids2026</div>
+        <div class="hint">Ubah password admin panel. Default: ids2026</div>
       </div>
     </div>
 
