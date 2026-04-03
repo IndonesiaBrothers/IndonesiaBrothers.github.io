@@ -1,14 +1,12 @@
 (function() {
   "use strict";
 
-  // === CONFIG ===
   var REPO_OWNER = "IndonesiaBrothers";
   var REPO_NAME = "IndonesiaBrothers.github.io";
   var CONFIG_PATH = "admin-config.json";
   var SCRIPT_PATH = "script.js";
   var GH_API = "https://api.github.com";
 
-  // === STATE ===
   var state = {
     view: "loading",
     token: null,
@@ -30,10 +28,13 @@
     ocrStatus: "",
     ocrProgress: 0,
     ocrResults: [],
+    ocrRawText: "",
     dirty: false
   };
 
   var app = document.getElementById("app");
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
 
   // === CRYPTO ===
   function b64e(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
@@ -60,8 +61,9 @@
 
   // === GITHUB API ===
   async function ghGet(path) {
-    var res = await fetch(GH_API + "/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + path, {
-      headers: { "Authorization": "token " + state.token, "Accept": "application/vnd.github.v3+json" }
+    var res = await fetch(GH_API + "/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + path + "?t=" + Date.now(), {
+      headers: { "Authorization": "token " + state.token, "Accept": "application/vnd.github.v3+json" },
+      cache: "no-store"
     });
     if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.message || res.statusText); }
     return res.json();
@@ -79,147 +81,175 @@
     return res.json();
   }
 
-  // === DATA PARSING ===
-  function parseMembers(src) {
-    var match = src.match(/const members\s*=\s*\[([\s\S]*?)\];/);
-    if (!match) return [];
-    var arr = [], re = /\{\s*name:\s*"([^"]*?)"\s*,\s*power:\s*"([^"]*?)"\s*,\s*level:\s*(\d+)\s*,\s*rank:\s*"([^"]*?)"\s*,\s*role:\s*"([^"]*?)"\s*\}/g, m;
-    while ((m = re.exec(match[1])) !== null) {
-      arr.push({ name: m[1], power: m[2], level: parseInt(m[3]), rank: m[4], role: m[5] });
-    }
-    return arr;
-  }
-
-  function parsePowerNum(s) {
-    if (!s || s === "N/A") return 0;
-    var n = parseFloat(s.replace(/[^0-9.]/g, ""));
-    if (s.includes("B")) return n * 1000;
-    if (s.includes("M")) return n;
-    if (s.includes("K")) return n / 1000;
-    return n;
-  }
-
-  function rankOrder(r) { return { R5: 0, R4: 1, R3: 2, R2: 3, R1: 4 }[r] || 5; }
-
-  function rankLabel(r) { return { R5: "Leader", R4: "Officers", R3: "Elite Members", R2: "Members", R1: "Inactive" }[r] || r; }
-
-  function generateScript(orig, players) {
-    var ro = { R5: 0, R4: 1, R3: 2, R2: 3, R1: 4 };
-    var sorted = players.slice().sort(function(a, b) {
-      if (ro[a.rank] !== ro[b.rank]) return ro[a.rank] - ro[b.rank];
-      return parsePowerNum(b.power) - parsePowerNum(a.power);
-    });
-    var counts = {};
-    sorted.forEach(function(p) { counts[p.rank] = (counts[p.rank] || 0) + 1; });
-    var lines = [], cr = "";
-    sorted.forEach(function(p, i) {
-      if (p.rank !== cr) {
-        if (lines.length) lines.push("");
-        lines.push("    // " + p.rank + " - " + rankLabel(p.rank) + " (" + counts[p.rank] + ")");
-        cr = p.rank;
-      }
-      var comma = i < sorted.length - 1 ? "," : ",";
-      lines.push('    { name: "' + p.name + '", power: "' + p.power + '", level: ' + p.level + ', rank: "' + p.rank + '", role: "' + p.role + '" }' + comma);
-    });
-    var membersBlock = "const members = [\n" + lines.join("\n") + "\n];";
-    return orig.replace(/const members\s*=\s*\[[\s\S]*?\];/, membersBlock);
-  }
-
-  function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
-
   // === INIT ===
   async function init() {
-    state.view = "loading"; render();
     try {
-      var res = await fetch("admin-config.json?t=" + Date.now());
-      if (res.ok) {
-        state.configData = await res.json();
+      var raw = await fetch("https://raw.githubusercontent.com/" + REPO_OWNER + "/" + REPO_NAME + "/main/" + CONFIG_PATH + "?t=" + Date.now(), { cache: "no-store" });
+      if (raw.ok) {
+        state.configData = await raw.json();
         state.view = "login";
       } else {
-        var bk = localStorage.getItem("ids-admin-config");
-        if (bk) { state.configData = JSON.parse(bk); state.view = "login"; }
-        else state.view = "setup";
+        state.view = "setup";
       }
     } catch(e) {
-      var bk = localStorage.getItem("ids-admin-config");
-      if (bk) { state.configData = JSON.parse(bk); state.view = "login"; }
-      else state.view = "setup";
+      state.view = "setup";
     }
     render();
   }
 
-  // === SETUP ===
   async function handleSetup(pw, token) {
     state.loading = true; state.msg = null; render();
     try {
+      // Test token
       state.token = token;
-      await ghGet(SCRIPT_PATH);
+      var test = await ghGet(SCRIPT_PATH);
+      // Encrypt and save
       var enc = await encryptText(token, pw);
-      var cfg = JSON.stringify({ encrypted: enc, v: 1 }, null, 2);
-      var sha = null;
-      try { var ex = await ghGet(CONFIG_PATH); sha = ex.sha; } catch(e) {}
-      await ghPut(CONFIG_PATH, cfg, sha, "Setup admin panel");
-      localStorage.setItem("ids-admin-config", cfg);
-      state.configData = { encrypted: enc, v: 1 };
-      await loadPlayerData();
+      var configContent = JSON.stringify({ encrypted_token: enc, version: 1 });
+      var existing = null;
+      try { existing = await ghGet(CONFIG_PATH); } catch(e) {}
+      await ghPut(CONFIG_PATH, configContent, existing ? existing.sha : null, "Setup admin config");
+      state.configData = JSON.parse(configContent);
+      // Load players
+      state.originalScript = decodeURIComponent(escape(atob(test.content.replace(/\n/g, ""))));
+      state.scriptSHA = test.sha;
+      state.players = parseMembers(state.originalScript);
       state.view = "dashboard";
-      state.msg = "Setup complete! Admin panel ready.";
+      state.msg = "Setup complete! " + state.players.length + " players loaded.";
       state.msgType = "success";
     } catch(e) {
-      state.msg = e.message;
+      state.msg = "Error: " + e.message;
       state.msgType = "error";
     }
     state.loading = false; render();
   }
 
-  // === LOGIN ===
   async function handleLogin(pw) {
     state.loading = true; state.msg = null; render();
     try {
-      var token = await decryptText(state.configData.encrypted, pw);
+      var token = await decryptText(state.configData.encrypted_token, pw);
       state.token = token;
-      await loadPlayerData();
+      var data = await ghGet(SCRIPT_PATH);
+      state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+      state.scriptSHA = data.sha;
+      state.players = parseMembers(state.originalScript);
       state.view = "dashboard";
-      state.msg = "Logged in!";
+      state.msg = state.players.length + " players loaded.";
       state.msgType = "success";
     } catch(e) {
-      state.msg = (e.name === "OperationError") ? "Wrong password!" : e.message;
+      state.msg = "Wrong password or connection error.";
       state.msgType = "error";
     }
     state.loading = false; render();
   }
 
-  // === LOAD DATA ===
-  async function loadPlayerData() {
-    var file = await ghGet(SCRIPT_PATH);
-    state.originalScript = decodeURIComponent(escape(atob(file.content)));
-    state.scriptSHA = file.sha;
-    state.players = parseMembers(state.originalScript);
-    if (state.players.length === 0) throw new Error("Could not parse player data");
+  // === PARSER ===
+  function parseMembers(script) {
+    var members = [];
+    // Match the members array
+    var match = script.match(/const\s+members\s*=\s*\[([\s\S]*?)\];/);
+    if (!match) match = script.match(/var\s+members\s*=\s*\[([\s\S]*?)\];/);
+    if (!match) match = script.match(/let\s+members\s*=\s*\[([\s\S]*?)\];/);
+    if (!match) return members;
+
+    var block = match[1];
+    // Match each object
+    var objRe = /\{[^}]+\}/g;
+    var m;
+    while ((m = objRe.exec(block)) !== null) {
+      var obj = m[0];
+      var name = extractField(obj, "name");
+      var power = extractField(obj, "power");
+      var level = extractField(obj, "level");
+      var rank = extractField(obj, "rank");
+      var role = extractField(obj, "role");
+      if (name) {
+        members.push({
+          name: name,
+          power: power || "0M",
+          level: parseInt(level) || 1,
+          rank: rank || "R2",
+          role: role || ""
+        });
+      }
+    }
+    return members;
+  }
+
+  function extractField(obj, field) {
+    var re = new RegExp(field + '\\s*:\\s*["\']([^"\']*)["\']');
+    var m = obj.match(re);
+    if (m) return m[1];
+    // Try numeric
+    re = new RegExp(field + '\\s*:\\s*(\\d+)');
+    m = obj.match(re);
+    return m ? m[1] : "";
+  }
+
+  function rankOrder(r) {
+    var o = { R5: 1, R4: 2, R3: 3, R2: 4, R1: 5 };
+    return o[r] || 99;
+  }
+
+  function parsePowerNum(p) {
+    if (!p) return 0;
+    var s = String(p).replace(/,/g, ".");
+    var m = s.match(/([\d.]+)\s*([BMbm]?)/);
+    if (!m) return 0;
+    var v = parseFloat(m[1]);
+    if (m[2] && m[2].toUpperCase() === "B") v *= 1000;
+    return v;
+  }
+
+  function formatPower(p) {
+    if (typeof p === "string") return p;
+    if (p >= 1000) return (p / 1000).toFixed(1) + "B";
+    return p.toFixed(1) + "M";
+  }
+
+  // === GENERATE SCRIPT ===
+  function generateScript(original, players) {
+    var arr = "const members = [\n";
+    players.forEach(function(p, i) {
+      arr += '  { name: "' + p.name.replace(/"/g, '\\"') + '", power: "' + p.power + '", level: ' + p.level + ', rank: "' + p.rank + '", role: "' + p.role.replace(/"/g, '\\"') + '" }';
+      if (i < players.length - 1) arr += ",";
+      arr += "\n";
+    });
+    arr += "];";
+    var result = original.replace(/(?:const|var|let)\s+members\s*=\s*\[[\s\S]*?\];/, arr);
+    return result;
   }
 
   // === PUSH ===
   async function pushToGitHub() {
     state.loading = true; state.msg = "Pushing to GitHub..."; state.msgType = "info"; render();
     try {
-      // Re-fetch to get latest SHA
       try {
         var latest = await ghGet(SCRIPT_PATH);
         state.scriptSHA = latest.sha;
-        state.originalScript = decodeURIComponent(escape(atob(latest.content)));
+        state.originalScript = decodeURIComponent(escape(atob(latest.content.replace(/\n/g, ""))));
       } catch(e) {}
       var ns = generateScript(state.originalScript, state.players);
       var result = await ghPut(SCRIPT_PATH, ns, state.scriptSHA, "Update member data (" + state.players.length + " players)");
       state.scriptSHA = result.content.sha;
       state.originalScript = ns;
       state.dirty = false;
-      state.msg = "Pushed! Website updates in ~1 min.";
+      state.msg = "✅ Pushed! Website updates in ~1 min.";
       state.msgType = "success";
+      showToast("Pushed to GitHub! ✅");
     } catch(e) {
       state.msg = "Push failed: " + e.message;
       state.msgType = "error";
     }
     state.loading = false; render();
+  }
+
+  function showToast(text) {
+    var t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 2500);
   }
 
   // === RENDER ===
@@ -241,7 +271,7 @@
     app.innerHTML = '<div class="auth-page"><div class="auth-card">' +
       '<div class="auth-logo">IDs ADMIN</div>' +
       '<h2>First Time Setup</h2>' +
-      '<p class="auth-desc">Set up admin access. You need a GitHub Fine-grained Token.</p>' +
+      '<p class="auth-desc">Setup admin access. You need a GitHub Fine-grained Token.</p>' +
       '<div class="setup-steps">' +
         '<div class="step"><span class="step-num">1</span><div>' +
           '<strong>Create GitHub Token</strong>' +
@@ -255,7 +285,7 @@
         '<div class="form-group"><label>Admin Password</label><input type="password" id="sp" placeholder="Choose a password" required minlength="4"></div>' +
         '<div class="form-group"><label>Confirm Password</label><input type="password" id="sp2" placeholder="Confirm password" required></div>' +
         msgHtml +
-        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Setting up...' : 'Setup Admin Panel') + '</button>' +
+        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Setting up...' : '🔐 Setup Admin Panel') + '</button>' +
       '</form>' +
     '</div></div>';
     document.getElementById("sf").onsubmit = function(e) {
@@ -274,19 +304,15 @@
       '<form id="lf">' +
         '<div class="form-group"><label>Password</label><input type="password" id="lp" placeholder="Enter admin password" required autofocus></div>' +
         msgHtml +
-        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Logging in...' : 'Login') + '</button>' +
+        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Logging in...' : '🔓 Login') + '</button>' +
       '</form>' +
-      '<p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted)"><a href="#" id="reset-link" style="color:var(--cyan-primary)">Reset setup</a></p>' +
+      '<p style="margin-top:14px;font-size:0.75rem;color:var(--text-muted)"><a href="#" id="reset-link" style="color:var(--cyan-primary)">Reset setup</a></p>' +
     '</div></div>';
     document.getElementById("lf").onsubmit = function(e) { e.preventDefault(); handleLogin(document.getElementById("lp").value); };
     document.getElementById("reset-link").onclick = function(e) {
       e.preventDefault();
       if (confirm("Reset admin setup? You'll need to enter the GitHub token again.")) {
-        localStorage.removeItem("ids-admin-config");
-        state.configData = null;
-        state.view = "setup";
-        state.msg = null;
-        render();
+        state.configData = null; state.view = "setup"; state.msg = null; render();
       }
     };
   }
@@ -296,7 +322,6 @@
     var counts = { all: p.length, R5: 0, R4: 0, R3: 0, R2: 0, R1: 0 };
     p.forEach(function(m) { counts[m.rank] = (counts[m.rank] || 0) + 1; });
 
-    // Filter & sort
     var filtered = p.filter(function(m) {
       if (state.filterRank !== "all" && m.rank !== state.filterRank) return false;
       if (state.search && m.name.toLowerCase().indexOf(state.search.toLowerCase()) === -1) return false;
@@ -314,14 +339,15 @@
       return asc ? v : -v;
     });
 
-    // Stats
     var totalPower = 0;
     p.forEach(function(m) { totalPower += parsePowerNum(m.power); });
     var powerStr = totalPower >= 1000 ? (totalPower / 1000).toFixed(1) + "B" : totalPower.toFixed(0) + "M";
 
     var html = '';
+
     // Header
     html += '<div class="dash-header"><div class="dash-brand">IDs ADMIN</div><div class="dash-actions">';
+    if (state.dirty) html += '<span style="font-size:0.65rem;color:var(--gold-primary);font-family:var(--font-accent)">● UNSAVED</span>';
     html += '<button class="btn-secondary" id="logout-btn">Logout</button>';
     html += '</div></div>';
 
@@ -336,121 +362,194 @@
 
     // Tabs
     html += '<div class="tab-bar">';
-    html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">Roster</button>';
-    html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">Screenshot</button>';
+    html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">📋 Roster</button>';
+    html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">📸 Update</button>';
     html += '</div>';
 
     if (state.tab === "roster") {
-      // Toolbar
-      html += '<div class="toolbar">';
-      html += '<input type="search" id="search-input" placeholder="Search player..." value="' + esc(state.search) + '">';
-      html += '<div class="filter-pills">';
-      var ranks = ["all","R5","R4","R3","R2","R1"];
-      ranks.forEach(function(r) {
-        var label = r === "all" ? "ALL" : r;
-        var count = r === "all" ? counts.all : (counts[r]||0);
-        html += '<button class="pill' + (state.filterRank === r ? " active" : "") + '" data-rank="' + r + '">' + label + ' ' + count + '</button>';
-      });
-      html += '</div>';
-      html += '<button class="btn-sm" id="add-btn">+ ADD</button>';
-      html += '</div>';
-
-      // Table
-      html += '<div class="content"><div class="table-wrap"><table><thead><tr>';
-      html += '<th class="col-num">#</th>';
-      var cols = [["name","NAME"],["power","POWER"],["level","LVL"],["rank","RANK"],["role","ROLE"]];
-      cols.forEach(function(c) {
-        var cls = "col-" + c[0] + (state.sortCol === c[0] ? " sorted" : "");
-        var arrow = state.sortCol === c[0] ? (state.sortAsc ? " ▲" : " ▼") : "";
-        html += '<th class="' + cls + '" data-sort="' + c[0] + '">' + c[1] + arrow + '</th>';
-      });
-      html += '<th class="col-actions">ACTIONS</th></tr></thead><tbody>';
-
-      if (filtered.length === 0) {
-        html += '<tr><td colspan="7" class="empty-state"><div class="icon">🔍</div>No players found</td></tr>';
-      } else {
-        filtered.forEach(function(m, i) {
-          var idx = state.players.indexOf(m);
-          html += '<tr data-idx="' + idx + '">';
-          html += '<td class="col-num">' + (i+1) + '</td>';
-          html += '<td class="col-name"><span class="player-name">' + esc(m.name) + '</span></td>';
-          html += '<td class="col-power"><span class="power-val">' + esc(m.power) + '</span></td>';
-          html += '<td class="col-level">' + m.level + '</td>';
-          html += '<td class="col-rank"><span class="rank-badge rank-' + m.rank + '">' + m.rank + '</span></td>';
-          html += '<td class="col-role"><span class="role-tag">' + esc(m.role) + '</span></td>';
-          html += '<td class="col-actions"><div class="row-actions">';
-          html += '<button class="btn-sm edit-btn" data-idx="' + idx + '">EDIT</button>';
-          html += '<button class="btn-danger del-btn" data-idx="' + idx + '">DEL</button>';
-          html += '</div></td>';
-          html += '</tr>';
-        });
-      }
-      html += '</tbody></table></div></div>';
+      html += renderRosterTab(filtered, counts);
     } else {
-      // Screenshot tab
-      html += '<div class="content"><div class="screenshot-tab">';
-      html += '<div class="upload-zone" id="upload-zone"><div class="icon">📸</div><p>Drop screenshots here or click to upload</p><p class="hint">Upload Member List screenshots from the game</p></div>';
-      html += '<input type="file" id="file-input" accept="image/*" multiple style="display:none">';
-
-      if (state.screenshots.length > 0) {
-        html += '<div class="preview-grid">';
-        state.screenshots.forEach(function(s, i) {
-          html += '<div class="preview-thumb"><img src="' + s + '"><button class="remove-btn" data-si="' + i + '">✕</button></div>';
-        });
-        html += '</div>';
-        html += '<button class="btn-primary" id="ocr-btn" style="margin-bottom:16px"' + (state.loading ? ' disabled' : '') + '>Scan & Parse Screenshots</button>';
-      }
-
-      if (state.ocrStatus) {
-        html += '<div class="ocr-status">' + esc(state.ocrStatus);
-        if (state.ocrProgress > 0 && state.ocrProgress < 100) {
-          html += '<div class="progress-bar"><div class="progress-fill" style="width:' + state.ocrProgress + '%"></div></div>';
-        }
-        html += '</div>';
-      }
-
-      if (state.ocrResults.length > 0) {
-        html += '<h3 style="margin:16px 0 10px;font-family:var(--font-heading);font-size:1rem;letter-spacing:2px;color:var(--gold-primary)">PARSED RESULTS (' + state.ocrResults.length + ' players)</h3>';
-        html += '<div class="table-wrap"><table><thead><tr><th>NAME</th><th>POWER</th><th>STATUS</th></tr></thead><tbody>';
-        state.ocrResults.forEach(function(r) {
-          var status = r.matched ? '<span style="color:#00c853">Matched</span>' : '<span style="color:var(--gold-primary)">New</span>';
-          html += '<tr><td>' + esc(r.name) + '</td><td><span class="power-val">' + esc(r.power) + '</span></td><td>' + status + '</td></tr>';
-        });
-        html += '</tbody></table></div>';
-        html += '<button class="btn-gold" id="apply-ocr" style="margin-top:12px;width:100%">Apply to Roster</button>';
-      }
-      html += '</div></div>';
+      html += renderScreenshotTab();
     }
 
     // Push bar
-    var pushMsg = state.msg || (state.dirty ? "Changes pending" : "Up to date");
+    var pushMsg = state.msg || (state.dirty ? "⚠️ Changes pending" : "✅ Up to date");
     var pushCls = state.msgType === "success" ? " success" : state.msgType === "error" ? " error" : "";
     html += '<div class="push-bar">';
     html += '<span class="push-msg' + pushCls + '">' + esc(pushMsg) + '</span>';
-    html += '<button class="btn-gold" id="push-btn"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'PUSHING...' : 'PUSH TO GITHUB') + '</button>';
+    html += '<button class="btn-gold" id="push-btn"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? '⏳' : '🚀 PUSH') + '</button>';
     html += '</div>';
 
     // Modal
     if (state.editPlayer !== null) {
-      var ep = state.editPlayer;
-      var title = state.editIdx === -1 ? "ADD PLAYER" : "EDIT PLAYER";
-      html += '<div class="modal-overlay" id="modal-overlay">';
-      html += '<div class="modal"><h3>' + title + '</h3><form id="edit-form">';
-      html += '<div class="form-group"><label>Name</label><input id="ed-name" value="' + esc(ep.name) + '" required></div>';
-      html += '<div class="form-group"><label>Power</label><input id="ed-power" value="' + esc(ep.power) + '" placeholder="e.g. 50.1M" required></div>';
-      html += '<div class="form-group"><label>Level</label><input id="ed-level" type="number" value="' + ep.level + '" min="1" max="99" required></div>';
-      html += '<div class="form-group"><label>Rank</label><select id="ed-rank"><option value="R5"' + (ep.rank==="R5"?" selected":"") + '>R5 - Leader</option><option value="R4"' + (ep.rank==="R4"?" selected":"") + '>R4 - Officer</option><option value="R3"' + (ep.rank==="R3"?" selected":"") + '>R3 - Elite</option><option value="R2"' + (ep.rank==="R2"?" selected":"") + '>R2 - Member</option><option value="R1"' + (ep.rank==="R1"?" selected":"") + '>R1 - Inactive</option></select></div>';
-      html += '<div class="form-group"><label>Role (optional)</label><input id="ed-role" value="' + esc(ep.role) + '" placeholder="Leader, Warlord, Muse..."></div>';
-      html += '<div class="modal-actions"><button type="submit" class="btn-primary">SAVE</button><button type="button" class="btn-secondary" id="cancel-edit">CANCEL</button></div>';
-      html += '</form></div></div>';
+      html += renderEditModal();
     }
 
     app.innerHTML = html;
     bindDashboard();
   }
 
+  function renderRosterTab(filtered, counts) {
+    var html = '';
+    // Toolbar
+    html += '<div class="toolbar">';
+    html += '<input type="search" id="search-input" placeholder="🔍 Search player..." value="' + esc(state.search) + '">';
+    html += '<div class="filter-pills">';
+    ["all","R5","R4","R3","R2","R1"].forEach(function(r) {
+      var label = r === "all" ? "ALL" : r;
+      var count = r === "all" ? counts.all : (counts[r]||0);
+      html += '<button class="pill' + (state.filterRank === r ? " active" : "") + '" data-rank="' + r + '">' + label + ' ' + count + '</button>';
+    });
+    html += '</div>';
+    html += '<button class="btn-sm" id="add-btn">+ ADD</button>';
+    html += '</div>';
+
+    // Content area
+    html += '<div class="content">';
+
+    if (filtered.length === 0) {
+      html += '<div class="empty-state"><div class="icon">🔍</div>No players found</div>';
+    } else {
+      // Mobile: player cards
+      html += '<div class="player-list">';
+      filtered.forEach(function(m, i) {
+        var idx = state.players.indexOf(m);
+        html += '<div class="player-card" data-idx="' + idx + '">';
+        html += '<div class="pc-num">' + (i+1) + '</div>';
+        html += '<div class="pc-rank"><span class="rank-badge rank-' + m.rank + '">' + m.rank + '</span></div>';
+        html += '<div class="pc-info">';
+        html += '<div class="pc-name">' + esc(m.name) + '</div>';
+        html += '<div class="pc-meta">';
+        html += '<span class="pc-power">' + esc(m.power) + '</span>';
+        html += '<span class="pc-level">Lv.' + m.level + '</span>';
+        if (m.role) html += '<span class="pc-role">' + esc(m.role) + '</span>';
+        html += '</div></div></div>';
+      });
+      html += '</div>';
+
+      // Desktop: table
+      html += '<div class="table-wrap"><table><thead><tr>';
+      html += '<th class="col-num">#</th>';
+      [["name","NAME"],["power","POWER"],["level","LVL"],["rank","RANK"],["role","ROLE"]].forEach(function(c) {
+        var cls = "col-" + c[0] + (state.sortCol === c[0] ? " sorted" : "");
+        var arrow = state.sortCol === c[0] ? (state.sortAsc ? " ▲" : " ▼") : "";
+        html += '<th class="' + cls + '" data-sort="' + c[0] + '">' + c[1] + arrow + '</th>';
+      });
+      html += '<th class="col-actions">ACT</th></tr></thead><tbody>';
+      filtered.forEach(function(m, i) {
+        var idx = state.players.indexOf(m);
+        html += '<tr>';
+        html += '<td class="col-num">' + (i+1) + '</td>';
+        html += '<td class="col-name"><span class="player-name">' + esc(m.name) + '</span></td>';
+        html += '<td class="col-power"><span class="power-val">' + esc(m.power) + '</span></td>';
+        html += '<td class="col-level">' + m.level + '</td>';
+        html += '<td class="col-rank"><span class="rank-badge rank-' + m.rank + '">' + m.rank + '</span></td>';
+        html += '<td class="col-role"><span class="role-tag">' + esc(m.role) + '</span></td>';
+        html += '<td class="col-actions"><div class="row-actions">';
+        html += '<button class="btn-sm edit-btn" data-idx="' + idx + '">✏️</button>';
+        html += '<button class="btn-danger del-btn" data-idx="' + idx + '">🗑</button>';
+        html += '</div></td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderScreenshotTab() {
+    var html = '<div class="content"><div class="screenshot-tab">';
+
+    // Upload zone
+    html += '<div class="upload-zone" id="upload-zone"><div class="icon">📸</div><p>Tap to upload Member List screenshots</p><p class="hint">Upload screenshots from game, multiple images OK</p></div>';
+    html += '<input type="file" id="file-input" accept="image/*" multiple style="display:none">';
+
+    if (state.screenshots.length > 0) {
+      html += '<div class="preview-grid">';
+      state.screenshots.forEach(function(s, i) {
+        html += '<div class="preview-thumb"><img src="' + s + '"><button class="remove-btn" data-si="' + i + '">✕</button></div>';
+      });
+      html += '</div>';
+      html += '<button class="btn-primary" id="ocr-btn"' + (state.loading ? ' disabled' : '') + '>🔍 Scan & Parse Screenshots</button>';
+      html += '<div style="height:12px"></div>';
+    }
+
+    if (state.ocrStatus) {
+      html += '<div class="ocr-status">' + esc(state.ocrStatus);
+      if (state.ocrProgress > 0 && state.ocrProgress < 100) {
+        html += '<div class="progress-bar"><div class="progress-fill" style="width:' + state.ocrProgress + '%"></div></div>';
+      }
+      html += '</div>';
+    }
+
+    // Show raw OCR text for debugging
+    if (state.ocrRawText) {
+      html += '<details style="margin-bottom:12px"><summary style="color:var(--text-muted);font-size:0.75rem;cursor:pointer">📝 Raw OCR Text (debug)</summary>';
+      html += '<div class="debug-text">' + esc(state.ocrRawText) + '</div></details>';
+    }
+
+    if (state.ocrResults.length > 0) {
+      html += '<div class="section-title">PARSED RESULTS <span class="count">(' + state.ocrResults.length + ' players)</span></div>';
+      state.ocrResults.forEach(function(r) {
+        var statusColor = r.matched ? "#00c853" : "var(--gold-primary)";
+        var statusText = r.matched ? "✅ Match" : "🆕 New";
+        html += '<div class="ocr-result-card">';
+        html += '<div class="orc-name">' + esc(r.name) + '</div>';
+        html += '<div class="orc-power">' + esc(r.power) + '</div>';
+        html += '<div class="orc-status" style="color:' + statusColor + '">' + statusText + '</div>';
+        html += '</div>';
+      });
+      html += '<div style="height:12px"></div>';
+      html += '<button class="btn-gold" id="apply-ocr" style="width:100%">✅ Apply ' + state.ocrResults.length + ' Results to Roster</button>';
+    }
+
+    // Separator
+    html += '<div style="border-top:1px solid var(--border-color);margin:20px 0;padding-top:16px">';
+    html += '<div class="section-title">✏️ QUICK MANUAL UPDATE</div>';
+    html += '<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px">If screenshot scan doesn\'t work perfectly, update power values manually here:</p>';
+
+    // Quick update - show top players by rank for easy power update
+    html += '<div class="quick-update-list">';
+    var sorted = state.players.slice().sort(function(a,b) { return rankOrder(a.rank) - rankOrder(b.rank) || parsePowerNum(b.power) - parsePowerNum(a.power); });
+    sorted.forEach(function(p, i) {
+      var idx = state.players.indexOf(p);
+      html += '<div class="qu-item">';
+      html += '<span class="rank-badge rank-' + p.rank + '" style="flex-shrink:0;font-size:0.5rem">' + p.rank + '</span>';
+      html += '<span class="qu-name">' + esc(p.name) + '</span>';
+      html += '<input type="text" class="qu-power" data-idx="' + idx + '" value="' + esc(p.power) + '" placeholder="e.g. 50.1M">';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<div style="height:12px"></div>';
+    html += '<button class="btn-primary" id="apply-quick" style="width:100%">💾 Save Manual Changes</button>';
+    html += '</div>';
+
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderEditModal() {
+    var ep = state.editPlayer;
+    var title = state.editIdx === -1 ? "ADD PLAYER" : "EDIT PLAYER";
+    var html = '<div class="modal-overlay" id="modal-overlay">';
+    html += '<div class="modal"><h3>' + title + '</h3><form id="edit-form">';
+    html += '<div class="form-group"><label>Name</label><input id="ed-name" value="' + esc(ep.name) + '" required></div>';
+    html += '<div class="form-group"><label>Power</label><input id="ed-power" value="' + esc(ep.power) + '" placeholder="e.g. 50.1M" required></div>';
+    html += '<div class="form-group"><label>Level</label><input id="ed-level" type="number" value="' + ep.level + '" min="1" max="99" required></div>';
+    html += '<div class="form-group"><label>Rank</label><select id="ed-rank">';
+    ["R5","R4","R3","R2","R1"].forEach(function(r) {
+      var labels = { R5: "R5 - Leader", R4: "R4 - Officer", R3: "R3 - Elite", R2: "R2 - Member", R1: "R1 - Inactive" };
+      html += '<option value="' + r + '"' + (ep.rank === r ? " selected" : "") + '>' + labels[r] + '</option>';
+    });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>Role (optional)</label><input id="ed-role" value="' + esc(ep.role) + '" placeholder="Leader, Warlord..."></div>';
+    html += '<div class="modal-actions"><button type="submit" class="btn-primary">💾 SAVE</button><button type="button" class="btn-secondary" id="cancel-edit">CANCEL</button></div>';
+    html += '</form></div></div>';
+    return html;
+  }
+
+  // === EVENT BINDING ===
   function bindDashboard() {
-    // Logout
     var lb = document.getElementById("logout-btn");
     if (lb) lb.onclick = function() { state.view = "login"; state.token = null; state.msg = null; render(); };
 
@@ -461,14 +560,21 @@
 
     // Search
     var si = document.getElementById("search-input");
-    if (si) si.oninput = function() { state.search = si.value; render(); var el = document.getElementById("search-input"); if (el) { el.focus(); el.selectionStart = el.selectionEnd = si.value.length; } };
+    if (si) {
+      si.oninput = function() {
+        state.search = si.value;
+        render();
+        var el = document.getElementById("search-input");
+        if (el) { el.focus(); el.selectionStart = el.selectionEnd = si.value.length; }
+      };
+    }
 
     // Filter pills
     document.querySelectorAll(".pill").forEach(function(b) {
       b.onclick = function() { state.filterRank = b.dataset.rank; render(); };
     });
 
-    // Sort
+    // Sort headers (desktop)
     document.querySelectorAll("th[data-sort]").forEach(function(th) {
       th.onclick = function() {
         if (state.sortCol === th.dataset.sort) state.sortAsc = !state.sortAsc;
@@ -477,11 +583,22 @@
       };
     });
 
-    // Add
+    // Player cards (mobile) - tap to edit
+    document.querySelectorAll(".player-card[data-idx]").forEach(function(card) {
+      card.onclick = function() {
+        var idx = parseInt(card.dataset.idx);
+        var p = state.players[idx];
+        state.editPlayer = { name: p.name, power: p.power, level: p.level, rank: p.rank, role: p.role };
+        state.editIdx = idx;
+        render();
+      };
+    });
+
+    // Add button
     var ab = document.getElementById("add-btn");
     if (ab) ab.onclick = function() { state.editPlayer = { name: "", power: "", level: 1, rank: "R2", role: "" }; state.editIdx = -1; render(); };
 
-    // Edit buttons
+    // Edit buttons (desktop)
     document.querySelectorAll(".edit-btn").forEach(function(b) {
       b.onclick = function(e) {
         e.stopPropagation();
@@ -493,7 +610,7 @@
       };
     });
 
-    // Delete buttons
+    // Delete buttons (desktop)
     document.querySelectorAll(".del-btn").forEach(function(b) {
       b.onclick = function(e) {
         e.stopPropagation();
@@ -501,7 +618,7 @@
         if (confirm("Delete " + state.players[idx].name + "?")) {
           state.players.splice(idx, 1);
           state.dirty = true;
-          state.msg = "Player deleted. Don't forget to push!";
+          state.msg = "Player deleted.";
           state.msgType = "info";
           render();
         }
@@ -528,8 +645,9 @@
       state.editPlayer = null;
       state.editIdx = -1;
       state.dirty = true;
-      state.msg = "Player saved. Don't forget to push!";
+      state.msg = "Player saved!";
       state.msgType = "info";
+      showToast("Player saved! ✅");
       render();
     };
 
@@ -555,14 +673,14 @@
       b.onclick = function(e) { e.stopPropagation(); state.screenshots.splice(parseInt(b.dataset.si), 1); render(); };
     });
 
-    // OCR
+    // OCR scan
     var ob = document.getElementById("ocr-btn");
     if (ob) ob.onclick = runOCR;
 
-    // Apply OCR
+    // Apply OCR results
     var ao = document.getElementById("apply-ocr");
     if (ao) ao.onclick = function() {
-      var updated = 0, added = 0;
+      var updated = 0;
       state.ocrResults.forEach(function(r) {
         if (r.matched) {
           var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
@@ -571,11 +689,37 @@
       });
       state.ocrResults = [];
       state.ocrStatus = "";
+      state.ocrRawText = "";
       state.screenshots = [];
       state.dirty = true;
-      state.msg = updated + " players updated. Don't forget to push!";
+      state.msg = updated + " players updated!";
       state.msgType = "success";
       state.tab = "roster";
+      showToast(updated + " players updated! ✅");
+      render();
+    };
+
+    // Quick manual update - save button
+    var aq = document.getElementById("apply-quick");
+    if (aq) aq.onclick = function() {
+      var changed = 0;
+      document.querySelectorAll(".qu-power").forEach(function(input) {
+        var idx = parseInt(input.dataset.idx);
+        var newPower = input.value.trim();
+        if (newPower && newPower !== state.players[idx].power) {
+          state.players[idx].power = newPower;
+          changed++;
+        }
+      });
+      if (changed > 0) {
+        state.dirty = true;
+        state.msg = changed + " players updated!";
+        state.msgType = "success";
+        showToast(changed + " players updated! ✅");
+      } else {
+        state.msg = "No changes detected.";
+        state.msgType = "info";
+      }
       render();
     };
   }
@@ -589,31 +733,71 @@
     });
   }
 
-  // === OCR ===
+  // === OCR with Image Preprocessing ===
+  function preprocessImage(dataUrl) {
+    return new Promise(function(resolve) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        // Scale up for better OCR
+        var scale = Math.max(1, 2000 / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Grayscale + contrast boost
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var data = imageData.data;
+        for (var i = 0; i < data.length; i += 4) {
+          // Grayscale
+          var gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+          // Contrast boost
+          gray = ((gray - 128) * 1.8) + 128;
+          gray = Math.max(0, Math.min(255, gray));
+          // Threshold to black/white for cleaner OCR
+          var bw = gray > 140 ? 255 : 0;
+          data[i] = bw;
+          data[i+1] = bw;
+          data[i+2] = bw;
+        }
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.src = dataUrl;
+    });
+  }
+
   async function runOCR() {
     if (state.screenshots.length === 0) return;
     state.loading = true;
     state.ocrStatus = "Loading OCR engine...";
     state.ocrProgress = 5;
     state.ocrResults = [];
+    state.ocrRawText = "";
     render();
 
     try {
-      // Load Tesseract.js dynamically if needed
       if (typeof Tesseract === "undefined") {
         await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
       }
 
       var allText = "";
       for (var i = 0; i < state.screenshots.length; i++) {
-        state.ocrStatus = "Scanning image " + (i+1) + "/" + state.screenshots.length + "...";
-        state.ocrProgress = 10 + (i / state.screenshots.length) * 70;
+        state.ocrStatus = "Preprocessing image " + (i+1) + "/" + state.screenshots.length + "...";
+        state.ocrProgress = 5 + (i / state.screenshots.length) * 10;
         render();
 
-        var result = await Tesseract.recognize(state.screenshots[i], "eng", {
+        // Preprocess image for better OCR
+        var processed = await preprocessImage(state.screenshots[i]);
+
+        state.ocrStatus = "Scanning image " + (i+1) + "/" + state.screenshots.length + "...";
+        render();
+
+        var result = await Tesseract.recognize(processed, "eng", {
           logger: function(m) {
             if (m.status === "recognizing text") {
-              state.ocrProgress = 10 + ((i + m.progress) / state.screenshots.length) * 70;
+              state.ocrProgress = 15 + ((i + m.progress) / state.screenshots.length) * 70;
               render();
             }
           }
@@ -621,67 +805,21 @@
         allText += result.data.text + "\n";
       }
 
+      state.ocrRawText = allText;
       state.ocrStatus = "Parsing results...";
-      state.ocrProgress = 85;
+      state.ocrProgress = 90;
       render();
 
-      // Parse OCR text
-      var lines = allText.split("\n");
-      var results = [];
-      var powerRe = /(\d+[\.,]\d+)\s*[MmBb]/;
-
-      lines.forEach(function(line) {
-        line = line.trim();
-        if (!line || line.length < 3) return;
-        var pm = line.match(powerRe);
-        if (!pm) return;
-
-        var powerVal = pm[1].replace(",", ".") + "M";
-        var beforePower = line.substring(0, pm.index).trim();
-        if (!beforePower || beforePower.length < 2) return;
-
-        // Clean up name
-        var name = beforePower.replace(/^[\d\.\s#]+/, "").replace(/[^\w\s\-_.'"]/g, " ").replace(/\s+/g, " ").trim();
-        if (name.length < 2) return;
-
-        // Check if player exists
-        var matched = state.players.some(function(p) {
-          return p.name.toLowerCase() === name.toLowerCase() || 
-                 p.name.toLowerCase().indexOf(name.toLowerCase()) !== -1 ||
-                 name.toLowerCase().indexOf(p.name.toLowerCase()) !== -1;
-        });
-
-        // Find exact match
-        var exactMatch = state.players.find(function(p) {
-          return p.name.toLowerCase() === name.toLowerCase();
-        });
-
-        if (exactMatch) {
-          results.push({ name: exactMatch.name, power: powerVal, matched: true });
-        } else {
-          // Fuzzy match
-          var bestMatch = null, bestScore = 0;
-          state.players.forEach(function(p) {
-            var score = similarity(name.toLowerCase(), p.name.toLowerCase());
-            if (score > bestScore && score > 0.6) { bestScore = score; bestMatch = p; }
-          });
-          if (bestMatch) {
-            results.push({ name: bestMatch.name, power: powerVal, matched: true });
-          }
-        }
-      });
-
-      // Deduplicate (keep last occurrence)
-      var seen = {};
-      results = results.filter(function(r) {
-        if (seen[r.name]) return false;
-        seen[r.name] = true;
-        return true;
-      });
+      // Parse OCR text with multiple strategies
+      var results = parseOCRText(allText);
 
       state.ocrResults = results;
       state.ocrStatus = "Found " + results.length + " players from screenshots.";
       state.ocrProgress = 100;
+
+      if (results.length === 0) {
+        state.ocrStatus = "⚠️ Could not parse any players. Try using Quick Manual Update below, or check the Raw OCR Text for debugging.";
+      }
     } catch(e) {
       state.ocrStatus = "OCR Error: " + e.message;
     }
@@ -689,8 +827,92 @@
     render();
   }
 
+  function parseOCRText(text) {
+    var lines = text.split("\n");
+    var results = [];
+    var powerPatterns = [
+      /([\d]+[.,]\d+)\s*[MmBb]/,           // 64.3M, 50,1M
+      /([\d]+[.,]\d+)\s*[Mm]illion/i,       // 64.3 Million
+      /([\d]+[.,]\d+)\s*[Mm]il/i,           // 64.3 mil
+      /([\d]+)\s*[.,]\s*([\d]+)\s*[MmBb]/,  // 64 . 3 M (OCR space errors)
+    ];
+
+    lines.forEach(function(line) {
+      line = line.trim();
+      if (!line || line.length < 4) return;
+
+      var powerVal = null;
+      var powerIdx = -1;
+      var suffix = "M";
+
+      // Try each power pattern
+      for (var pi = 0; pi < powerPatterns.length; pi++) {
+        var pm = line.match(powerPatterns[pi]);
+        if (pm) {
+          if (pi === 3) {
+            // Pattern with spaces: "64 . 3 M"
+            powerVal = pm[1] + "." + pm[2];
+          } else {
+            powerVal = pm[1].replace(",", ".");
+          }
+          powerIdx = pm.index;
+          if (/[Bb]/.test(line.substring(pm.index, pm.index + pm[0].length + 2))) suffix = "B";
+          break;
+        }
+      }
+
+      if (!powerVal || powerIdx < 2) return;
+
+      var beforePower = line.substring(0, powerIdx).trim();
+      // Clean up: remove leading numbers, special chars, level indicators
+      var name = beforePower
+        .replace(/^[\d.\s#:]+/, "")
+        .replace(/\b[Ll][Vv]\.?\s*\d+/g, "")
+        .replace(/\b\d{1,2}\s*$/, "")
+        .replace(/[|[\]{}()\\/]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (name.length < 2 || name.length > 30) return;
+
+      // Match against existing players
+      var exactMatch = state.players.find(function(p) {
+        return p.name.toLowerCase() === name.toLowerCase();
+      });
+
+      if (exactMatch) {
+        results.push({ name: exactMatch.name, power: powerVal + suffix, matched: true });
+      } else {
+        // Fuzzy match
+        var bestMatch = null, bestScore = 0;
+        state.players.forEach(function(p) {
+          var score = similarity(name.toLowerCase(), p.name.toLowerCase());
+          if (score > bestScore && score > 0.55) { bestScore = score; bestMatch = p; }
+        });
+        if (bestMatch) {
+          results.push({ name: bestMatch.name, power: powerVal + suffix, matched: true });
+        } else if (parseFloat(powerVal) > 0) {
+          results.push({ name: name, power: powerVal + suffix, matched: false });
+        }
+      }
+    });
+
+    // Deduplicate (keep last)
+    var seen = {};
+    var deduped = [];
+    for (var i = results.length - 1; i >= 0; i--) {
+      var key = results[i].name.toLowerCase();
+      if (!seen[key]) {
+        seen[key] = true;
+        deduped.unshift(results[i]);
+      }
+    }
+    return deduped;
+  }
+
   function similarity(a, b) {
     if (a === b) return 1;
+    if (a.indexOf(b) !== -1 || b.indexOf(a) !== -1) return 0.85;
     var longer = a.length > b.length ? a : b;
     var shorter = a.length > b.length ? b : a;
     if (longer.length === 0) return 1;
