@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#050507">
   <title>Hall of Fame | IDs - Indonesian Brothers</title>
-  <meta name="description" content="Hall of Fame - Top performers, donors, and DA warriors of IDs Indonesian Brothers alliance.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -25,7 +24,7 @@
         <li><a href="index.html#about" class="nav-link">About</a></li>
         <li><a href="index.html#members" class="nav-link">Roster</a></li>
         <li><a href="#" class="nav-link active">Hall of Fame</a></li>
-        <li><a href="index.html#train-lottery" class="nav-link">Train</a></li>
+        <li><a href="index.html#train-lottery" class="nav-link">Lottery</a></li>
         <li><a href="index.html#allies" class="nav-link">Allies</a></li>
         <li><a href="index.html#join" class="nav-link nav-link-cta">Join Us</a></li>
       </ul>
@@ -41,95 +40,70 @@
   <!-- HERO BANNER -->
   <section class="hof-hero">
     <div class="hof-hero-bg"></div>
-    <div class="hof-hero-content">
-      <div class="hof-hero-icon">👑</div>
-      <h1 class="hof-hero-title">HALL OF <span class="text-accent">FAME</span></h1>
-      <p class="hof-hero-subtitle">Honoring our greatest warriors every week</p>
-      <div class="hof-week-badge" id="week-badge">Loading...</div>
+    <div class="container">
+      <div class="hof-hero-content">
+        <div class="hof-hero-badge">👑 HALL OF FAME</div>
+        <h1 class="hof-hero-title">LEGENDS OF <span class="text-accent">IDs</span></h1>
+        <p class="hof-hero-subtitle">Honoring our top performers, biggest donors, and fiercest DA warriors</p>
+      </div>
     </div>
   </section>
 
   <!-- TAB NAVIGATION -->
-  <div class="hof-tabs-wrapper">
+  <section class="hof-tabs-section">
     <div class="container">
-      <div class="hof-tabs" id="hof-tabs">
+      <div class="hof-tabs">
         <button class="hof-tab active" data-tab="improve">🚀 Top Improve</button>
         <button class="hof-tab" data-tab="donation">💰 Top Donation</button>
-        <button class="hof-tab" data-tab="da">🐉 Top DA Point</button>
+        <button class="hof-tab" data-tab="dapoint">🐉 Top DA Point</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- CONTENT SECTIONS -->
-  <section class="section section-dark">
+  <!-- TAB CONTENTS -->
+  <section class="hof-content-section">
     <div class="container">
 
       <!-- TOP IMPROVE -->
-      <div class="hof-section active" id="section-improve">
-        <div class="section-header">
-          <span class="section-tag">// WEEKLY IMPROVEMENT</span>
-          <h2 class="section-title">TOP <span class="text-accent">IMPROVERS</span></h2>
-          <div class="section-divider">
-            <span class="divider-line"></span>
-            <span class="divider-diamond">◆</span>
-            <span class="divider-line"></span>
-          </div>
-          <p class="section-subtitle">Warriors with the greatest power growth this week</p>
+      <div class="hof-panel active" id="panel-improve">
+        <div class="hof-coming-soon">
+          <div class="hof-cs-icon">🚀</div>
+          <h2 class="hof-cs-title">Top Player Improve</h2>
+          <p class="hof-cs-desc">Siapa yang paling besar kenaikan power-nya minggu ini?<br>Tracking persentase kenaikan power mingguan.</p>
+          <div class="hof-cs-badge">COMING SOON</div>
+          <p class="hof-cs-hint">Data akan muncul setelah admin menginput power mingguan lewat admin panel.</p>
         </div>
-
-        <!-- Podium -->
-        <div class="hof-podium" id="podium-improve"></div>
-
-        <!-- Full Rankings -->
-        <div class="hof-rankings" id="rankings-improve"></div>
       </div>
 
       <!-- TOP DONATION -->
-      <div class="hof-section" id="section-donation">
-        <div class="section-header">
-          <span class="section-tag">// GENEROSITY</span>
-          <h2 class="section-title">TOP <span class="text-accent">DONORS</span></h2>
-          <div class="section-divider">
-            <span class="divider-line"></span>
-            <span class="divider-diamond">◆</span>
-            <span class="divider-line"></span>
-          </div>
-          <p class="section-subtitle">Those who give the most for the brotherhood</p>
+      <div class="hof-panel" id="panel-donation">
+        <div class="hof-coming-soon">
+          <div class="hof-cs-icon">💰</div>
+          <h2 class="hof-cs-title">Top Donation</h2>
+          <p class="hof-cs-desc">Player yang paling banyak donasi untuk alliance.<br>Siapa yang paling royal?</p>
+          <div class="hof-cs-badge">COMING SOON</div>
+          <p class="hof-cs-hint">Data akan muncul setelah admin menginput data donasi lewat admin panel.</p>
         </div>
-        <div class="hof-podium" id="podium-donation"></div>
-        <div class="hof-rankings" id="rankings-donation"></div>
       </div>
 
       <!-- TOP DA POINT -->
-      <div class="hof-section" id="section-da">
-        <div class="section-header">
-          <span class="section-tag">// DRAGON ARENA</span>
-          <h2 class="section-title">TOP <span class="text-accent">DA WARRIORS</span></h2>
-          <div class="section-divider">
-            <span class="divider-line"></span>
-            <span class="divider-diamond">◆</span>
-            <span class="divider-line"></span>
-          </div>
-          <p class="section-subtitle">The fiercest fighters in the Dragon Arena</p>
+      <div class="hof-panel" id="panel-dapoint">
+        <div class="hof-coming-soon">
+          <div class="hof-cs-icon">🐉</div>
+          <h2 class="hof-cs-title">Top DA Point</h2>
+          <p class="hof-cs-desc">Warrior terkuat di Dragon Arena!<br>Siapa yang mendominasi pertempuran?</p>
+          <div class="hof-cs-badge">COMING SOON</div>
+          <p class="hof-cs-hint">Data akan muncul setelah admin menginput DA point lewat admin panel.</p>
         </div>
-        <div class="hof-podium" id="podium-da"></div>
-        <div class="hof-rankings" id="rankings-da"></div>
       </div>
 
     </div>
   </section>
 
   <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-glow"></div>
+  <footer class="hof-footer">
     <div class="container">
-      <div class="footer-tagline">
-        <span class="tagline-glow">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
-      </div>
-      <div class="footer-bottom">
-        <span class="footer-line"></span>
-        <p>© 2026 IDs - Indonesian Brothers | Server #2059 | Last War: Survival</p>
-      </div>
+      <p>IDs - Indonesian Brothers | Last War: Survival</p>
     </div>
   </footer>
 
