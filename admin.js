@@ -974,17 +974,10 @@
     state.ocrRawText = "";
     render();
 
-    try {
-      var allResults = [];
-      for (var i = 0; i < state.screenshots.length; i++) {
-        state.ocrStatus = "🤖 Menganalisis gambar " + (i+1) + "/" + state.screenshots.length + " dengan Groq AI...";
-        state.ocrProgress = 10 + (i / state.screenshots.length) * 80;
-        render();
+    function delay(ms) { return new Promise(function(resolve) { setTimeout(resolve, ms); }); }
 
-        var dataUrl = state.screenshots[i];
-        var base64Data = dataUrl.split(",")[1];
-        var mimeType = dataUrl.match(/data:(.*?);/)[1];
-
+    async function callGroqWithRetry(dataUrl, imgIndex, maxRetries) {
+      for (var attempt = 0; attempt <= maxRetries; attempt++) {
         var response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + state.groqKey },
@@ -1002,12 +995,37 @@
           })
         });
 
-        if (!response.ok) {
-          var errData = await response.json().catch(function() { return {}; });
-          throw new Error("Groq API error: " + (errData.error ? errData.error.message : response.statusText));
+        if (response.ok) return await response.json();
+
+        var errData = await response.json().catch(function() { return {}; });
+        var errMsg = errData.error ? errData.error.message : response.statusText;
+
+        // Rate limit — extract wait time and retry
+        if (response.status === 429 && attempt < maxRetries) {
+          var waitMatch = errMsg.match(/try again in ([\d.]+)s/i);
+          var waitSec = waitMatch ? Math.ceil(parseFloat(waitMatch[1])) + 2 : 15;
+          for (var w = waitSec; w > 0; w--) {
+            state.ocrStatus = "⏳ Rate limit — tunggu " + w + " detik lalu retry gambar " + (imgIndex+1) + "...";
+            render();
+            await delay(1000);
+          }
+          continue;
         }
 
-        var data = await response.json();
+        throw new Error("Groq API error: " + errMsg);
+      }
+    }
+
+    try {
+      var allResults = [];
+      for (var i = 0; i < state.screenshots.length; i++) {
+        state.ocrStatus = "🤖 Menganalisis gambar " + (i+1) + "/" + state.screenshots.length + " dengan Groq AI...";
+        state.ocrProgress = 10 + (i / state.screenshots.length) * 80;
+        render();
+
+        var dataUrl = state.screenshots[i];
+
+        var data = await callGroqWithRetry(dataUrl, i, 3);
         var text = data.choices[0].message.content;
         state.ocrRawText += "=== Image " + (i+1) + " ===\n" + text + "\n\n";
 
@@ -1020,6 +1038,15 @@
             allResults = allResults.concat(parsed);
           } catch(pe) {
             state.ocrRawText += "\n⚠️ JSON parse error: " + pe.message + "\n";
+          }
+        }
+
+        // Delay between images to avoid rate limit (15 sec cooldown)
+        if (i < state.screenshots.length - 1) {
+          for (var d = 12; d > 0; d--) {
+            state.ocrStatus = "✅ Gambar " + (i+1) + " selesai! ⏳ Cooldown " + d + "s sebelum gambar " + (i+2) + "...";
+            render();
+            await delay(1000);
           }
         }
       }
