@@ -6,6 +6,49 @@
 let members = [];
 
 // --- Utility: Parse power string to number for sorting ---
+
+// --- Calculate Alliance Power from members data ---
+function calculateAlliancePower(memberList) {
+  var totalM = 0; // total in millions
+  memberList.forEach(function(m) {
+    if (!m.power || m.power === "N/A") return;
+    var num = parseFloat(m.power.replace(/[^0-9.]/g, ""));
+    if (isNaN(num)) return;
+    if (m.power.includes("B")) totalM += num * 1000;
+    else if (m.power.includes("M")) totalM += num;
+    else if (m.power.includes("K")) totalM += num / 1000;
+    else totalM += num / 1000000;
+  });
+  return totalM; // returns total in millions
+}
+
+function updateAlliancePowerDisplay(memberList) {
+  var totalM = calculateAlliancePower(memberList);
+  var totalRaw = Math.round(totalM * 1000000); // raw number for counter
+  
+  // Format for hero display
+  var formatted;
+  if (totalM >= 1000) {
+    formatted = (totalM / 1000).toFixed(1) + "B+";
+  } else {
+    formatted = totalM.toFixed(0) + "M+";
+  }
+  
+  // Update hero section
+  var heroEl = document.getElementById("hero-alliance-power");
+  if (heroEl) heroEl.textContent = formatted + " ALLIANCE POWER";
+  
+  // Update stats counter
+  var statEl = document.getElementById("stat-alliance-power");
+  if (statEl) {
+    statEl.setAttribute("data-target", totalRaw.toString());
+    // Re-trigger counter animation if already started
+    statEl.textContent = totalRaw.toLocaleString("en-US");
+  }
+  
+  console.log("⚡ Alliance Power: " + formatted + " (" + totalRaw.toLocaleString() + ")");
+}
+
 function parsePower(powerStr) {
   if (!powerStr || powerStr === "N/A") return Infinity; // Leader always on top
   const num = parseFloat(powerStr.replace(/[^0-9.]/g, ""));
@@ -41,6 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const res = await fetch('members.json?v=' + Date.now());
     members = await res.json();
     console.log("✅ Loaded " + members.length + " members from members.json");
+    updateAlliancePowerDisplay(members);
   } catch(e) {
     console.error("❌ Failed to load members.json:", e);
   }
