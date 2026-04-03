@@ -890,101 +890,87 @@
 
     // Apply OCR results
     var ao = document.getElementById("apply-ocr");
-    if (ao) ao.onclick = function() {
+    if (ao) ao.onclick = async function() {
       var updated = 0;
+      var added = 0;
+      
+      // Step 1: Apply scan results to state
       if (state.scanCategory === "power") {
-        var added = 0;
         state.ocrResults.forEach(function(r) {
           if (r.matched) {
             var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
             if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
           } else {
-            // NEW MEMBER - add to roster
-            state.players.push({
-              name: r.name,
-              power: r.power || "N/A",
-              level: r.level ? String(r.level) : "1",
-              rank: "R1",
-              role: "Member"
-            });
-            updated++;
-            added++;
+            state.players.push({ name: r.name, power: r.power || "N/A", level: r.level ? String(r.level) : "1", rank: "R1", role: "Member" });
+            updated++; added++;
           }
         });
-        if (added > 0) {
-          state.msg = updated + " data updated! (" + added + " new member added)";
-          showToast("🆕 " + added + " new member ditambahkan ke roster!");
-        }
-        state.dirty = true;
-        state.tab = "roster";
       } else {
-        // Donation or Duel - update weeklydata
         var dataField = state.scanCategory === "donation" ? "donations" : "daPoints";
         state.ocrResults.forEach(function(r) {
           if (r.value !== undefined) {
-            var pName = r.name;
             if (!state.weeklyData) state.weeklyData = {};
             if (!state.weeklyData[dataField]) state.weeklyData[dataField] = {};
-            state.weeklyData[dataField][pName] = Number(r.value);
+            state.weeklyData[dataField][r.name] = Number(r.value);
             updated++;
-            // If new member, also add to roster
             if (!r.matched) {
               var exists = state.players.find(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
-              if (!exists) {
-                state.players.push({
-                  name: r.name,
-                  power: "N/A",
-                  level: "1",
-                  rank: "R1",
-                  role: "Member"
-                });
-                state.dirty = true;
-              }
+              if (!exists) { state.players.push({ name: r.name, power: "N/A", level: "1", rank: "R1", role: "Member" }); added++; }
             }
           }
         });
         state.weeklyDirty = true;
       }
+      
+      // Clear scan state
       state.ocrResults = [];
       state.ocrStatus = "";
       state.ocrRawText = "";
       state.screenshots = [];
-      state.msg = updated + " data applied! Pushing to GitHub...";
+      state.tab = "roster";
+      
+      // Step 2: Push to GitHub directly (no setTimeout)
+      var pushMsg = added > 0 ? (updated + " updated, " + added + " new") : (updated + " updated");
+      state.msg = "\u23F3 " + pushMsg + " \u2014 Pushing to GitHub...";
       state.msgType = "info";
+      state.loading = true;
       render();
       
-      // Auto push after apply
-      setTimeout(async function() {
-        try {
-          // Always push members.json (roster)
-          try { var latest = await ghGet(MEMBERS_PATH); state.membersSHA = latest.sha; } catch(e) {}
-          var membersContent = JSON.stringify(state.players, null, 2);
-          var result = await ghPut(MEMBERS_PATH, membersContent, state.membersSHA, "Update member data (" + state.players.length + " players)");
-          state.membersSHA = result.content.sha;
-          state.dirty = false;
-          
-          // Also push weeklydata if it was changed
-          if (state.weeklyDirty) {
-            try { var wl = await ghGet(WEEKLY_PATH); state.weeklySHA = wl.sha; } catch(e) {}
-            var wContent = JSON.stringify(state.weeklyData, null, 2);
-            var wr = await ghPut(WEEKLY_PATH, wContent, state.weeklySHA, "Update weekly data - " + (state.weeklyData.weekLabel || ""));
-            state.weeklySHA = wr.content.sha;
-            state.weeklyDirty = false;
-          }
-          
-          state.msg = "✅ " + updated + " data updated & pushed to GitHub!";
-          state.msgType = "success";
-          showToast("✅ Applied & Pushed to GitHub!");
-        } catch(e) {
-          state.msg = "❌ Push failed: " + e.message;
-          state.msgType = "error";
+      try {
+        // Always push members.json
+        try { var latest = await ghGet(MEMBERS_PATH); state.membersSHA = latest.sha; } catch(e) {}
+        var membersContent = JSON.stringify(state.players, null, 2);
+        var pushResult = await ghPut(MEMBERS_PATH, membersContent, state.membersSHA, "Update members (" + state.players.length + " players, " + added + " new)");
+        state.membersSHA = pushResult.content.sha;
+        state.dirty = false;
+        
+        // Push weeklydata.json if donation/duel
+        if (state.weeklyDirty) {
+          try { var wl = await ghGet(WEEKLY_PATH); state.weeklySHA = wl.sha; } catch(e) {}
+          var wContent = JSON.stringify(state.weeklyData, null, 2);
+          var wr = await ghPut(WEEKLY_PATH, wContent, state.weeklySHA, "Update weekly data");
+          state.weeklySHA = wr.content.sha;
+          state.weeklyDirty = false;
         }
-        state.loading = false;
-        render();
-      }, 100);
+        
+        // Snapshot power history if power scan
+        if (state.scanCategory === "power") {
+          try { await snapshotCurrentPower(); } catch(e) { console.log("History snapshot skipped:", e); }
+        }
+        
+        state.msg = "\u2705 " + pushMsg + " \u2014 Pushed to GitHub! Site updates in ~1 min.";
+        state.msgType = "success";
+        showToast("\u2705 " + pushMsg + " pushed to GitHub!");
+      } catch(e) {
+        state.msg = "\u274C Push failed: " + e.message;
+        state.msgType = "error";
+        showToast("\u274C Push gagal: " + e.message);
+      }
+      state.loading = false;
+      render();
     };
 
-    // Quick manual update - save button
+        // Quick manual update - save button
     var aq = document.getElementById("apply-quick");
     if (aq) aq.onclick = function() {
       var changed = 0;
@@ -1141,7 +1127,7 @@
           return p.name.toLowerCase() === r.name.toLowerCase();
         });
         if (exactMatch) {
-          matched.push({ name: exactMatch.name, power: r.power, level: r.level, matched: true });
+          matched.push({ name: exactMatch.name, power: r.power, level: r.level, value: r.value, matched: true });
         } else {
           var bestMatch = null, bestScore = 0;
           state.players.forEach(function(p) {
@@ -1149,9 +1135,9 @@
             if (score > bestScore && score > 0.5) { bestScore = score; bestMatch = p; }
           });
           if (bestMatch) {
-            matched.push({ name: bestMatch.name, power: r.power, level: r.level, matched: true, originalName: r.name });
+            matched.push({ name: bestMatch.name, power: r.power, level: r.level, value: r.value, matched: true, originalName: r.name });
           } else {
-            matched.push({ name: r.name, power: r.power, level: r.level, matched: false });
+            matched.push({ name: r.name, power: r.power, level: r.level, value: r.value, matched: false });
           }
         }
       });
