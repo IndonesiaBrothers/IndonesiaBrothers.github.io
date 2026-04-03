@@ -42,7 +42,7 @@
     </div>
 
     <!-- TAB: ROSTER -->
-    <div class="tab-content active" id="tab-roster">
+    <div class="tab-content tab-roster active" id="tab-roster">
       <!-- STATS BAR -->
       <div class="stats-bar" id="statsBar"></div>
 
@@ -80,8 +80,8 @@
         </div>
       </div>
 
-      <!-- TABLE -->
-      <div class="table-container">
+      <!-- SCROLLABLE TABLE AREA -->
+      <div class="table-scroll" id="tableScroll">
         <table>
           <thead>
             <tr>
@@ -102,11 +102,11 @@
     </div>
 
     <!-- TAB: SCREENSHOT UPDATE -->
-    <div class="tab-content" id="tab-screenshot">
+    <div class="tab-content tab-screenshot" id="tab-screenshot">
       <div class="screenshot-section">
         <div class="screenshot-header">
           <h2>📸 Update via Game Screenshot</h2>
-          <p>Upload screenshots dari halaman <strong>Member List</strong> di game. Data player akan otomatis di-parse dan diupdate.</p>
+          <p>Upload screenshots dari halaman <strong>Member List</strong> di game. Data player akan otomatis di-scan dan ditampilkan untuk review sebelum disimpan.</p>
         </div>
 
         <div class="screenshot-upload-area" id="screenshotDropZone">
@@ -119,19 +119,48 @@
         <!-- PREVIEW -->
         <div class="screenshot-previews" id="screenshotPreviews"></div>
 
-        <!-- SEND BUTTON -->
+        <!-- PROCESS BUTTON -->
         <div class="screenshot-actions" id="screenshotActions" style="display:none;">
-          <button class="btn btn-gold btn-lg" onclick="sendScreenshots()">
-            🚀 Process & Update Data
+          <button class="btn btn-gold btn-lg" onclick="processScreenshots()">
+            🔍 Scan & Parse Screenshots
           </button>
           <button class="btn btn-outline" onclick="clearScreenshots()">✕ Clear</button>
         </div>
 
-        <!-- STATUS -->
-        <div class="screenshot-status" id="screenshotStatus" style="display:none;">
-          <div class="status-spinner"></div>
-          <div class="status-text" id="statusText">Processing screenshots...</div>
-          <div class="status-hint">Data akan diupdate dalam 1-2 menit. Refresh halaman untuk melihat perubahan.</div>
+        <!-- OCR PROGRESS -->
+        <div class="ocr-progress-section" id="ocrProgress" style="display:none;">
+          <div class="ocr-progress-bar-container">
+            <div class="ocr-progress-bar" id="ocrProgressBar"></div>
+          </div>
+          <div class="ocr-progress-text" id="ocrProgressText">Processing...</div>
+        </div>
+
+        <!-- OCR REVIEW TABLE -->
+        <div class="ocr-review-section" id="ocrReview" style="display:none;">
+          <div class="ocr-review-header">
+            <h3>📋 Scanned Results — Review & Edit</h3>
+            <p>Periksa dan koreksi data yang terdeteksi. Klik <strong>Apply to Roster</strong> untuk memasukkan ke daftar player.</p>
+          </div>
+          <div class="ocr-review-scroll">
+            <table class="ocr-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Power</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="ocrReviewBody"></tbody>
+            </table>
+          </div>
+          <div class="ocr-review-actions">
+            <button class="btn btn-success" onclick="applyOCRResults()">✅ Apply to Roster</button>
+            <button class="btn btn-outline" onclick="cancelOCR()">Cancel</button>
+            <span class="ocr-review-count" id="ocrReviewCount"></span>
+          </div>
         </div>
 
         <!-- INSTRUCTIONS -->
@@ -141,26 +170,37 @@
             <li>Buka game Last War → Alliance → Member List</li>
             <li>Screenshot halaman member list (bisa beberapa screenshot untuk semua member)</li>
             <li>Upload semua screenshot di sini</li>
-            <li>Klik <strong>"Process & Update Data"</strong></li>
-            <li>Tunggu 1-2 menit, lalu refresh halaman</li>
+            <li>Klik <strong>"Scan & Parse Screenshots"</strong></li>
+            <li>Review hasil scan, koreksi jika perlu</li>
+            <li>Klik <strong>"Apply to Roster"</strong> → lalu <strong>"Push Update"</strong> di tab Roster</li>
           </ol>
         </div>
       </div>
     </div>
 
-    <!-- CONFIG MODAL -->
-    <div class="config-section" id="configSection" style="display:none;">
-      <div class="config-box">
-        <label>Webhook URL (from Tasklet)</label>
-        <input type="text" id="webhookUrl" placeholder="https://webhooks.tasklet.ai/v1/public/webhook?token=..." oninput="saveConfig()">
-        <div class="hint">Copy the webhook URL dari pengaturan trigger di Tasklet dan paste di sini. Diperlukan untuk push update.</div>
-        <br>
-        <label>Admin Password</label>
-        <input type="password" id="configPassword" placeholder="Set new password..." oninput="saveConfig()">
-        <div class="hint">Ubah password admin panel. Default: ids2026</div>
+  </div>
+
+  <!-- CONFIG MODAL (fixed overlay) -->
+  <div class="config-overlay" id="configOverlay" style="display:none;" onclick="closeConfigOutside(event)">
+    <div class="config-box">
+      <div class="config-title">⚙️ Configuration</div>
+
+      <label>GitHub Token</label>
+      <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx...">
+      <div class="hint">Personal Access Token untuk push ke GitHub. <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:var(--cyan-primary);">Buat di sini →</a></div>
+      <div class="hint">Pilih repo <strong>IndonesiaBrothers.github.io</strong> → Permission: Contents → Read & Write</div>
+      <div id="tokenStatus" class="token-status"></div>
+
+      <br>
+      <label>Admin Password</label>
+      <input type="password" id="configPassword" placeholder="Set new password...">
+      <div class="hint">Ubah password admin panel. Default: ids2026</div>
+
+      <div class="config-actions">
+        <button class="btn btn-gold btn-sm" onclick="saveConfig()">💾 Save</button>
+        <button class="btn btn-outline btn-sm" onclick="closeConfig()">Close</button>
       </div>
     </div>
-
   </div>
 
   <!-- SAVE BAR -->
@@ -168,14 +208,14 @@
     <div class="changes-info" id="changesInfo">0 changes pending</div>
     <div class="save-actions">
       <button class="btn btn-outline btn-sm" onclick="discardChanges()">Discard</button>
-      <button class="btn btn-gold btn-sm" onclick="pushToGitHub()">🚀 Push Update to GitHub</button>
+      <button class="btn btn-gold btn-sm" onclick="pushToGitHub()">🚀 Push to GitHub</button>
     </div>
   </div>
 
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">Pushing to GitHub...</div>
+    <div class="loading-text" id="loadingText">Loading...</div>
   </div>
 
   <!-- TOAST -->
