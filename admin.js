@@ -663,7 +663,7 @@
       });
       html += '<div style="height:12px"></div>';
       var catLabel = state.scanCategory === "power" ? "Roster" : state.scanCategory === "donation" ? "Donasi" : "Duel Aliansi";
-      html += '<button class="btn-gold" id="apply-ocr" style="width:100%">✅ Apply ' + state.ocrResults.length + ' Results ke ' + catLabel + '</button>';
+      html += '<button class="btn-gold" id="apply-ocr" style="width:100%;font-size:1.1rem;padding:14px">🚀 Apply ' + state.ocrResults.length + ' Results & Push ke GitHub</button>';
     }
 
     // Separator
@@ -949,10 +949,39 @@
       state.ocrStatus = "";
       state.ocrRawText = "";
       state.screenshots = [];
-      state.msg = updated + " data updated!";
-      state.msgType = "success";
-      showToast(updated + " data updated! ✅");
+      state.msg = updated + " data applied! Pushing to GitHub...";
+      state.msgType = "info";
       render();
+      
+      // Auto push after apply
+      setTimeout(async function() {
+        try {
+          // Always push members.json (roster)
+          try { var latest = await ghGet(MEMBERS_PATH); state.membersSHA = latest.sha; } catch(e) {}
+          var membersContent = JSON.stringify(state.players, null, 2);
+          var result = await ghPut(MEMBERS_PATH, membersContent, state.membersSHA, "Update member data (" + state.players.length + " players)");
+          state.membersSHA = result.content.sha;
+          state.dirty = false;
+          
+          // Also push weeklydata if it was changed
+          if (state.weeklyDirty) {
+            try { var wl = await ghGet(WEEKLY_PATH); state.weeklySHA = wl.sha; } catch(e) {}
+            var wContent = JSON.stringify(state.weeklyData, null, 2);
+            var wr = await ghPut(WEEKLY_PATH, wContent, state.weeklySHA, "Update weekly data - " + (state.weeklyData.weekLabel || ""));
+            state.weeklySHA = wr.content.sha;
+            state.weeklyDirty = false;
+          }
+          
+          state.msg = "✅ " + updated + " data updated & pushed to GitHub!";
+          state.msgType = "success";
+          showToast("✅ Applied & Pushed to GitHub!");
+        } catch(e) {
+          state.msg = "❌ Push failed: " + e.message;
+          state.msgType = "error";
+        }
+        state.loading = false;
+        render();
+      }, 100);
     };
 
     // Quick manual update - save button
