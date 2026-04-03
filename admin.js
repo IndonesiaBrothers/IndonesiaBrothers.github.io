@@ -1,1012 +1,725 @@
-// ============================================
-// IDs Brotherhood - Admin Panel v3
-// Direct GitHub API + Tesseract.js OCR
-// No webhook needed!
-// ============================================
+(function() {
+  "use strict";
 
-// --- Constants ---
-const GITHUB_OWNER = 'IndonesiaBrothers';
-const GITHUB_REPO = 'IndonesiaBrothers.github.io';
-const GITHUB_FILE = 'script.js';
-const GITHUB_API = 'https://api.github.com';
-const DEFAULT_PASSWORD = 'ids2026';
+  // === CONFIG ===
+  var REPO_OWNER = "IndonesiaBrothers";
+  var REPO_NAME = "IndonesiaBrothers.github.io";
+  var CONFIG_PATH = "admin-config.json";
+  var SCRIPT_PATH = "script.js";
+  var GH_API = "https://api.github.com";
 
-// --- State ---
-let players = [];
-let originalPlayers = [];
-let changes = new Set();
-let newPlayers = new Set();
-let deletedIndices = new Set();
-let currentSort = { field: 'rank', dir: 'asc' };
-let screenshotFiles = [];
-let ocrResults = [];
-let scriptJsSha = null;
-let fullScriptContent = '';
-let tesseractWorker = null;
+  // === STATE ===
+  var state = {
+    view: "loading",
+    token: null,
+    players: [],
+    originalScript: "",
+    scriptSHA: null,
+    tab: "roster",
+    search: "",
+    filterRank: "all",
+    sortCol: "rank",
+    sortAsc: true,
+    editPlayer: null,
+    editIdx: -1,
+    msg: null,
+    msgType: "info",
+    loading: false,
+    configData: null,
+    screenshots: [],
+    ocrStatus: "",
+    ocrProgress: 0,
+    ocrResults: [],
+    dirty: false
+  };
 
-// ============================================
-// INITIALIZATION
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('ids_admin_auth') === 'true') {
-    showAdmin();
+  var app = document.getElementById("app");
+
+  // === CRYPTO ===
+  function b64e(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+  function b64d(s) { return Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }); }
+
+  async function deriveKey(pw, salt) {
+    var km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" }, km, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
   }
 
-  document.getElementById('passwordInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') attemptLogin();
-  });
-
-  document.getElementById('searchBox').addEventListener('input', renderTable);
-  document.getElementById('rankFilter').addEventListener('change', renderTable);
-
-  // Screenshot drag & drop
-  const dropZone = document.getElementById('screenshotDropZone');
-  const fileInput = document.getElementById('screenshotInput');
-
-  dropZone.addEventListener('click', () => fileInput.click());
-  dropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    handleScreenshotFiles(e.dataTransfer.files);
-  });
-  fileInput.addEventListener('change', e => handleScreenshotFiles(e.target.files));
-});
-
-// ============================================
-// LOGIN
-// ============================================
-function attemptLogin() {
-  const input = document.getElementById('passwordInput').value;
-  const savedPassword = localStorage.getItem('ids_admin_password') || DEFAULT_PASSWORD;
-
-  if (input === savedPassword) {
-    sessionStorage.setItem('ids_admin_auth', 'true');
-    showAdmin();
-  } else {
-    const err = document.getElementById('loginError');
-    err.style.display = 'block';
-    document.getElementById('passwordInput').value = '';
-    setTimeout(() => err.style.display = 'none', 3000);
-  }
-}
-
-function showAdmin() {
-  document.getElementById('loginScreen').style.display = 'none';
-  const container = document.getElementById('adminContainer');
-  container.style.display = 'flex'; // flexbox layout!
-  document.body.style.overflow = 'hidden'; // prevent body scroll
-  loadPlayersFromGitHub();
-  loadConfig();
-}
-
-// ============================================
-// TAB SWITCHING
-// ============================================
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector('.tab-btn[data-tab="' + tabId + '"]').classList.add('active');
-  document.getElementById('tab-' + tabId).classList.add('active');
-}
-
-// ============================================
-// CONFIG (GitHub Token)
-// ============================================
-function loadConfig() {
-  const token = localStorage.getItem('ids_github_token') || '';
-  document.getElementById('githubToken').value = token;
-  updateTokenStatus(token);
-}
-
-function saveConfig() {
-  const token = document.getElementById('githubToken').value.trim();
-  const pw = document.getElementById('configPassword').value.trim();
-
-  if (token) {
-    localStorage.setItem('ids_github_token', token);
-    updateTokenStatus(token);
-    showToast('GitHub Token saved!', 'success');
-  }
-  if (pw) {
-    localStorage.setItem('ids_admin_password', pw);
-    showToast('Password updated!', 'success');
-  }
-  if (!token && !pw) {
-    showToast('Nothing to save', 'info');
-  }
-}
-
-function updateTokenStatus(token) {
-  const el = document.getElementById('tokenStatus');
-  if (token) {
-    el.textContent = '✅ Token configured';
-    el.className = 'token-status configured';
-  } else {
-    el.textContent = '⚠️ Token belum di-set — Push ke GitHub tidak bisa dilakukan';
-    el.className = 'token-status not-configured';
-  }
-}
-
-function openConfig() {
-  document.getElementById('configOverlay').style.display = 'flex';
-}
-
-function closeConfig() {
-  document.getElementById('configOverlay').style.display = 'none';
-}
-
-function closeConfigOutside(e) {
-  if (e.target === document.getElementById('configOverlay')) closeConfig();
-}
-
-// ============================================
-// LOAD PLAYERS
-// ============================================
-async function loadPlayersFromGitHub() {
-  try {
-    const token = localStorage.getItem('ids_github_token');
-    const headers = { 'Accept': 'application/vnd.github.v3+json' };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-
-    let text = '';
-
-    // Try GitHub API first (gives SHA for push)
-    try {
-      const resp = await fetch(GITHUB_API + '/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_FILE, { headers });
-      if (resp.ok) {
-        const data = await resp.json();
-        scriptJsSha = data.sha;
-        text = base64ToUtf8(data.content.replace(/\n/g, ''));
-        fullScriptContent = text;
-        console.log('[Admin] Loaded from GitHub API, SHA:', scriptJsSha);
-      }
-    } catch (e) {
-      console.warn('[Admin] GitHub API failed, falling back to direct fetch:', e);
-    }
-
-    // Fallback: direct same-origin fetch
-    if (!text) {
-      const resp = await fetch('script.js?t=' + Date.now());
-      if (!resp.ok) throw new Error('Failed to fetch script.js: ' + resp.status);
-      text = await resp.text();
-      fullScriptContent = text;
-      console.log('[Admin] Loaded from direct fetch');
-    }
-
-    // Parse players
-    players = parsePlayersRegex(text);
-    if (players.length === 0) {
-      console.warn('[Admin] Regex parse failed, trying eval...');
-      players = parsePlayersEval(text);
-    }
-
-    if (players.length === 0) {
-      showToast('No players found! Check console.', 'error');
-      console.error('[Admin] Parse failed. First 500 chars:', text.substring(0, 500));
-      return;
-    }
-
-    console.log('[Admin] Loaded ' + players.length + ' players');
-
-    originalPlayers = JSON.parse(JSON.stringify(players));
-    changes.clear();
-    newPlayers.clear();
-    deletedIndices.clear();
-
-    renderStats();
-    renderTable();
-    updateSaveBar();
-    showToast('Loaded ' + players.length + ' players', 'success');
-  } catch (err) {
-    console.error('[Admin] Load error:', err);
-    showToast('Failed to load: ' + err.message, 'error');
-  }
-}
-
-// --- Parse Method 1: Regex ---
-function parsePlayersRegex(text) {
-  const result = [];
-  // Match const members = [ ... ];
-  const arrMatch = text.match(/const\s+members\s*=\s*\[([\s\S]*?)\];/);
-  if (!arrMatch) {
-    console.warn('[Admin] Regex: Could not find members array');
-    return [];
+  async function encryptText(text, pw) {
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var key = await deriveKey(pw, salt);
+    var enc = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, new TextEncoder().encode(text));
+    return { s: b64e(salt), i: b64e(iv), d: b64e(enc) };
   }
 
-  const arrContent = arrMatch[1];
-  // Match each object { name: "...", power: "...", level: N, rank: "...", role: "..." }
-  const objRegex = /\{\s*name:\s*"([^"]*?)"\s*,\s*power:\s*"([^"]*?)"\s*,\s*level:\s*(\d+)\s*,\s*rank:\s*"([^"]*?)"\s*,\s*role:\s*"([^"]*?)"\s*\}/g;
-  let m;
-  while ((m = objRegex.exec(arrContent)) !== null) {
-    result.push({
-      name: m[1],
-      power: m[2],
-      level: parseInt(m[3]),
-      rank: m[4],
-      role: m[5]
+  async function decryptText(enc, pw) {
+    var key = await deriveKey(pw, b64d(enc.s));
+    var dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(enc.i) }, key, b64d(enc.d));
+    return new TextDecoder().decode(dec);
+  }
+
+  // === GITHUB API ===
+  async function ghGet(path) {
+    var res = await fetch(GH_API + "/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + path, {
+      headers: { "Authorization": "token " + state.token, "Accept": "application/vnd.github.v3+json" }
     });
+    if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.message || res.statusText); }
+    return res.json();
   }
 
-  console.log('[Admin] Regex parsed: ' + result.length + ' players');
-  return result;
-}
+  async function ghPut(path, content, sha, msg) {
+    var body = { message: msg, content: btoa(unescape(encodeURIComponent(content))) };
+    if (sha) body.sha = sha;
+    var res = await fetch(GH_API + "/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + path, {
+      method: "PUT",
+      headers: { "Authorization": "token " + state.token, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.message || res.statusText); }
+    return res.json();
+  }
 
-// --- Parse Method 2: Eval (fallback) ---
-function parsePlayersEval(text) {
-  try {
-    const match = text.match(/const\s+members\s*=\s*(\[[\s\S]*?\]);/);
+  // === DATA PARSING ===
+  function parseMembers(src) {
+    var match = src.match(/const members\s*=\s*\[([\s\S]*?)\];/);
     if (!match) return [];
-
-    const parsed = new Function('return ' + match[1])();
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.map(p => ({
-      name: String(p.name || ''),
-      power: String(p.power || 'N/A'),
-      level: parseInt(p.level) || 1,
-      rank: String(p.rank || 'R1'),
-      role: String(p.role || '')
-    }));
-  } catch (err) {
-    console.error('[Admin] Eval parse failed:', err);
-    return [];
-  }
-}
-
-// ============================================
-// RENDER
-// ============================================
-function renderStats() {
-  const active = players.filter((_, i) => !deletedIndices.has(i));
-  const counts = { total: active.length, R5: 0, R4: 0, R3: 0, R2: 0, R1: 0 };
-  active.forEach(p => { if (counts[p.rank] !== undefined) counts[p.rank]++; });
-
-  document.getElementById('statsBar').innerHTML =
-    '<div class="stat-card total"><div class="stat-value">' + counts.total + '</div><div class="stat-label">Total</div></div>' +
-    '<div class="stat-card r5"><div class="stat-value">' + counts.R5 + '</div><div class="stat-label">R5</div></div>' +
-    '<div class="stat-card r4"><div class="stat-value">' + counts.R4 + '</div><div class="stat-label">R4</div></div>' +
-    '<div class="stat-card r3"><div class="stat-value">' + counts.R3 + '</div><div class="stat-label">R3</div></div>' +
-    '<div class="stat-card r2"><div class="stat-value">' + counts.R2 + '</div><div class="stat-label">R2</div></div>' +
-    '<div class="stat-card r1"><div class="stat-value">' + counts.R1 + '</div><div class="stat-label">R1</div></div>';
-}
-
-function renderTable() {
-  const search = document.getElementById('searchBox').value.toLowerCase().trim();
-  const rankFilter = document.getElementById('rankFilter').value;
-  const tbody = document.getElementById('playerTableBody');
-
-  if (players.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No players loaded.</td></tr>';
-    return;
-  }
-
-  let list = players.map((p, i) => ({ ...p, _idx: i }));
-  list = list.filter(p => !deletedIndices.has(p._idx));
-  if (search) list = list.filter(p => p.name.toLowerCase().includes(search));
-  if (rankFilter) list = list.filter(p => p.rank === rankFilter);
-
-  // Sort
-  list.sort((a, b) => {
-    let va, vb;
-    switch (currentSort.field) {
-      case 'name':
-        va = a.name.toLowerCase();
-        vb = b.name.toLowerCase();
-        return currentSort.dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-      case 'power':
-        va = parsePower(a.power);
-        vb = parsePower(b.power);
-        return currentSort.dir === 'asc' ? va - vb : vb - va;
-      case 'level':
-        return currentSort.dir === 'asc' ? a.level - b.level : b.level - a.level;
-      case 'rank':
-        va = rankOrder(a.rank);
-        vb = rankOrder(b.rank);
-        if (va !== vb) return currentSort.dir === 'asc' ? va - vb : vb - va;
-        return parsePower(b.power) - parsePower(a.power);
-      default:
-        return 0;
+    var arr = [], re = /\{\s*name:\s*"([^"]*?)"\s*,\s*power:\s*"([^"]*?)"\s*,\s*level:\s*(\d+)\s*,\s*rank:\s*"([^"]*?)"\s*,\s*role:\s*"([^"]*?)"\s*\}/g, m;
+    while ((m = re.exec(match[1])) !== null) {
+      arr.push({ name: m[1], power: m[2], level: parseInt(m[3]), rank: m[4], role: m[5] });
     }
-  });
-
-  // Update sort arrows
-  document.querySelectorAll('.sort-arrow').forEach(el => el.classList.remove('active'));
-  const activeArrow = document.getElementById('sort-' + currentSort.field);
-  if (activeArrow) {
-    activeArrow.classList.add('active');
-    activeArrow.textContent = currentSort.dir === 'asc' ? '▲' : '▼';
+    return arr;
   }
 
-  if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No players match your search.</td></tr>';
-    return;
+  function parsePowerNum(s) {
+    if (!s || s === "N/A") return 0;
+    var n = parseFloat(s.replace(/[^0-9.]/g, ""));
+    if (s.includes("B")) return n * 1000;
+    if (s.includes("M")) return n;
+    if (s.includes("K")) return n / 1000;
+    return n;
   }
 
-  let html = '';
-  list.forEach((p, displayIdx) => {
-    const idx = p._idx;
-    const isModified = changes.has(idx);
-    const isNew = newPlayers.has(idx);
-    const rowClass = isNew ? 'row-new' : (isModified ? 'row-modified' : '');
+  function rankOrder(r) { return { R5: 0, R4: 1, R3: 2, R2: 3, R1: 4 }[r] || 5; }
 
-    const nameEsc = escapeHtml(p.name);
-    const powerEsc = escapeHtml(p.power);
-    const roleEsc = escapeHtml(p.role);
+  function rankLabel(r) { return { R5: "Leader", R4: "Officers", R3: "Elite Members", R2: "Members", R1: "Inactive" }[r] || r; }
 
-    html += '<tr class="' + rowClass + '" data-idx="' + idx + '">' +
-      '<td class="row-number">' + (displayIdx + 1) + '</td>' +
-      '<td><input type="text" value="' + nameEsc + '" onchange="updateField(' + idx + ',\'name\',this.value)"></td>' +
-      '<td><input type="text" value="' + powerEsc + '" onchange="updateField(' + idx + ',\'power\',this.value)" style="width:110px"></td>' +
-      '<td><input type="number" value="' + p.level + '" min="1" max="30" onchange="updateField(' + idx + ',\'level\',parseInt(this.value))" style="width:60px"></td>' +
-      '<td><select onchange="updateField(' + idx + ',\'rank\',this.value)">' +
-        ['R5','R4','R3','R2','R1'].map(r => '<option value="' + r + '"' + (p.rank === r ? ' selected' : '') + '>' + r + '</option>').join('') +
-      '</select></td>' +
-      '<td><input type="text" value="' + roleEsc + '" onchange="updateField(' + idx + ',\'role\',this.value)"></td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="deletePlayer(' + idx + ')">✕</button></td>' +
-    '</tr>';
-  });
-
-  tbody.innerHTML = html;
-}
-
-// ============================================
-// CRUD OPERATIONS
-// ============================================
-function updateField(idx, field, value) {
-  players[idx][field] = value;
-
-  if (idx < originalPlayers.length) {
-    const orig = originalPlayers[idx];
-    if (orig[field] !== value) {
-      changes.add(idx);
-    } else {
-      const allMatch = ['name','power','level','rank','role'].every(f => players[idx][f] === orig[f]);
-      if (allMatch) changes.delete(idx);
-    }
-  }
-
-  renderStats();
-  updateSaveBar();
-}
-
-function toggleAddPlayer() {
-  const section = document.getElementById('addSection');
-  section.style.display = section.style.display === 'none' ? 'block' : 'none';
-}
-
-function addPlayer() {
-  const name = document.getElementById('addName').value.trim();
-  const power = document.getElementById('addPower').value.trim() || 'N/A';
-  const level = parseInt(document.getElementById('addLevel').value) || 1;
-  const rank = document.getElementById('addRank').value;
-  const role = document.getElementById('addRole').value.trim();
-
-  if (!name) {
-    showToast('Player name is required!', 'error');
-    return;
-  }
-
-  if (players.some((p, i) => !deletedIndices.has(i) && p.name.toLowerCase() === name.toLowerCase())) {
-    showToast('Player already exists!', 'error');
-    return;
-  }
-
-  const idx = players.length;
-  players.push({ name, power, level, rank, role });
-  newPlayers.add(idx);
-
-  document.getElementById('addName').value = '';
-  document.getElementById('addPower').value = '';
-  document.getElementById('addLevel').value = '';
-  document.getElementById('addRole').value = '';
-
-  toggleAddPlayer();
-  renderStats();
-  renderTable();
-  updateSaveBar();
-  showToast(name + ' added!', 'success');
-}
-
-function deletePlayer(idx) {
-  const name = players[idx].name;
-  if (confirm('Remove ' + name + ' from the roster?')) {
-    deletedIndices.add(idx);
-    if (newPlayers.has(idx)) newPlayers.delete(idx);
-    renderStats();
-    renderTable();
-    updateSaveBar();
-    showToast(name + ' removed', 'info');
-  }
-}
-
-function discardChanges() {
-  if (confirm('Discard all changes?')) {
-    players = JSON.parse(JSON.stringify(originalPlayers));
-    changes.clear();
-    newPlayers.clear();
-    deletedIndices.clear();
-    renderStats();
-    renderTable();
-    updateSaveBar();
-    showToast('Changes discarded', 'info');
-  }
-}
-
-// ============================================
-// SORT & FILTER
-// ============================================
-function sortBy(field) {
-  if (currentSort.field === field) {
-    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-  } else {
-    currentSort.field = field;
-    currentSort.dir = 'asc';
-  }
-  renderTable();
-}
-
-function rankOrder(rank) {
-  const order = { R5: 1, R4: 2, R3: 3, R2: 4, R1: 5 };
-  return order[rank] || 99;
-}
-
-function parsePower(str) {
-  if (!str || str === 'N/A') return 0;
-  str = str.replace(/,/g, '').trim();
-  const m = str.match(/([\d.]+)\s*(B|M|K)?/i);
-  if (!m) return 0;
-  let num = parseFloat(m[1]);
-  const suffix = (m[2] || '').toUpperCase();
-  if (suffix === 'B') num *= 1000000000;
-  else if (suffix === 'M') num *= 1000000;
-  else if (suffix === 'K') num *= 1000;
-  return num;
-}
-
-// ============================================
-// SAVE BAR
-// ============================================
-function updateSaveBar() {
-  const totalChanges = changes.size + newPlayers.size + deletedIndices.size;
-  const bar = document.getElementById('saveBar');
-
-  if (totalChanges > 0) {
-    bar.classList.add('visible');
-    const parts = [];
-    if (changes.size) parts.push(changes.size + ' edited');
-    if (newPlayers.size) parts.push(newPlayers.size + ' added');
-    if (deletedIndices.size) parts.push(deletedIndices.size + ' removed');
-    document.getElementById('changesInfo').textContent = totalChanges + ' change' + (totalChanges > 1 ? 's' : '') + ' pending (' + parts.join(', ') + ')';
-  } else {
-    bar.classList.remove('visible');
-  }
-}
-
-// ============================================
-// PUSH TO GITHUB (Direct API)
-// ============================================
-async function pushToGitHub() {
-  const token = localStorage.getItem('ids_github_token');
-  if (!token) {
-    showToast('Set GitHub Token dulu di ⚙️ Config!', 'error');
-    openConfig();
-    return;
-  }
-
-  const totalChanges = changes.size + newPlayers.size + deletedIndices.size;
-  if (totalChanges === 0) {
-    showToast('No changes to push!', 'info');
-    return;
-  }
-
-  const finalPlayers = players.filter((_, i) => !deletedIndices.has(i));
-
-  showLoading('Pushing to GitHub...');
-
-  try {
-    // Generate new members array
-    const membersStr = generateMembersArray(finalPlayers);
-
-    // Get latest SHA if we don't have it
-    if (!scriptJsSha) {
-      const resp = await fetch(GITHUB_API + '/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_FILE, {
-        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.v3+json' }
-      });
-      if (!resp.ok) throw new Error('Failed to get file from GitHub: ' + resp.status);
-      const data = await resp.json();
-      scriptJsSha = data.sha;
-      fullScriptContent = base64ToUtf8(data.content.replace(/\n/g, ''));
-    }
-
-    // Replace ONLY the members array in script.js
-    const newContent = replaceMembersArray(fullScriptContent, membersStr);
-
-    // Push to GitHub
-    const pushResp = await fetch(GITHUB_API + '/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_FILE, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Update player data (' + finalPlayers.length + ' players)',
-        content: utf8ToBase64(newContent),
-        sha: scriptJsSha
-      })
+  function generateScript(orig, players) {
+    var ro = { R5: 0, R4: 1, R3: 2, R2: 3, R1: 4 };
+    var sorted = players.slice().sort(function(a, b) {
+      if (ro[a.rank] !== ro[b.rank]) return ro[a.rank] - ro[b.rank];
+      return parsePowerNum(b.power) - parsePowerNum(a.power);
     });
-
-    if (!pushResp.ok) {
-      const errData = await pushResp.json().catch(() => ({}));
-      throw new Error(errData.message || 'Push failed: ' + pushResp.status);
-    }
-
-    const result = await pushResp.json();
-    scriptJsSha = result.content.sha;
-    fullScriptContent = newContent;
-
-    // Reset state
-    players = JSON.parse(JSON.stringify(finalPlayers));
-    originalPlayers = JSON.parse(JSON.stringify(finalPlayers));
-    changes.clear();
-    newPlayers.clear();
-    deletedIndices.clear();
-
-    hideLoading();
-    renderStats();
-    renderTable();
-    updateSaveBar();
-    showToast('✅ Pushed! ' + finalPlayers.length + ' players. Website updates in ~1 min.', 'success');
-  } catch (err) {
-    hideLoading();
-    console.error('[Admin] Push error:', err);
-    showToast('Push failed: ' + err.message, 'error');
-  }
-}
-
-function generateMembersArray(playerList) {
-  let str = 'const members = [\n';
-  playerList.forEach((p, i) => {
-    str += '  { name: "' + escapeJS(p.name) + '", power: "' + escapeJS(p.power) + '", level: ' + p.level + ', rank: "' + escapeJS(p.rank) + '", role: "' + escapeJS(p.role) + '" }';
-    if (i < playerList.length - 1) str += ',';
-    str += '\n';
-  });
-  str += '];';
-  return str;
-}
-
-function replaceMembersArray(scriptContent, newMembersStr) {
-  const startRegex = /const\s+members\s*=\s*\[/;
-  const match = scriptContent.match(startRegex);
-  if (!match) throw new Error('Could not find members array in script.js');
-
-  const startIdx = match.index;
-
-  // Find matching ];
-  let depth = 0;
-  let endIdx = startIdx;
-  let inString = false;
-  let stringChar = '';
-
-  for (let i = startIdx + match[0].length - 1; i < scriptContent.length; i++) {
-    const c = scriptContent[i];
-    if (inString) {
-      if (c === '\\') { i++; continue; }
-      if (c === stringChar) inString = false;
-      continue;
-    }
-    if (c === '"' || c === "'") {
-      inString = true;
-      stringChar = c;
-      continue;
-    }
-    if (c === '[') depth++;
-    if (c === ']') {
-      depth--;
-      if (depth === 0) {
-        endIdx = i + 1;
-        if (scriptContent[i + 1] === ';') endIdx = i + 2;
-        break;
+    var counts = {};
+    sorted.forEach(function(p) { counts[p.rank] = (counts[p.rank] || 0) + 1; });
+    var lines = [], cr = "";
+    sorted.forEach(function(p, i) {
+      if (p.rank !== cr) {
+        if (lines.length) lines.push("");
+        lines.push("    // " + p.rank + " - " + rankLabel(p.rank) + " (" + counts[p.rank] + ")");
+        cr = p.rank;
       }
+      var comma = i < sorted.length - 1 ? "," : ",";
+      lines.push('    { name: "' + p.name + '", power: "' + p.power + '", level: ' + p.level + ', rank: "' + p.rank + '", role: "' + p.role + '" }' + comma);
+    });
+    var membersBlock = "const members = [\n" + lines.join("\n") + "\n];";
+    return orig.replace(/const members\s*=\s*\[[\s\S]*?\];/, membersBlock);
+  }
+
+  function esc(t) { var d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+
+  // === INIT ===
+  async function init() {
+    state.view = "loading"; render();
+    try {
+      var res = await fetch("admin-config.json?t=" + Date.now());
+      if (res.ok) {
+        state.configData = await res.json();
+        state.view = "login";
+      } else {
+        var bk = localStorage.getItem("ids-admin-config");
+        if (bk) { state.configData = JSON.parse(bk); state.view = "login"; }
+        else state.view = "setup";
+      }
+    } catch(e) {
+      var bk = localStorage.getItem("ids-admin-config");
+      if (bk) { state.configData = JSON.parse(bk); state.view = "login"; }
+      else state.view = "setup";
+    }
+    render();
+  }
+
+  // === SETUP ===
+  async function handleSetup(pw, token) {
+    state.loading = true; state.msg = null; render();
+    try {
+      state.token = token;
+      await ghGet(SCRIPT_PATH);
+      var enc = await encryptText(token, pw);
+      var cfg = JSON.stringify({ encrypted: enc, v: 1 }, null, 2);
+      var sha = null;
+      try { var ex = await ghGet(CONFIG_PATH); sha = ex.sha; } catch(e) {}
+      await ghPut(CONFIG_PATH, cfg, sha, "Setup admin panel");
+      localStorage.setItem("ids-admin-config", cfg);
+      state.configData = { encrypted: enc, v: 1 };
+      await loadPlayerData();
+      state.view = "dashboard";
+      state.msg = "Setup complete! Admin panel ready.";
+      state.msgType = "success";
+    } catch(e) {
+      state.msg = e.message;
+      state.msgType = "error";
+    }
+    state.loading = false; render();
+  }
+
+  // === LOGIN ===
+  async function handleLogin(pw) {
+    state.loading = true; state.msg = null; render();
+    try {
+      var token = await decryptText(state.configData.encrypted, pw);
+      state.token = token;
+      await loadPlayerData();
+      state.view = "dashboard";
+      state.msg = "Logged in!";
+      state.msgType = "success";
+    } catch(e) {
+      state.msg = (e.name === "OperationError") ? "Wrong password!" : e.message;
+      state.msgType = "error";
+    }
+    state.loading = false; render();
+  }
+
+  // === LOAD DATA ===
+  async function loadPlayerData() {
+    var file = await ghGet(SCRIPT_PATH);
+    state.originalScript = decodeURIComponent(escape(atob(file.content)));
+    state.scriptSHA = file.sha;
+    state.players = parseMembers(state.originalScript);
+    if (state.players.length === 0) throw new Error("Could not parse player data");
+  }
+
+  // === PUSH ===
+  async function pushToGitHub() {
+    state.loading = true; state.msg = "Pushing to GitHub..."; state.msgType = "info"; render();
+    try {
+      // Re-fetch to get latest SHA
+      try {
+        var latest = await ghGet(SCRIPT_PATH);
+        state.scriptSHA = latest.sha;
+        state.originalScript = decodeURIComponent(escape(atob(latest.content)));
+      } catch(e) {}
+      var ns = generateScript(state.originalScript, state.players);
+      var result = await ghPut(SCRIPT_PATH, ns, state.scriptSHA, "Update member data (" + state.players.length + " players)");
+      state.scriptSHA = result.content.sha;
+      state.originalScript = ns;
+      state.dirty = false;
+      state.msg = "Pushed! Website updates in ~1 min.";
+      state.msgType = "success";
+    } catch(e) {
+      state.msg = "Push failed: " + e.message;
+      state.msgType = "error";
+    }
+    state.loading = false; render();
+  }
+
+  // === RENDER ===
+  function render() {
+    switch(state.view) {
+      case "loading": renderLoading(); break;
+      case "setup": renderSetup(); break;
+      case "login": renderLogin(); break;
+      case "dashboard": renderDashboard(); break;
     }
   }
 
-  return scriptContent.substring(0, startIdx) + newMembersStr + scriptContent.substring(endIdx);
-}
-
-// ============================================
-// SCREENSHOT OCR (Tesseract.js)
-// ============================================
-function handleScreenshotFiles(files) {
-  for (const file of files) {
-    if (!file.type.startsWith('image/')) continue;
-    screenshotFiles.push(file);
-  }
-  renderScreenshotPreviews();
-}
-
-function renderScreenshotPreviews() {
-  const container = document.getElementById('screenshotPreviews');
-  const actions = document.getElementById('screenshotActions');
-
-  if (screenshotFiles.length === 0) {
-    container.innerHTML = '';
-    actions.style.display = 'none';
-    return;
+  function renderLoading() {
+    app.innerHTML = '<div class="auth-page"><div class="auth-card"><div class="loader"></div><p style="color:var(--text-muted)">Loading...</p></div></div>';
   }
 
-  actions.style.display = 'flex';
-
-  let html = '';
-  screenshotFiles.forEach((file, i) => {
-    const url = URL.createObjectURL(file);
-    html += '<div class="preview-card">' +
-      '<img src="' + url + '" alt="Screenshot ' + (i+1) + '">' +
-      '<div class="preview-info">' +
-        '<div class="preview-name">' + escapeHtml(file.name) + '</div>' +
-        '<div class="preview-size">' + (file.size / 1024).toFixed(0) + ' KB</div>' +
+  function renderSetup() {
+    var msgHtml = state.msg ? '<div class="msg msg-' + state.msgType + '">' + esc(state.msg) + '</div>' : '';
+    app.innerHTML = '<div class="auth-page"><div class="auth-card">' +
+      '<div class="auth-logo">IDs ADMIN</div>' +
+      '<h2>First Time Setup</h2>' +
+      '<p class="auth-desc">Set up admin access. You need a GitHub Fine-grained Token.</p>' +
+      '<div class="setup-steps">' +
+        '<div class="step"><span class="step-num">1</span><div>' +
+          '<strong>Create GitHub Token</strong>' +
+          '<a href="https://github.com/settings/tokens?type=beta" target="_blank" class="step-link">github.com/settings/tokens</a>' +
+          '<ul class="step-details"><li>Repository: <code>' + REPO_NAME + '</code></li><li>Permission: Contents → <strong>Read and Write</strong></li></ul>' +
+        '</div></div>' +
+        '<div class="step"><span class="step-num">2</span><div><strong>Paste token & set password below</strong></div></div>' +
       '</div>' +
-      '<button class="preview-remove" onclick="removeScreenshot(' + i + ')">✕</button>' +
-    '</div>';
-  });
+      '<form id="sf">' +
+        '<div class="form-group"><label>GitHub Token</label><input type="password" id="st" placeholder="github_pat_..." required></div>' +
+        '<div class="form-group"><label>Admin Password</label><input type="password" id="sp" placeholder="Choose a password" required minlength="4"></div>' +
+        '<div class="form-group"><label>Confirm Password</label><input type="password" id="sp2" placeholder="Confirm password" required></div>' +
+        msgHtml +
+        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Setting up...' : 'Setup Admin Panel') + '</button>' +
+      '</form>' +
+    '</div></div>';
+    document.getElementById("sf").onsubmit = function(e) {
+      e.preventDefault();
+      var pw = document.getElementById("sp").value, pw2 = document.getElementById("sp2").value;
+      if (pw !== pw2) { state.msg = "Passwords don't match!"; state.msgType = "error"; render(); return; }
+      handleSetup(pw, document.getElementById("st").value.trim());
+    };
+  }
 
-  container.innerHTML = html;
-}
+  function renderLogin() {
+    var msgHtml = state.msg ? '<div class="msg msg-' + state.msgType + '">' + esc(state.msg) + '</div>' : '';
+    app.innerHTML = '<div class="auth-page"><div class="auth-card">' +
+      '<div class="auth-logo">IDs ADMIN</div>' +
+      '<h2>Admin Login</h2>' +
+      '<form id="lf">' +
+        '<div class="form-group"><label>Password</label><input type="password" id="lp" placeholder="Enter admin password" required autofocus></div>' +
+        msgHtml +
+        '<button type="submit" class="btn-primary"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'Logging in...' : 'Login') + '</button>' +
+      '</form>' +
+      '<p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted)"><a href="#" id="reset-link" style="color:var(--cyan-primary)">Reset setup</a></p>' +
+    '</div></div>';
+    document.getElementById("lf").onsubmit = function(e) { e.preventDefault(); handleLogin(document.getElementById("lp").value); };
+    document.getElementById("reset-link").onclick = function(e) {
+      e.preventDefault();
+      if (confirm("Reset admin setup? You'll need to enter the GitHub token again.")) {
+        localStorage.removeItem("ids-admin-config");
+        state.configData = null;
+        state.view = "setup";
+        state.msg = null;
+        render();
+      }
+    };
+  }
 
-function removeScreenshot(index) {
-  screenshotFiles.splice(index, 1);
-  renderScreenshotPreviews();
-}
+  function renderDashboard() {
+    var p = state.players;
+    var counts = { all: p.length, R5: 0, R4: 0, R3: 0, R2: 0, R1: 0 };
+    p.forEach(function(m) { counts[m.rank] = (counts[m.rank] || 0) + 1; });
 
-function clearScreenshots() {
-  screenshotFiles = [];
-  ocrResults = [];
-  renderScreenshotPreviews();
-  document.getElementById('ocrProgress').style.display = 'none';
-  document.getElementById('ocrReview').style.display = 'none';
-}
+    // Filter & sort
+    var filtered = p.filter(function(m) {
+      if (state.filterRank !== "all" && m.rank !== state.filterRank) return false;
+      if (state.search && m.name.toLowerCase().indexOf(state.search.toLowerCase()) === -1) return false;
+      return true;
+    });
 
-async function loadTesseract() {
-  if (tesseractWorker) return tesseractWorker;
+    var sc = state.sortCol, asc = state.sortAsc;
+    filtered.sort(function(a, b) {
+      var v;
+      if (sc === "name") v = a.name.localeCompare(b.name);
+      else if (sc === "power") v = parsePowerNum(b.power) - parsePowerNum(a.power);
+      else if (sc === "level") v = b.level - a.level;
+      else if (sc === "rank") v = rankOrder(a.rank) - rankOrder(b.rank) || parsePowerNum(b.power) - parsePowerNum(a.power);
+      else v = 0;
+      return asc ? v : -v;
+    });
 
-  // Dynamically load Tesseract.js
-  if (!window.Tesseract) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('Failed to load Tesseract.js'));
-      document.head.appendChild(script);
+    // Stats
+    var totalPower = 0;
+    p.forEach(function(m) { totalPower += parsePowerNum(m.power); });
+    var powerStr = totalPower >= 1000 ? (totalPower / 1000).toFixed(1) + "B" : totalPower.toFixed(0) + "M";
+
+    var html = '';
+    // Header
+    html += '<div class="dash-header"><div class="dash-brand">IDs ADMIN</div><div class="dash-actions">';
+    html += '<button class="btn-secondary" id="logout-btn">Logout</button>';
+    html += '</div></div>';
+
+    // Stats
+    html += '<div class="stats-bar">';
+    html += '<div class="stat-chip">TOTAL <span class="val">' + counts.all + '</span></div>';
+    html += '<div class="stat-chip">POWER <span class="val">' + powerStr + '</span></div>';
+    ["R5","R4","R3","R2","R1"].forEach(function(r) {
+      html += '<div class="stat-chip">' + r + ' <span class="val">' + (counts[r]||0) + '</span></div>';
+    });
+    html += '</div>';
+
+    // Tabs
+    html += '<div class="tab-bar">';
+    html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">Roster</button>';
+    html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">Screenshot</button>';
+    html += '</div>';
+
+    if (state.tab === "roster") {
+      // Toolbar
+      html += '<div class="toolbar">';
+      html += '<input type="search" id="search-input" placeholder="Search player..." value="' + esc(state.search) + '">';
+      html += '<div class="filter-pills">';
+      var ranks = ["all","R5","R4","R3","R2","R1"];
+      ranks.forEach(function(r) {
+        var label = r === "all" ? "ALL" : r;
+        var count = r === "all" ? counts.all : (counts[r]||0);
+        html += '<button class="pill' + (state.filterRank === r ? " active" : "") + '" data-rank="' + r + '">' + label + ' ' + count + '</button>';
+      });
+      html += '</div>';
+      html += '<button class="btn-sm" id="add-btn">+ ADD</button>';
+      html += '</div>';
+
+      // Table
+      html += '<div class="content"><div class="table-wrap"><table><thead><tr>';
+      html += '<th class="col-num">#</th>';
+      var cols = [["name","NAME"],["power","POWER"],["level","LVL"],["rank","RANK"],["role","ROLE"]];
+      cols.forEach(function(c) {
+        var cls = "col-" + c[0] + (state.sortCol === c[0] ? " sorted" : "");
+        var arrow = state.sortCol === c[0] ? (state.sortAsc ? " ▲" : " ▼") : "";
+        html += '<th class="' + cls + '" data-sort="' + c[0] + '">' + c[1] + arrow + '</th>';
+      });
+      html += '<th class="col-actions">ACTIONS</th></tr></thead><tbody>';
+
+      if (filtered.length === 0) {
+        html += '<tr><td colspan="7" class="empty-state"><div class="icon">🔍</div>No players found</td></tr>';
+      } else {
+        filtered.forEach(function(m, i) {
+          var idx = state.players.indexOf(m);
+          html += '<tr data-idx="' + idx + '">';
+          html += '<td class="col-num">' + (i+1) + '</td>';
+          html += '<td class="col-name"><span class="player-name">' + esc(m.name) + '</span></td>';
+          html += '<td class="col-power"><span class="power-val">' + esc(m.power) + '</span></td>';
+          html += '<td class="col-level">' + m.level + '</td>';
+          html += '<td class="col-rank"><span class="rank-badge rank-' + m.rank + '">' + m.rank + '</span></td>';
+          html += '<td class="col-role"><span class="role-tag">' + esc(m.role) + '</span></td>';
+          html += '<td class="col-actions"><div class="row-actions">';
+          html += '<button class="btn-sm edit-btn" data-idx="' + idx + '">EDIT</button>';
+          html += '<button class="btn-danger del-btn" data-idx="' + idx + '">DEL</button>';
+          html += '</div></td>';
+          html += '</tr>';
+        });
+      }
+      html += '</tbody></table></div></div>';
+    } else {
+      // Screenshot tab
+      html += '<div class="content"><div class="screenshot-tab">';
+      html += '<div class="upload-zone" id="upload-zone"><div class="icon">📸</div><p>Drop screenshots here or click to upload</p><p class="hint">Upload Member List screenshots from the game</p></div>';
+      html += '<input type="file" id="file-input" accept="image/*" multiple style="display:none">';
+
+      if (state.screenshots.length > 0) {
+        html += '<div class="preview-grid">';
+        state.screenshots.forEach(function(s, i) {
+          html += '<div class="preview-thumb"><img src="' + s + '"><button class="remove-btn" data-si="' + i + '">✕</button></div>';
+        });
+        html += '</div>';
+        html += '<button class="btn-primary" id="ocr-btn" style="margin-bottom:16px"' + (state.loading ? ' disabled' : '') + '>Scan & Parse Screenshots</button>';
+      }
+
+      if (state.ocrStatus) {
+        html += '<div class="ocr-status">' + esc(state.ocrStatus);
+        if (state.ocrProgress > 0 && state.ocrProgress < 100) {
+          html += '<div class="progress-bar"><div class="progress-fill" style="width:' + state.ocrProgress + '%"></div></div>';
+        }
+        html += '</div>';
+      }
+
+      if (state.ocrResults.length > 0) {
+        html += '<h3 style="margin:16px 0 10px;font-family:var(--font-heading);font-size:1rem;letter-spacing:2px;color:var(--gold-primary)">PARSED RESULTS (' + state.ocrResults.length + ' players)</h3>';
+        html += '<div class="table-wrap"><table><thead><tr><th>NAME</th><th>POWER</th><th>STATUS</th></tr></thead><tbody>';
+        state.ocrResults.forEach(function(r) {
+          var status = r.matched ? '<span style="color:#00c853">Matched</span>' : '<span style="color:var(--gold-primary)">New</span>';
+          html += '<tr><td>' + esc(r.name) + '</td><td><span class="power-val">' + esc(r.power) + '</span></td><td>' + status + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+        html += '<button class="btn-gold" id="apply-ocr" style="margin-top:12px;width:100%">Apply to Roster</button>';
+      }
+      html += '</div></div>';
+    }
+
+    // Push bar
+    var pushMsg = state.msg || (state.dirty ? "Changes pending" : "Up to date");
+    var pushCls = state.msgType === "success" ? " success" : state.msgType === "error" ? " error" : "";
+    html += '<div class="push-bar">';
+    html += '<span class="push-msg' + pushCls + '">' + esc(pushMsg) + '</span>';
+    html += '<button class="btn-gold" id="push-btn"' + (state.loading ? ' disabled' : '') + '>' + (state.loading ? 'PUSHING...' : 'PUSH TO GITHUB') + '</button>';
+    html += '</div>';
+
+    // Modal
+    if (state.editPlayer !== null) {
+      var ep = state.editPlayer;
+      var title = state.editIdx === -1 ? "ADD PLAYER" : "EDIT PLAYER";
+      html += '<div class="modal-overlay" id="modal-overlay">';
+      html += '<div class="modal"><h3>' + title + '</h3><form id="edit-form">';
+      html += '<div class="form-group"><label>Name</label><input id="ed-name" value="' + esc(ep.name) + '" required></div>';
+      html += '<div class="form-group"><label>Power</label><input id="ed-power" value="' + esc(ep.power) + '" placeholder="e.g. 50.1M" required></div>';
+      html += '<div class="form-group"><label>Level</label><input id="ed-level" type="number" value="' + ep.level + '" min="1" max="99" required></div>';
+      html += '<div class="form-group"><label>Rank</label><select id="ed-rank"><option value="R5"' + (ep.rank==="R5"?" selected":"") + '>R5 - Leader</option><option value="R4"' + (ep.rank==="R4"?" selected":"") + '>R4 - Officer</option><option value="R3"' + (ep.rank==="R3"?" selected":"") + '>R3 - Elite</option><option value="R2"' + (ep.rank==="R2"?" selected":"") + '>R2 - Member</option><option value="R1"' + (ep.rank==="R1"?" selected":"") + '>R1 - Inactive</option></select></div>';
+      html += '<div class="form-group"><label>Role (optional)</label><input id="ed-role" value="' + esc(ep.role) + '" placeholder="Leader, Warlord, Muse..."></div>';
+      html += '<div class="modal-actions"><button type="submit" class="btn-primary">SAVE</button><button type="button" class="btn-secondary" id="cancel-edit">CANCEL</button></div>';
+      html += '</form></div></div>';
+    }
+
+    app.innerHTML = html;
+    bindDashboard();
+  }
+
+  function bindDashboard() {
+    // Logout
+    var lb = document.getElementById("logout-btn");
+    if (lb) lb.onclick = function() { state.view = "login"; state.token = null; state.msg = null; render(); };
+
+    // Tabs
+    document.querySelectorAll(".tab-btn").forEach(function(b) {
+      b.onclick = function() { state.tab = b.dataset.tab; state.msg = null; render(); };
+    });
+
+    // Search
+    var si = document.getElementById("search-input");
+    if (si) si.oninput = function() { state.search = si.value; render(); var el = document.getElementById("search-input"); if (el) { el.focus(); el.selectionStart = el.selectionEnd = si.value.length; } };
+
+    // Filter pills
+    document.querySelectorAll(".pill").forEach(function(b) {
+      b.onclick = function() { state.filterRank = b.dataset.rank; render(); };
+    });
+
+    // Sort
+    document.querySelectorAll("th[data-sort]").forEach(function(th) {
+      th.onclick = function() {
+        if (state.sortCol === th.dataset.sort) state.sortAsc = !state.sortAsc;
+        else { state.sortCol = th.dataset.sort; state.sortAsc = true; }
+        render();
+      };
+    });
+
+    // Add
+    var ab = document.getElementById("add-btn");
+    if (ab) ab.onclick = function() { state.editPlayer = { name: "", power: "", level: 1, rank: "R2", role: "" }; state.editIdx = -1; render(); };
+
+    // Edit buttons
+    document.querySelectorAll(".edit-btn").forEach(function(b) {
+      b.onclick = function(e) {
+        e.stopPropagation();
+        var idx = parseInt(b.dataset.idx);
+        var p = state.players[idx];
+        state.editPlayer = { name: p.name, power: p.power, level: p.level, rank: p.rank, role: p.role };
+        state.editIdx = idx;
+        render();
+      };
+    });
+
+    // Delete buttons
+    document.querySelectorAll(".del-btn").forEach(function(b) {
+      b.onclick = function(e) {
+        e.stopPropagation();
+        var idx = parseInt(b.dataset.idx);
+        if (confirm("Delete " + state.players[idx].name + "?")) {
+          state.players.splice(idx, 1);
+          state.dirty = true;
+          state.msg = "Player deleted. Don't forget to push!";
+          state.msgType = "info";
+          render();
+        }
+      };
+    });
+
+    // Push
+    var pb = document.getElementById("push-btn");
+    if (pb) pb.onclick = pushToGitHub;
+
+    // Modal
+    var ef = document.getElementById("edit-form");
+    if (ef) ef.onsubmit = function(e) {
+      e.preventDefault();
+      var np = {
+        name: document.getElementById("ed-name").value.trim(),
+        power: document.getElementById("ed-power").value.trim(),
+        level: parseInt(document.getElementById("ed-level").value),
+        rank: document.getElementById("ed-rank").value,
+        role: document.getElementById("ed-role").value.trim()
+      };
+      if (state.editIdx === -1) state.players.push(np);
+      else state.players[state.editIdx] = np;
+      state.editPlayer = null;
+      state.editIdx = -1;
+      state.dirty = true;
+      state.msg = "Player saved. Don't forget to push!";
+      state.msgType = "info";
+      render();
+    };
+
+    var ce = document.getElementById("cancel-edit");
+    if (ce) ce.onclick = function() { state.editPlayer = null; state.editIdx = -1; render(); };
+
+    var mo = document.getElementById("modal-overlay");
+    if (mo) mo.onclick = function(e) { if (e.target === mo) { state.editPlayer = null; state.editIdx = -1; render(); } };
+
+    // Screenshot upload
+    var uz = document.getElementById("upload-zone");
+    var fi = document.getElementById("file-input");
+    if (uz && fi) {
+      uz.onclick = function() { fi.click(); };
+      uz.ondragover = function(e) { e.preventDefault(); uz.classList.add("dragover"); };
+      uz.ondragleave = function() { uz.classList.remove("dragover"); };
+      uz.ondrop = function(e) { e.preventDefault(); uz.classList.remove("dragover"); addFiles(e.dataTransfer.files); };
+      fi.onchange = function() { addFiles(fi.files); fi.value = ""; };
+    }
+
+    // Remove screenshot
+    document.querySelectorAll(".remove-btn[data-si]").forEach(function(b) {
+      b.onclick = function(e) { e.stopPropagation(); state.screenshots.splice(parseInt(b.dataset.si), 1); render(); };
+    });
+
+    // OCR
+    var ob = document.getElementById("ocr-btn");
+    if (ob) ob.onclick = runOCR;
+
+    // Apply OCR
+    var ao = document.getElementById("apply-ocr");
+    if (ao) ao.onclick = function() {
+      var updated = 0, added = 0;
+      state.ocrResults.forEach(function(r) {
+        if (r.matched) {
+          var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
+          if (idx !== -1) { state.players[idx].power = r.power; updated++; }
+        }
+      });
+      state.ocrResults = [];
+      state.ocrStatus = "";
+      state.screenshots = [];
+      state.dirty = true;
+      state.msg = updated + " players updated. Don't forget to push!";
+      state.msgType = "success";
+      state.tab = "roster";
+      render();
+    };
+  }
+
+  function addFiles(files) {
+    Array.from(files).forEach(function(f) {
+      if (!f.type.startsWith("image/")) return;
+      var reader = new FileReader();
+      reader.onload = function(e) { state.screenshots.push(e.target.result); render(); };
+      reader.readAsDataURL(f);
     });
   }
 
-  tesseractWorker = await Tesseract.createWorker('eng', 1, {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        const pct = Math.round(m.progress * 100);
-        const bar = document.getElementById('ocrProgressBar');
-        if (bar) bar.style.width = pct + '%';
-      }
-    }
-  });
+  // === OCR ===
+  async function runOCR() {
+    if (state.screenshots.length === 0) return;
+    state.loading = true;
+    state.ocrStatus = "Loading OCR engine...";
+    state.ocrProgress = 5;
+    state.ocrResults = [];
+    render();
 
-  return tesseractWorker;
-}
-
-async function processScreenshots() {
-  if (screenshotFiles.length === 0) {
-    showToast('No screenshots to process!', 'error');
-    return;
-  }
-
-  const progressSection = document.getElementById('ocrProgress');
-  const progressBar = document.getElementById('ocrProgressBar');
-  const progressText = document.getElementById('ocrProgressText');
-
-  progressSection.style.display = 'block';
-  progressBar.style.width = '0%';
-  progressText.textContent = 'Loading OCR engine...';
-
-  try {
-    const worker = await loadTesseract();
-    ocrResults = [];
-
-    for (let i = 0; i < screenshotFiles.length; i++) {
-      progressText.textContent = 'Scanning screenshot ' + (i + 1) + ' of ' + screenshotFiles.length + '...';
-      progressBar.style.width = Math.round(((i) / screenshotFiles.length) * 100) + '%';
-
-      // Preprocess image for better OCR
-      const processedBlob = await preprocessImage(screenshotFiles[i]);
-
-      const result = await worker.recognize(processedBlob);
-      const text = result.data.text;
-      console.log('[OCR] Screenshot ' + (i+1) + ' raw text:', text);
-
-      // Parse OCR output
-      const parsed = parseOCRText(text);
-      ocrResults.push(...parsed);
-    }
-
-    progressBar.style.width = '100%';
-
-    if (ocrResults.length === 0) {
-      progressText.textContent = '⚠️ Tidak ada data player yang terdeteksi. Coba screenshot yang lebih jelas.';
-      showToast('No player data detected. Try clearer screenshots.', 'error');
-      return;
-    }
-
-    progressText.textContent = '✅ Found ' + ocrResults.length + ' players!';
-    showOCRReview();
-    showToast('Detected ' + ocrResults.length + ' players. Review below!', 'success');
-
-  } catch (err) {
-    console.error('[OCR] Error:', err);
-    progressText.textContent = '❌ Error: ' + err.message;
-    showToast('OCR failed: ' + err.message, 'error');
-  }
-}
-
-// Preprocess image for better OCR (invert, enhance contrast)
-function preprocessImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-
-      // Draw original
-      ctx.drawImage(img, 0, 0);
-
-      // Get pixel data
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // Convert to grayscale, invert, increase contrast
-      for (let i = 0; i < data.length; i += 4) {
-        // Grayscale
-        let gray = data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114;
-        // Invert (dark bg → light bg for better OCR)
-        gray = 255 - gray;
-        // Increase contrast
-        gray = gray < 100 ? 0 : Math.min(255, gray * 1.5);
-
-        data[i] = gray;
-        data[i+1] = gray;
-        data[i+2] = gray;
+    try {
+      // Load Tesseract.js dynamically if needed
+      if (typeof Tesseract === "undefined") {
+        await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
       }
 
-      ctx.putImageData(imageData, 0, 0);
-      canvas.toBlob(blob => resolve(blob), 'image/png');
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-}
+      var allText = "";
+      for (var i = 0; i < state.screenshots.length; i++) {
+        state.ocrStatus = "Scanning image " + (i+1) + "/" + state.screenshots.length + "...";
+        state.ocrProgress = 10 + (i / state.screenshots.length) * 70;
+        render();
 
-// Parse OCR text into player data
-function parseOCRText(text) {
-  const results = [];
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-  // Look for patterns:
-  // - Power values: numbers like 64,300,428 or 64.3M or 234.2M
-  // - Level: Lv.30 or Lv 30 or level numbers
-  // - Player names: text strings near power values
-  const powerRegex = /(\d[\d,]*\.?\d*)\s*(B|M|K|b|m|k)?/;
-  const lvRegex = /[Ll][Vv]\.?\s*(\d+)/;
-
-  let currentName = '';
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-
-    // Try to find a power value in this line
-    const powerMatch = line.match(/^(\d[\d,]*\.?\d*)\s*(B|M|K)?$/i);
-    const lvMatch = line.match(lvRegex);
-
-    if (powerMatch) {
-      // This line is a power value
-      let power = powerMatch[1].replace(/,/g, '');
-      const suffix = (powerMatch[2] || '').toUpperCase();
-
-      // Convert to human readable
-      if (!suffix && power.length > 6) {
-        const num = parseFloat(power) / 1000000;
-        power = num.toFixed(1) + 'M';
-      } else if (suffix) {
-        power = powerMatch[1] + suffix;
+        var result = await Tesseract.recognize(state.screenshots[i], "eng", {
+          logger: function(m) {
+            if (m.status === "recognizing text") {
+              state.ocrProgress = 10 + ((i + m.progress) / state.screenshots.length) * 70;
+              render();
+            }
+          }
+        });
+        allText += result.data.text + "\n";
       }
 
-      // The previous non-empty, non-number line was likely the name
-      if (currentName) {
-        let level = 0;
-        // Check next line for level
-        if (i + 1 < lines.length) {
-          const nextLv = lines[i + 1].match(lvRegex);
-          if (nextLv) {
-            level = parseInt(nextLv[1]);
-            i++; // skip level line
+      state.ocrStatus = "Parsing results...";
+      state.ocrProgress = 85;
+      render();
+
+      // Parse OCR text
+      var lines = allText.split("\n");
+      var results = [];
+      var powerRe = /(\d+[\.,]\d+)\s*[MmBb]/;
+
+      lines.forEach(function(line) {
+        line = line.trim();
+        if (!line || line.length < 3) return;
+        var pm = line.match(powerRe);
+        if (!pm) return;
+
+        var powerVal = pm[1].replace(",", ".") + "M";
+        var beforePower = line.substring(0, pm.index).trim();
+        if (!beforePower || beforePower.length < 2) return;
+
+        // Clean up name
+        var name = beforePower.replace(/^[\d\.\s#]+/, "").replace(/[^\w\s\-_.'"]/g, " ").replace(/\s+/g, " ").trim();
+        if (name.length < 2) return;
+
+        // Check if player exists
+        var matched = state.players.some(function(p) {
+          return p.name.toLowerCase() === name.toLowerCase() || 
+                 p.name.toLowerCase().indexOf(name.toLowerCase()) !== -1 ||
+                 name.toLowerCase().indexOf(p.name.toLowerCase()) !== -1;
+        });
+
+        // Find exact match
+        var exactMatch = state.players.find(function(p) {
+          return p.name.toLowerCase() === name.toLowerCase();
+        });
+
+        if (exactMatch) {
+          results.push({ name: exactMatch.name, power: powerVal, matched: true });
+        } else {
+          // Fuzzy match
+          var bestMatch = null, bestScore = 0;
+          state.players.forEach(function(p) {
+            var score = similarity(name.toLowerCase(), p.name.toLowerCase());
+            if (score > bestScore && score > 0.6) { bestScore = score; bestMatch = p; }
+          });
+          if (bestMatch) {
+            results.push({ name: bestMatch.name, power: powerVal, matched: true });
           }
         }
+      });
 
-        results.push({
-          name: currentName.trim(),
-          power: power,
-          level: level || 30,
-          detected: true
-        });
-        currentName = '';
-      }
-    } else if (!line.match(/^\d/) && !lvMatch && line.length > 1 && line.length < 30) {
-      // Likely a player name (not a number, not a level, reasonable length)
-      currentName = line;
+      // Deduplicate (keep last occurrence)
+      var seen = {};
+      results = results.filter(function(r) {
+        if (seen[r.name]) return false;
+        seen[r.name] = true;
+        return true;
+      });
+
+      state.ocrResults = results;
+      state.ocrStatus = "Found " + results.length + " players from screenshots.";
+      state.ocrProgress = 100;
+    } catch(e) {
+      state.ocrStatus = "OCR Error: " + e.message;
     }
-
-    i++;
+    state.loading = false;
+    render();
   }
 
-  return results;
-}
+  function similarity(a, b) {
+    if (a === b) return 1;
+    var longer = a.length > b.length ? a : b;
+    var shorter = a.length > b.length ? b : a;
+    if (longer.length === 0) return 1;
+    return (longer.length - editDist(longer, shorter)) / longer.length;
+  }
 
-function showOCRReview() {
-  const reviewSection = document.getElementById('ocrReview');
-  const tbody = document.getElementById('ocrReviewBody');
-  const count = document.getElementById('ocrReviewCount');
-
-  let html = '';
-  ocrResults.forEach((r, i) => {
-    // Check if player exists
-    const existingIdx = players.findIndex(p => p.name.toLowerCase() === r.name.toLowerCase());
-    let status = '';
-    let statusClass = '';
-
-    if (existingIdx >= 0) {
-      const existing = players[existingIdx];
-      if (existing.power !== r.power) {
-        status = '⬆️ Update (' + existing.power + ' → ' + r.power + ')';
-        statusClass = 'ocr-status-update';
-      } else {
-        status = '— Same';
-        statusClass = 'ocr-status-same';
+  function editDist(a, b) {
+    var m = [];
+    for (var i = 0; i <= b.length; i++) { m[i] = [i]; }
+    for (var j = 0; j <= a.length; j++) { m[0][j] = j; }
+    for (var i = 1; i <= b.length; i++) {
+      for (var j = 1; j <= a.length; j++) {
+        if (b.charAt(i-1) === a.charAt(j-1)) m[i][j] = m[i-1][j-1];
+        else m[i][j] = Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
       }
-    } else {
-      status = '✨ New';
-      statusClass = 'ocr-status-new';
     }
+    return m[b.length][a.length];
+  }
 
-    html += '<tr>' +
-      '<td class="row-number">' + (i + 1) + '</td>' +
-      '<td><input type="text" value="' + escapeHtml(r.name) + '" onchange="ocrResults[' + i + '].name=this.value"></td>' +
-      '<td><input type="text" value="' + escapeHtml(r.power) + '" onchange="ocrResults[' + i + '].power=this.value" style="width:100px"></td>' +
-      '<td><input type="number" value="' + r.level + '" min="1" max="30" onchange="ocrResults[' + i + '].level=parseInt(this.value)" style="width:60px"></td>' +
-      '<td><span class="' + statusClass + '">' + status + '</span></td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="removeOCRResult(' + i + ')">✕</button></td>' +
-    '</tr>';
-  });
+  function loadScript(src) {
+    return new Promise(function(resolve, reject) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
 
-  tbody.innerHTML = html;
-  count.textContent = ocrResults.length + ' players detected';
-  reviewSection.style.display = 'block';
-}
-
-function removeOCRResult(index) {
-  ocrResults.splice(index, 1);
-  showOCRReview();
-}
-
-function applyOCRResults() {
-  let updated = 0;
-  let added = 0;
-
-  ocrResults.forEach(r => {
-    const existingIdx = players.findIndex(p =>
-      !deletedIndices.has(players.indexOf(p)) &&
-      p.name.toLowerCase() === r.name.toLowerCase()
-    );
-
-    if (existingIdx >= 0) {
-      // Update existing player
-      if (players[existingIdx].power !== r.power || players[existingIdx].level !== r.level) {
-        players[existingIdx].power = r.power;
-        players[existingIdx].level = r.level;
-        changes.add(existingIdx);
-        updated++;
-      }
-    } else {
-      // Add new player
-      const idx = players.length;
-      players.push({
-        name: r.name,
-        power: r.power,
-        level: r.level,
-        rank: 'R2',
-        role: ''
-      });
-      newPlayers.add(idx);
-      added++;
-    }
-  });
-
-  ocrResults = [];
-  document.getElementById('ocrReview').style.display = 'none';
-  document.getElementById('ocrProgress').style.display = 'none';
-
-  // Switch to roster tab
-  switchTab('roster');
-
-  renderStats();
-  renderTable();
-  updateSaveBar();
-
-  const msg = [];
-  if (updated) msg.push(updated + ' updated');
-  if (added) msg.push(added + ' added');
-  showToast('✅ Applied! ' + msg.join(', ') + '. Push to GitHub when ready.', 'success');
-}
-
-function cancelOCR() {
-  ocrResults = [];
-  document.getElementById('ocrReview').style.display = 'none';
-  document.getElementById('ocrProgress').style.display = 'none';
-}
-
-// ============================================
-// UTILITIES
-// ============================================
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function escapeJS(str) {
-  if (!str) return '';
-  return String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-}
-
-function utf8ToBase64(str) {
-  const bytes = new TextEncoder().encode(str);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  return btoa(binary);
-}
-
-function base64ToUtf8(b64) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
-}
-
-function showToast(message, type) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = 'toast ' + type;
-  setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => toast.classList.remove('show'), 4000);
-}
-
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text || 'Loading...';
-  document.getElementById('loadingOverlay').classList.add('visible');
-}
-
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.remove('visible');
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+  // === START ===
+  init();
+})();
