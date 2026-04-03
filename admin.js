@@ -38,8 +38,6 @@
     weeklySHA: null,
     historySHA: null,
     powerHistory: null,
-    hofSearch: "",
-    hofDirty: false
   };
 
   var app = document.getElementById("app");
@@ -351,7 +349,6 @@
       state.historySHA = hResp.content.sha;
     }
     
-    state.hofDirty = false;
   }
 
   function snapshotCurrentPower() {
@@ -387,79 +384,7 @@
     
     // Also update weeklyData previousPower
     state.weeklyData.previousPower = currentPower;
-    state.hofDirty = true;
     showToast("Power snapshot saved to history! \ud83d\udcf8");
-  }
-
-  function renderHofTab() {
-    var html = '<div class="content">';
-
-    // Week info & snapshot button
-    html += '<div class="hof-header">';
-    html += '<div class="hof-week-info">';
-    html += '<span class="hof-week-label">\ud83d\udcc5 ' + esc(state.weeklyData ? state.weeklyData.weekLabel : "Loading...") + '</span>';
-    html += '<span class="hof-updated">Last: ' + esc(state.weeklyData ? state.weeklyData.lastUpdated : "-") + '</span>';
-    html += '</div>';
-    html += '<div class="hof-actions">';
-    html += '<button class="btn-sm" id="snapshot-btn" title="Save current power as baseline for next week">\ud83d\udcf8 Snapshot Power</button>';
-    html += '<button class="btn-sm btn-gold" id="push-hof-btn"' + (state.loading ? ' disabled' : '') + '>\ud83d\ude80 Push HoF Data</button>';
-    html += '</div>';
-    html += '</div>';
-
-    if (state.hofDirty) {
-      html += '<div class="hof-dirty-notice">\u26a0\ufe0f Unsaved changes — click Push HoF Data to save</div>';
-    }
-
-    // Search
-    html += '<div class="hof-search-bar">';
-    html += '<input type="text" id="hof-search" placeholder="Search player..." value="' + esc(state.hofSearch) + '">';
-    html += '</div>';
-
-    // Player list with donation & DA inputs
-    html += '<div class="hof-player-list">';
-
-    var filtered = (state.players || []).filter(function(p) {
-      if (state.hofSearch && p.name.toLowerCase().indexOf(state.hofSearch.toLowerCase()) === -1) return false;
-      return true;
-    });
-
-    // Sort by power desc
-    filtered.sort(function(a, b) { return parsePowerNum(b.power) - parsePowerNum(a.power); });
-
-    // Table header
-    html += '<div class="hof-table-header">';
-    html += '<span class="hof-col-name">Player</span>';
-    html += '<span class="hof-col-power">Power</span>';
-    html += '<span class="hof-col-input">\ud83d\udcb0 Donation</span>';
-    html += '<span class="hof-col-input">\ud83d\udc09 DA Point</span>';
-    html += '</div>';
-
-    filtered.forEach(function(p) {
-      var don = state.weeklyData ? (state.weeklyData.donations[p.name] || 0) : 0;
-      var da = state.weeklyData ? (state.weeklyData.daPoints[p.name] || 0) : 0;
-      var prevPow = state.weeklyData ? (state.weeklyData.previousPower[p.name] || 0) : 0;
-      var curPow = parsePowerNum(p.power);
-      var diff = prevPow > 0 ? curPow - prevPow : 0;
-      var pct = prevPow > 0 ? ((diff / prevPow) * 100).toFixed(1) : "0.0";
-      var diffClass = diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral";
-      var diffSign = diff > 0 ? "+" : "";
-
-      html += '<div class="hof-row">';
-      html += '<div class="hof-col-name">';
-      html += '<span class="hof-player-name">' + esc(p.name) + '</span>';
-      html += '<span class="hof-player-meta">' + p.rank + ' · Lv.' + p.level + '</span>';
-      html += '</div>';
-      html += '<div class="hof-col-power">';
-      html += '<span class="hof-power-val">' + esc(p.power) + '</span>';
-      html += '<span class="hof-power-diff ' + diffClass + '">' + diffSign + formatPower(Math.abs(diff)) + ' (' + diffSign + pct + '%)</span>';
-      html += '</div>';
-      html += '<div class="hof-col-input"><input type="number" class="hof-input" data-player="' + esc(p.name) + '" data-field="donation" value="' + don + '" min="0"></div>';
-      html += '<div class="hof-col-input"><input type="number" class="hof-input" data-player="' + esc(p.name) + '" data-field="da" value="' + da + '" min="0"></div>';
-      html += '</div>';
-    });
-
-    html += '</div></div>';
-    return html;
   }
 
   // === RENDER ===
@@ -580,15 +505,12 @@
     html += '<div class="tab-bar">';
     html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">📋 Roster</button>';
     html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">📸 Update</button>';
-    html += '<button class="tab-btn' + (state.tab === "halloffame" ? " active" : "") + '" data-tab="halloffame">🏆 Hall of Fame</button>';
     html += '</div>';
 
     if (state.tab === "roster") {
       html += renderRosterTab(filtered, counts);
     } else if (state.tab === "screenshot") {
       html += renderScreenshotTab();
-    } else if (state.tab === "halloffame") {
-      html += renderHofTab();
     }
 
     // Push bar
@@ -879,43 +801,11 @@
       }
     };
 
-    var phBtn = document.getElementById("push-hof-btn");
-    if (phBtn) phBtn.onclick = async function() {
-      try {
-        state.loading = true; render();
-        await pushWeeklyData();
-        state.loading = false;
-        showToast("Hall of Fame data pushed! \ud83c\udfc6");
-        render();
-      } catch(e) {
-        state.loading = false;
-        showToast("Error: " + e.message);
-        render();
-      }
-    };
 
-    var hofSearch = document.getElementById("hof-search");
-    if (hofSearch) {
-      hofSearch.oninput = function() {
-        state.hofSearch = hofSearch.value;
-        render();
-        var el = document.getElementById("hof-search");
-        if (el) { el.focus(); el.selectionStart = el.selectionEnd = hofSearch.value.length; }
-      };
-    }
 
-    document.querySelectorAll(".hof-input").forEach(function(inp) {
-      inp.onchange = function() {
-        var name = inp.dataset.player;
-        var field = inp.dataset.field;
-        var val = parseInt(inp.value) || 0;
-        if (state.weeklyData) {
-          if (field === "donation") state.weeklyData.donations[name] = val;
-          else if (field === "da") state.weeklyData.daPoints[name] = val;
-          state.hofDirty = true;
-        }
-      };
-    });
+
+
+
 
     // Modal
     var ef = document.getElementById("edit-form");
