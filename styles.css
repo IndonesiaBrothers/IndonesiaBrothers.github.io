@@ -3869,3 +3869,161 @@ ul { list-style: none; }
     font-size: 1.4rem;
   }
 }
+
+
+/* ===== HALL OF FAME LEADERBOARD (Donation & Duel) ===== */
+.hof-leaderboard-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.hof-lb-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+}
+.hof-lb-icon {
+  font-size: 2.5rem;
+}
+.hof-lb-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.5rem;
+  color: #d4af37;
+  margin: 0;
+}
+.hof-lb-week {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin: 4px 0 0;
+}
+.hof-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hof-lb-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-style: italic;
+}
+.hof-lb-no-data {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+  font-size: 0.95rem;
+}
+
+/* Individual row */
+.hof-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s ease;
+}
+.hof-lb-row:hover {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateX(4px);
+}
+
+/* Top 3 special styles */
+.hof-lb-top1 {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.04));
+  border-color: rgba(255, 215, 0, 0.3);
+}
+.hof-lb-top2 {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.03));
+  border-color: rgba(192, 192, 192, 0.25);
+}
+.hof-lb-top3 {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.03));
+  border-color: rgba(205, 127, 50, 0.25);
+}
+
+.hof-lb-badge {
+  font-size: 1.5rem;
+  min-width: 40px;
+  text-align: center;
+  font-weight: 700;
+  color: #888;
+}
+.hof-lb-top1 .hof-lb-badge,
+.hof-lb-top2 .hof-lb-badge,
+.hof-lb-top3 .hof-lb-badge {
+  font-size: 1.8rem;
+}
+
+.hof-lb-info {
+  flex: 1;
+  min-width: 0;
+}
+.hof-lb-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #e8e8e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hof-lb-top1 .hof-lb-name { color: #ffd700; }
+.hof-lb-top2 .hof-lb-name { color: #ddd; }
+.hof-lb-top3 .hof-lb-name { color: #cd7f32; }
+
+/* Bar */
+.hof-lb-bar-wrap {
+  flex: 0 0 120px;
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hof-lb-bar {
+  height: 100%;
+  border-radius: 4px;
+  width: 0;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hof-lb-bar-gold {
+  background: linear-gradient(90deg, #d4af37, #f0d060);
+}
+.hof-lb-bar-silver {
+  background: linear-gradient(90deg, #aaa, #ddd);
+}
+.hof-lb-bar-bronze {
+  background: linear-gradient(90deg, #cd7f32, #e8a050);
+}
+.hof-lb-bar-default {
+  background: linear-gradient(90deg, #555, #777);
+}
+
+/* Value */
+.hof-lb-value {
+  min-width: 80px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #d4af37;
+  font-family: 'Orbitron', sans-serif;
+}
+
+@media (max-width: 600px) {
+  .hof-lb-row {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .hof-lb-badge {
+    font-size: 1.2rem;
+    min-width: 32px;
+  }
+  .hof-lb-name { font-size: 0.9rem; }
+  .hof-lb-bar-wrap { flex: 0 0 60px; }
+  .hof-lb-value { min-width: 60px; font-size: 0.85rem; }
+}
