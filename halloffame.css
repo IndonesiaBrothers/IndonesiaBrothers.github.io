@@ -2,469 +2,311 @@
    HALL OF FAME - IDs Indonesian Brothers
    ============================================ */
 
-/* --- Hero Banner --- */
+/* === HERO === */
 .hof-hero {
   position: relative;
-  min-height: 320px;
+  min-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 100px 24px 60px;
   overflow: hidden;
+  padding-top: 80px;
 }
 
 .hof-hero-bg {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse at 50% 0%, rgba(255, 23, 68, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgba(255, 214, 0, 0.08) 0%, transparent 50%),
-    var(--bg-primary);
+    radial-gradient(ellipse at 30% 50%, rgba(255,23,68,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 30%, rgba(255,214,0,0.1) 0%, transparent 60%),
+    linear-gradient(180deg, #050507 0%, #0a0a12 100%);
   z-index: 0;
 }
 
 .hof-hero-content {
   position: relative;
   z-index: 1;
+  text-align: center;
+  padding: 40px 20px;
 }
 
-.hof-hero-icon {
-  font-size: 3.5rem;
+.hof-hero-badge {
+  display: inline-block;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #ffd600;
+  background: rgba(255,214,0,0.1);
+  border: 1px solid rgba(255,214,0,0.3);
+  padding: 8px 20px;
+  border-radius: 4px;
   margin-bottom: 16px;
-  animation: crownFloat 3s ease-in-out infinite;
-}
-
-@keyframes crownFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
 }
 
 .hof-hero-title {
-  font-family: var(--font-accent);
-  font-size: clamp(2rem, 6vw, 3.5rem);
-  font-weight: 900;
-  letter-spacing: 3px;
-  margin-bottom: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 2px;
 }
 
 .hof-hero-subtitle {
-  font-family: var(--font-body);
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  color: #999;
+  margin: 0;
+  letter-spacing: 0.5px;
 }
 
-.hof-week-badge {
-  display: inline-block;
-  font-family: var(--font-accent);
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  padding: 8px 24px;
-  border: 1px solid rgba(255, 214, 0, 0.3);
-  border-radius: 4px;
-  color: var(--gold-primary);
-  background: rgba(255, 214, 0, 0.05);
-}
-
-/* --- Tab Navigation --- */
-.hof-tabs-wrapper {
+/* === TAB NAVIGATION === */
+.hof-tabs-section {
+  background: #0a0a12;
+  padding: 0;
   position: sticky;
-  top: 64px;
-  z-index: 50;
-  background: rgba(5, 5, 7, 0.95);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-color);
-  padding: 12px 0;
+  top: 60px;
+  z-index: 90;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .hof-tabs {
   display: flex;
-  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 0 4px;
+  gap: 0;
 }
 
 .hof-tabs::-webkit-scrollbar { display: none; }
 
 .hof-tab {
-  flex-shrink: 0;
-  font-family: var(--font-heading);
+  flex: 1;
+  min-width: 130px;
+  padding: 16px 20px;
+  font-family: 'Rajdhani', sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 10px 24px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  color: #777;
   background: transparent;
-  color: var(--text-secondary);
+  border: none;
+  border-bottom: 3px solid transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.3s;
   white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.5px;
 }
 
 .hof-tab:hover {
-  color: var(--text-primary);
-  border-color: rgba(255, 23, 68, 0.3);
+  color: #ccc;
+  background: rgba(255,255,255,0.02);
 }
 
 .hof-tab.active {
-  color: #fff;
-  background: rgba(255, 23, 68, 0.15);
-  border-color: var(--red-primary);
-  box-shadow: 0 0 20px var(--red-glow-soft);
+  color: #ffd600;
+  border-bottom-color: #ffd600;
+  background: rgba(255,214,0,0.05);
 }
 
-/* --- Sections --- */
-.hof-section {
+/* === CONTENT PANELS === */
+.hof-content-section {
+  background: #050507;
+  min-height: 60vh;
+  padding: 32px 0 60px;
+}
+
+.hof-panel {
   display: none;
-  padding-top: 40px;
 }
 
-.hof-section.active {
+.hof-panel.active {
   display: block;
-  animation: fadeInUp 0.4s ease;
+  animation: hofFadeIn 0.4s ease;
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+@keyframes hofFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Podium --- */
-.hof-podium {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 12px;
-  margin: 40px auto;
-  max-width: 700px;
-  padding: 0 16px;
+/* === COMING SOON === */
+.hof-coming-soon {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-.podium-card {
-  flex: 1;
-  max-width: 220px;
-  text-align: center;
+.hof-cs-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 20px rgba(255,214,0,0.3));
+  animation: hofFloat 3s ease-in-out infinite;
+}
+
+@keyframes hofFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.hof-cs-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 1px;
+}
+
+.hof-cs-desc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  color: #999;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.hof-cs-badge {
+  display: inline-block;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #ffd600;
+  background: linear-gradient(135deg, rgba(255,214,0,0.12) 0%, rgba(255,23,68,0.08) 100%);
+  border: 2px solid rgba(255,214,0,0.3);
+  padding: 14px 32px;
   border-radius: 8px;
+  margin-bottom: 20px;
+  position: relative;
   overflow: hidden;
-  transition: transform 0.3s ease;
 }
 
-.podium-card:hover {
-  transform: translateY(-5px);
+.hof-cs-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,214,0,0.08) 50%, transparent 70%);
+  animation: hofShimmer 3s ease-in-out infinite;
 }
 
-/* 1st place */
-.podium-card.rank-1 {
-  order: 2;
-  background: linear-gradient(180deg, rgba(255, 214, 0, 0.12) 0%, rgba(255, 214, 0, 0.03) 100%);
-  border: 1px solid rgba(255, 214, 0, 0.3);
+@keyframes hofShimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
 }
 
-.podium-card.rank-1 .podium-pedestal {
-  height: 160px;
-  background: linear-gradient(180deg, rgba(255, 214, 0, 0.08), transparent);
+.hof-cs-hint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  font-style: italic;
 }
 
-.podium-card.rank-1 .podium-medal { font-size: 2.5rem; }
-.podium-card.rank-1 .podium-name { color: var(--gold-primary); }
-
-/* 2nd place */
-.podium-card.rank-2 {
-  order: 1;
-  background: linear-gradient(180deg, rgba(192, 192, 192, 0.1) 0%, rgba(192, 192, 192, 0.02) 100%);
-  border: 1px solid rgba(192, 192, 192, 0.2);
+/* === FOOTER === */
+.hof-footer {
+  background: #050507;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 24px 0;
+  text-align: center;
 }
 
-.podium-card.rank-2 .podium-pedestal {
-  height: 120px;
-  background: linear-gradient(180deg, rgba(192, 192, 192, 0.06), transparent);
+.hof-footer p {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0;
 }
 
-.podium-card.rank-2 .podium-medal { font-size: 2rem; }
-.podium-card.rank-2 .podium-name { color: #c0c0c0; }
-
-/* 3rd place */
-.podium-card.rank-3 {
-  order: 3;
-  background: linear-gradient(180deg, rgba(205, 127, 50, 0.1) 0%, rgba(205, 127, 50, 0.02) 100%);
-  border: 1px solid rgba(205, 127, 50, 0.2);
-}
-
-.podium-card.rank-3 .podium-pedestal {
-  height: 90px;
-  background: linear-gradient(180deg, rgba(205, 127, 50, 0.06), transparent);
-}
-
-.podium-card.rank-3 .podium-medal { font-size: 1.8rem; }
-.podium-card.rank-3 .podium-name { color: #cd7f32; }
-
-.podium-pedestal {
-  display: flex;
+/* === MOBILE NAV (copy from main site for consistency) === */
+.nav-toggle {
+  display: none;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 16px 12px;
-}
-
-.podium-medal {
-  margin-bottom: 8px;
-}
-
-.podium-name {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-  word-break: break-word;
-}
-
-.podium-value {
-  font-family: var(--font-accent);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.podium-percent {
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: #4caf50;
-  font-weight: 600;
-}
-
-.podium-percent.negative {
-  color: #f44336;
-}
-
-.podium-rank-label {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
   padding: 8px;
-  border-top: 1px solid var(--border-color);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  z-index: 1001;
 }
 
-/* --- Rankings Table --- */
-.hof-rankings {
-  max-width: 800px;
-  margin: 0 auto 40px;
+.nav-toggle span {
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  transition: all 0.3s;
+  border-radius: 2px;
 }
 
-.ranking-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-color);
-  transition: background var(--transition-fast);
-}
-
-.ranking-row:hover {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.ranking-pos {
-  font-family: var(--font-accent);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  width: 32px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.ranking-pos.top-3 {
-  color: var(--gold-primary);
-}
-
-.ranking-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ranking-name {
-  font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ranking-detail {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.ranking-values {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.ranking-main-value {
-  font-family: var(--font-accent);
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.ranking-sub-value {
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-top: 2px;
-}
-
-.ranking-sub-value.positive { color: #4caf50; }
-.ranking-sub-value.negative { color: #f44336; }
-.ranking-sub-value.neutral { color: var(--text-muted); }
-
-/* --- Empty State --- */
-.hof-empty {
-  text-align: center;
-  padding: 80px 20px;
-  color: var(--text-muted);
-}
-
-.hof-empty-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.hof-empty-text {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  letter-spacing: 1px;
-}
-
-.hof-empty-sub {
-  font-size: 0.9rem;
-  margin-top: 8px;
-}
-
-/* --- Loading --- */
-.hof-loading {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.hof-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-color);
-  border-top-color: var(--red-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.hof-loading-text {
-  font-family: var(--font-heading);
-  color: var(--text-secondary);
-  letter-spacing: 1px;
-}
-
-/* --- Mobile Nav (copy from main site) --- */
 @media (max-width: 768px) {
-  .hof-hero {
-    min-height: 260px;
-    padding: 90px 16px 40px;
+  .nav-toggle {
+    display: flex;
   }
-
-  .hof-hero-icon { font-size: 2.5rem; }
-
-  .hof-tabs-wrapper {
-    top: 56px;
-    padding: 8px 0;
-  }
-
-  .hof-tab {
-    font-size: 0.8rem;
-    padding: 8px 16px;
-  }
-
-  .hof-podium {
-    gap: 8px;
-    padding: 0 8px;
-    margin: 24px auto;
-  }
-
-  .podium-card.rank-1 .podium-pedestal { height: 130px; }
-  .podium-card.rank-2 .podium-pedestal { height: 100px; }
-  .podium-card.rank-3 .podium-pedestal { height: 75px; }
-
-  .podium-name { font-size: 0.8rem; }
-  .podium-value { font-size: 0.9rem; }
-  .podium-percent { font-size: 0.75rem; }
-  .podium-medal { font-size: 1.5rem !important; }
-  .podium-card.rank-1 .podium-medal { font-size: 2rem !important; }
-
-  .ranking-row {
-    padding: 12px;
-    gap: 8px;
-  }
-
-  .ranking-name { font-size: 0.85rem; }
-  .ranking-main-value { font-size: 0.85rem; }
-
-  /* Mobile nav */
+  
   .nav-links {
     position: fixed;
     top: 0;
     right: -100%;
     width: 280px;
     height: 100vh;
-    background: rgba(10, 10, 18, 0.98);
-    backdrop-filter: blur(24px);
+    background: #0a0a12;
     flex-direction: column;
-    justify-content: center;
-    gap: 0;
-    padding: 80px 32px;
-    transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 100;
+    padding: 80px 30px 30px;
+    transition: right 0.3s ease;
+    z-index: 1000;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    list-style: none;
+    margin: 0;
   }
-
-  .nav-links.active { right: 0; }
-
-  .nav-links li { width: 100%; }
-
-  .nav-link {
-    display: block;
-    padding: 16px 0;
-    font-size: 1.1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+  
+  .nav-links.active {
+    right: 0;
   }
-
-  .nav-toggle { display: flex; }
-
-  .mobile-nav-overlay.active {
-    display: block;
+  
+  .mobile-nav-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 90;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
   }
-}
+  
+  .mobile-nav-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
-@media (max-width: 400px) {
-  .podium-name { font-size: 0.7rem; }
-  .podium-value { font-size: 0.8rem; }
+  .hof-hero {
+    min-height: 220px;
+    padding-top: 70px;
+  }
+
+  .hof-hero-content {
+    padding: 30px 16px;
+  }
+
+  .hof-tab {
+    font-size: 0.82rem;
+    padding: 14px 12px;
+    min-width: 110px;
+  }
+
+  .hof-coming-soon {
+    padding: 40px 16px;
+  }
+
+  .hof-cs-icon {
+    font-size: 3rem;
+  }
+
+  .hof-cs-title {
+    font-size: 1.2rem;
+  }
 }
