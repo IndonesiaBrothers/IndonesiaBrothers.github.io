@@ -3589,3 +3589,283 @@ ul { list-style: none; }
   .hof-cs-icon { font-size: 3rem; }
   .hof-cs-title { font-size: 1.3rem; }
 }
+
+
+/* ============================================
+   HALL OF FAME - TOP IMPROVE LEADERBOARD
+   ============================================ */
+.hof-improve-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hof-improve-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.hof-improve-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  animation: hofFloat 3s ease-in-out infinite;
+}
+
+.hof-improve-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.hof-improve-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.hof-improve-week {
+  display: inline-block;
+  padding: 6px 20px;
+  background: rgba(255,23,68,0.1);
+  border: 1px solid rgba(255,23,68,0.3);
+  border-radius: 50px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--red-primary);
+}
+
+.hof-improve-leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hof-improve-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hof-improve-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,23,68,0.2);
+  border-top-color: var(--red-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.hof-improve-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.hof-improve-row.hof-row-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hof-improve-row:hover {
+  border-color: var(--red-primary);
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 20px rgba(255,23,68,0.1);
+}
+
+.hof-improve-row.hof-rank-1 {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.03));
+  border-color: rgba(255,215,0,0.4);
+}
+
+.hof-improve-row.hof-rank-2 {
+  background: linear-gradient(135deg, rgba(192,192,192,0.1), rgba(192,192,192,0.03));
+  border-color: rgba(192,192,192,0.3);
+}
+
+.hof-improve-row.hof-rank-3 {
+  background: linear-gradient(135deg, rgba(205,127,50,0.1), rgba(205,127,50,0.03));
+  border-color: rgba(205,127,50,0.3);
+}
+
+.hof-improve-badge {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.hof-rank-1 .hof-improve-badge {
+  background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1));
+  border-color: rgba(255,215,0,0.5);
+  color: #ffd700;
+  font-size: 1.2rem;
+}
+
+.hof-rank-2 .hof-improve-badge {
+  background: linear-gradient(135deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05));
+  border-color: rgba(192,192,192,0.4);
+  color: #c0c0c0;
+  font-size: 1.1rem;
+}
+
+.hof-rank-3 .hof-improve-badge {
+  background: linear-gradient(135deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05));
+  border-color: rgba(205,127,50,0.4);
+  color: #cd7f32;
+  font-size: 1.1rem;
+}
+
+.hof-improve-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hof-improve-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hof-improve-power-detail {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.hof-improve-power-detail span {
+  color: var(--text-secondary);
+}
+
+.hof-improve-bar-wrap {
+  flex: 1;
+  min-width: 80px;
+  max-width: 200px;
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hof-improve-bar {
+  height: 100%;
+  border-radius: 4px;
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hof-rank-1 .hof-improve-bar {
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  box-shadow: 0 0 8px rgba(255,215,0,0.4);
+}
+
+.hof-rank-2 .hof-improve-bar {
+  background: linear-gradient(90deg, #c0c0c0, #a0a0a0);
+  box-shadow: 0 0 6px rgba(192,192,192,0.3);
+}
+
+.hof-rank-3 .hof-improve-bar {
+  background: linear-gradient(90deg, #cd7f32, #b06020);
+  box-shadow: 0 0 6px rgba(205,127,50,0.3);
+}
+
+.hof-improve-bar-default {
+  background: linear-gradient(90deg, var(--red-primary), #ff6b6b);
+  box-shadow: 0 0 4px rgba(255,23,68,0.2);
+}
+
+.hof-improve-percent {
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: right;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.hof-improve-percent.hof-pct-up {
+  color: #22c55e;
+}
+
+.hof-improve-percent.hof-pct-down {
+  color: #ef4444;
+}
+
+.hof-improve-percent.hof-pct-same {
+  color: var(--text-muted);
+}
+
+.hof-improve-arrow {
+  font-size: 0.85rem;
+  margin-right: 2px;
+}
+
+.hof-improve-no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .hof-improve-row {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .hof-improve-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  .hof-rank-1 .hof-improve-badge,
+  .hof-rank-2 .hof-improve-badge,
+  .hof-rank-3 .hof-improve-badge {
+    font-size: 1rem;
+  }
+  .hof-improve-name {
+    font-size: 0.9rem;
+  }
+  .hof-improve-bar-wrap {
+    display: none;
+  }
+  .hof-improve-percent {
+    font-size: 0.85rem;
+    min-width: 60px;
+  }
+  .hof-improve-title {
+    font-size: 1.4rem;
+  }
+}
