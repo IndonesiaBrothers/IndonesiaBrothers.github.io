@@ -2,109 +2,8 @@
 // IDs - Indonesian Brothers | ESPORTS WEBSITE
 // ============================================
 
-// --- Member Data (All 100 Members) ---
-const members = [
-  { name: "Scythe7FN", power: "N/A", level: 30, rank: "R5", role: "Leader" },
-  { name: "JubekBoy", power: "42.7M", level: 27, rank: "R4", role: "Warlord" },
-  { name: "La Fayette", power: "90.8M", level: 30, rank: "R4", role: "Muse" },
-  { name: "NOX RAVEN", power: "70.0M", level: 28, rank: "R4", role: "" },
-  { name: "Papasangar", power: "64.9M", level: 28, rank: "R4", role: "Butler" },
-  { name: "JuAnCuk Boy", power: "52.2M", level: 29, rank: "R4", role: "Recruiter" },
-  { name: "SHADOW EMPEROR", power: "54.7M", level: 28, rank: "R4", role: "" },
-  { name: "BEKZ BOY", power: "49.5M", level: 27, rank: "R4", role: "" },
-  { name: "Leilzx", power: "49.8M", level: 26, rank: "R4", role: "" },
-  { name: "COMAND JOE", power: "46.2M", level: 27, rank: "R4", role: "" },
-  { name: "vian", power: "41.4M", level: 28, rank: "R4", role: "" },
-  { name: "SpiritBoy", power: "104.2M", level: 30, rank: "R3", role: "" },
-  { name: "CourageBoy", power: "82.8M", level: 29, rank: "R3", role: "" },
-  { name: "Conquérors", power: "78.6M", level: 29, rank: "R3", role: "" },
-  { name: "ConsDeLeoN", power: "70.4M", level: 28, rank: "R3", role: "" },
-  { name: "Pasopeso", power: "67.0M", level: 29, rank: "R3", role: "" },
-  { name: "ibolam", power: "65.1M", level: 28, rank: "R3", role: "" },
-  { name: "civil engineer city", power: "63.6M", level: 28, rank: "R3", role: "" },
-  { name: "ExpertMurderer", power: "64.5M", level: 28, rank: "R3", role: "" },
-  { name: "Komanboy", power: "58.2M", level: 28, rank: "R3", role: "" },
-  { name: "tamLinDa", power: "63.4M", level: 29, rank: "R3", role: "" },
-  { name: "dev28", power: "66.0M", level: 28, rank: "R3", role: "" },
-  { name: "Kingtasboy", power: "73.8M", level: 29, rank: "R3", role: "" },
-  { name: "Mustafa 1734", power: "60.3M", level: 28, rank: "R3", role: "" },
-  { name: "NARAPIDA", power: "65.0M", level: 28, rank: "R3", role: "" },
-  { name: "tamNAYLA", power: "59.6M", level: 27, rank: "R3", role: "" },
-  { name: "Tolga 1907", power: "59.6M", level: 29, rank: "R3", role: "" },
-  { name: "rFz", power: "60.5M", level: 28, rank: "R3", role: "" },
-  { name: "Mammon17", power: "56.1M", level: 26, rank: "R3", role: "" },
-  { name: "Dedo31", power: "56.5M", level: 28, rank: "R3", role: "" },
-  { name: "Mustafa121111", power: "66.7M", level: 28, rank: "R3", role: "" },
-  { name: "Rubylopp", power: "58.4M", level: 28, rank: "R3", role: "" },
-  { name: "SilwirBoy", power: "59.6M", level: 29, rank: "R3", role: "" },
-  { name: "boboiBoy", power: "54.1M", level: 28, rank: "R3", role: "" },
-  { name: "RAFFA AP", power: "51.7M", level: 26, rank: "R3", role: "" },
-  { name: "BABY MONSTER", power: "56.3M", level: 28, rank: "R3", role: "" },
-  { name: "MTMBoy", power: "57.5M", level: 27, rank: "R3", role: "" },
-  { name: "AsPeNdOS", power: "53.0M", level: 27, rank: "R3", role: "" },
-  { name: "ThorBoy", power: "47.6M", level: 27, rank: "R3", role: "" },
-  { name: "Rembol03", power: "50.3M", level: 26, rank: "R3", role: "" },
-  { name: "BANSHEE", power: "72.5M", level: 28, rank: "R3", role: "" },
-  { name: "Kolesom", power: "46.1M", level: 28, rank: "R3", role: "" },
-  { name: "BLi", power: "50.1M", level: 27, rank: "R3", role: "" },
-  { name: "riyanris", power: "53.6M", level: 27, rank: "R3", role: "" },
-  { name: "Andre Qbz", power: "54.6M", level: 27, rank: "R3", role: "" },
-  { name: "DiablossBoyy", power: "50.7M", level: 27, rank: "R3", role: "" },
-  { name: "BAGUS CITY", power: "52.4M", level: 27, rank: "R3", role: "" },
-  { name: "Lexxxi", power: "44.7M", level: 26, rank: "R3", role: "" },
-  { name: "ITS ME MAMUN", power: "37.8M", level: 27, rank: "R3", role: "" },
-  { name: "monitor chief", power: "42.7M", level: 27, rank: "R3", role: "" },
-  { name: "MR MASHLE", power: "45.5M", level: 27, rank: "R3", role: "" },
-  { name: "SeHaB", power: "47.0M", level: 28, rank: "R3", role: "" },
-  { name: "Huxnana", power: "47.8M", level: 28, rank: "R3", role: "" },
-  { name: "kapralBoy", power: "36.3M", level: 26, rank: "R3", role: "" },
-  { name: "Pikachuu16", power: "36.5M", level: 27, rank: "R3", role: "" },
-  { name: "FLORIN", power: "63.2M", level: 27, rank: "R2", role: "" },
-  { name: "Strawberrybbyy", power: "57.2M", level: 28, rank: "R2", role: "" },
-  { name: "Turkish Boy", power: "57.7M", level: 28, rank: "R2", role: "" },
-  { name: "Elziowww", power: "55.8M", level: 28, rank: "R2", role: "" },
-  { name: "Saint Heavenn", power: "50.9M", level: 27, rank: "R2", role: "" },
-  { name: "Sayap kiri", power: "51.5M", level: 29, rank: "R2", role: "" },
-  { name: "My BOY", power: "60.8M", level: 28, rank: "R2", role: "" },
-  { name: "BY EMRE", power: "50.4M", level: 28, rank: "R2", role: "" },
-  { name: "Horasboy", power: "50.4M", level: 25, rank: "R2", role: "" },
-  { name: "KingGinz", power: "50.3M", level: 27, rank: "R2", role: "" },
-  { name: "J4xzzBoy", power: "49.8M", level: 26, rank: "R2", role: "" },
-  { name: "BaDBoy1234", power: "48.9M", level: 27, rank: "R2", role: "" },
-  { name: "Jiang Yun", power: "48.7M", level: 27, rank: "R2", role: "" },
-  { name: "Ucilboy", power: "48.7M", level: 27, rank: "R2", role: "" },
-  { name: "cloudies", power: "48.6M", level: 28, rank: "R2", role: "" },
-  { name: "bonk1", power: "48.2M", level: 27, rank: "R2", role: "" },
-  { name: "KhunHorvejkul", power: "48.2M", level: 26, rank: "R2", role: "" },
-  { name: "JonleBOY", power: "47.9M", level: 26, rank: "R2", role: "" },
-  { name: "sukim59", power: "47.6M", level: 27, rank: "R2", role: "" },
-  { name: "BRAYEN", power: "46.5M", level: 26, rank: "R2", role: "" },
-  { name: "Gobel Pahlepi", power: "45.9M", level: 27, rank: "R2", role: "" },
-  { name: "ARZA BOY", power: "40.6M", level: 28, rank: "R2", role: "" },
-  { name: "BALLEX", power: "46.1M", level: 28, rank: "R2", role: "" },
-  { name: "Ropikkoh", power: "44.4M", level: 26, rank: "R2", role: "" },
-  { name: "Fitta Karamoyy", power: "44.2M", level: 27, rank: "R2", role: "" },
-  { name: "TH3F00L", power: "44.1M", level: 28, rank: "R2", role: "" },
-  { name: "kamg jago", power: "43.5M", level: 27, rank: "R2", role: "" },
-  { name: "My Jang Wonyoung", power: "42.8M", level: 28, rank: "R2", role: "" },
-  { name: "black sailes", power: "42.8M", level: 27, rank: "R2", role: "" },
-  { name: "ZENconiee", power: "42.7M", level: 27, rank: "R2", role: "" },
-  { name: "Lonelyboy", power: "42.0M", level: 27, rank: "R2", role: "" },
-  { name: "RjBoy", power: "43.9M", level: 27, rank: "R2", role: "" },
-  { name: "IkitClaw33", power: "39.8M", level: 26, rank: "R2", role: "" },
-  { name: "bhoenster", power: "38.8M", level: 27, rank: "R2", role: "" },
-  { name: "pikasz", power: "38.4M", level: 27, rank: "R2", role: "" },
-  { name: "MASS BOY", power: "41.6M", level: 26, rank: "R2", role: "" },
-  { name: "FATIH", power: "37.1M", level: 28, rank: "R2", role: "" },
-  { name: "L Ziya 7", power: "29.6M", level: 25, rank: "R2", role: "" },
-  { name: "B L U E shark", power: "57.6M", level: 26, rank: "R1", role: "" },
-  { name: "aarestu", power: "53.9M", level: 26, rank: "R1", role: "" },
-  { name: "SEVEEN", power: "53.5M", level: 28, rank: "R1", role: "" },
-  { name: "DavinaAngraeni", power: "42.6M", level: 26, rank: "R1", role: "" },
-  { name: "Dearmeow", power: "37.3M", level: 26, rank: "R1", role: "" },
-  { name: "supersupi", power: "34.4M", level: 26, rank: "R1", role: "" },
-  { name: "MonstersBoy", power: "34.0M", level: 26, rank: "R1", role: "" }
-];
+// --- Member Data loaded from members.json ---
+let members = [];
 
 // --- Utility: Parse power string to number for sorting ---
 function parsePower(powerStr) {
@@ -136,7 +35,15 @@ members.sort((a, b) => {
 // ============================================
 // DOM READY
 // ============================================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Load member data from separate JSON file
+  try {
+    const res = await fetch('members.json?v=' + Date.now());
+    members = await res.json();
+    console.log("✅ Loaded " + members.length + " members from members.json");
+  } catch(e) {
+    console.error("❌ Failed to load members.json:", e);
+  }
   initParticleCanvas();
   initNavbar();
   initMobileNav();
