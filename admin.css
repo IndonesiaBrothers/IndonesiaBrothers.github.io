@@ -155,7 +155,7 @@ body {
 }
 
 .admin-header {
-  background: rgba(5,5,7,0.95);
+  background: rgba(5,5,7,0.97);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-glow);
   padding: 16px 32px;
@@ -217,9 +217,13 @@ body {
 .tab-bar {
   display: flex;
   gap: 0;
-  background: var(--bg-secondary);
+  background: rgba(10,10,18,0.97);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
   padding: 0 32px;
+  position: sticky;
+  top: 57px;
+  z-index: 90;
 }
 
 .tab-btn {
@@ -466,8 +470,12 @@ body {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  background: var(--bg-secondary);
+  background: rgba(10,10,18,0.97);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 108px;
+  z-index: 80;
 }
 
 .search-box {
@@ -636,7 +644,7 @@ thead th {
   color: var(--text-secondary);
   border-bottom: 2px solid var(--border-glow);
   position: sticky;
-  top: 60px;
+  top: 170px;
   z-index: 10;
   cursor: pointer;
   user-select: none;
@@ -917,7 +925,9 @@ tbody td select {
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
   .admin-header { padding: 12px 16px; }
-  .toolbar { padding: 12px 16px; }
+  .tab-bar { top: 49px; padding: 0 16px; }
+  .toolbar { padding: 12px 16px; top: 96px; }
+  thead th { top: 152px; }
   .stats-bar { padding: 12px 16px; }
   .table-container { padding: 0 16px 80px; }
   .add-player-section { padding: 0 16px 16px; }
