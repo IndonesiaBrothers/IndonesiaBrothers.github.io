@@ -761,3 +761,239 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* === HALL OF FAME TAB === */
+.hof-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.hof-week-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hof-week-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffd600;
+}
+
+.hof-updated {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.hof-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a2e;
+  color: #eee;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-sm:hover { background: #252542; border-color: #555; }
+.btn-sm.btn-gold { background: rgba(255, 214, 0, 0.15); border-color: rgba(255, 214, 0, 0.4); color: #ffd600; }
+.btn-sm.btn-gold:hover { background: rgba(255, 214, 0, 0.25); }
+
+.hof-dirty-notice {
+  background: rgba(255, 150, 0, 0.12);
+  border: 1px solid rgba(255, 150, 0, 0.3);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: #ffb300;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.hof-search-bar {
+  margin-bottom: 12px;
+}
+
+.hof-search-bar input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #111;
+  color: #eee;
+  font-size: 0.9rem;
+}
+
+.hof-search-bar input:focus {
+  outline: none;
+  border-color: #ff1744;
+  box-shadow: 0 0 8px rgba(255, 23, 68, 0.2);
+}
+
+.hof-table-header {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #0e0e1a;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #333;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hof-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.hof-row:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.hof-col-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hof-player-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hof-player-meta {
+  font-size: 0.7rem;
+  color: #777;
+}
+
+.hof-col-power {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hof-power-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hof-power-diff {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.hof-power-diff.positive { color: #4caf50; }
+.hof-power-diff.negative { color: #f44336; }
+.hof-power-diff.neutral { color: #666; }
+
+.hof-col-input {
+  min-width: 0;
+}
+
+.hof-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #0a0a15;
+  color: #eee;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.hof-input:focus {
+  outline: none;
+  border-color: #ffd600;
+  box-shadow: 0 0 6px rgba(255, 214, 0, 0.15);
+}
+
+/* Mobile HoF */
+@media (max-width: 768px) {
+  .hof-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .hof-actions {
+    justify-content: center;
+  }
+
+  .hof-table-header {
+    display: none;
+  }
+
+  .hof-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 6px 12px;
+    padding: 12px;
+    border: 1px solid #222;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #0e0e1a;
+  }
+
+  .hof-col-name {
+    grid-column: 1 / -1;
+  }
+
+  .hof-player-name {
+    font-size: 0.95rem;
+  }
+
+  .hof-col-power {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .hof-col-input {
+    position: relative;
+  }
+
+  .hof-col-input::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.65rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+
+  .hof-col-input:nth-child(3)::before { content: "💰 Donation"; }
+  .hof-col-input:nth-child(4)::before { content: "🐉 DA Point"; }
+
+  .hof-input {
+    padding: 10px 8px;
+    font-size: 1rem;
+  }
+}
