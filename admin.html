@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDs Brotherhood - Admin Panel</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <div class="logo">IDs</div>
+      <div class="subtitle">Admin Panel</div>
+      <input type="password" id="passwordInput" placeholder="Enter Password" autocomplete="off">
+      <button class="login-btn" id="loginBtn" onclick="attemptLogin()">Access</button>
+      <div class="login-error" id="loginError">Wrong password. Try again.</div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="admin-container" id="adminContainer">
+
+    <!-- HEADER -->
+    <div class="admin-header">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="brand">IDs ADMIN</div>
+        <div class="badge">🔒 SECURED</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm" onclick="openConfig()">⚙️ Config</button>
+        <a href="index.html" class="back-btn">← Back to Site</a>
+      </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search player name...">
+      <select class="filter-select" id="rankFilter">
+        <option value="">All Ranks</option>
+        <option value="R5">R5 - Leader</option>
+        <option value="R4">R4 - Officers</option>
+        <option value="R3">R3 - Elite</option>
+        <option value="R2">R2 - Members</option>
+        <option value="R1">R1 - Inactive</option>
+      </select>
+      <button class="btn btn-primary" onclick="toggleAddPlayer()">+ Add Player</button>
+      <button class="btn btn-gold" onclick="pushToGitHub()">🚀 Push Update</button>
+    </div>
+
+    <!-- ADD PLAYER -->
+    <div class="add-player-section" id="addSection" style="display:none;">
+      <div class="add-row">
+        <input type="text" name="name" id="addName" placeholder="Player Name">
+        <input type="text" name="power" id="addPower" placeholder="Power (e.g. 50.0M)">
+        <input type="number" name="level" id="addLevel" placeholder="Lvl" min="1" max="30">
+        <select name="rank" id="addRank">
+          <option value="R1">R1</option>
+          <option value="R2" selected>R2</option>
+          <option value="R3">R3</option>
+          <option value="R4">R4</option>
+          <option value="R5">R5</option>
+        </select>
+        <input type="text" name="role" id="addRole" placeholder="Role (optional)">
+        <button class="btn btn-success btn-sm" onclick="addPlayer()">✓ Add</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleAddPlayer()">✕ Cancel</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th width="50">#</th>
+            <th onclick="sortBy('name')">Name <span class="sort-arrow" id="sort-name">▲</span></th>
+            <th onclick="sortBy('power')" width="140">Power <span class="sort-arrow" id="sort-power">▲</span></th>
+            <th onclick="sortBy('level')" width="80">Level <span class="sort-arrow" id="sort-level">▲</span></th>
+            <th onclick="sortBy('rank')" width="100">Rank <span class="sort-arrow" id="sort-rank">▲</span></th>
+            <th width="140">Role</th>
+            <th width="80">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="playerTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- CONFIG MODAL -->
+    <div class="config-section" id="configSection" style="display:none;">
+      <div class="config-box">
+        <label>Webhook URL (from Tasklet)</label>
+        <input type="text" id="webhookUrl" placeholder="https://webhooks.tasklet.ai/v1/public/webhook?token=..." oninput="saveConfig()">
+        <div class="hint">Copy the webhook URL from your Tasklet trigger settings and paste it here. This is required to push updates.</div>
+        <br>
+        <label>Admin Password</label>
+        <input type="password" id="configPassword" placeholder="Set new password..." oninput="saveConfig()">
+        <div class="hint">Change the admin panel password. Default: ids2026</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SAVE BAR -->
+  <div class="save-bar" id="saveBar">
+    <div class="changes-info" id="changesInfo">0 changes pending</div>
+    <div class="save-actions">
+      <button class="btn btn-outline btn-sm" onclick="discardChanges()">Discard</button>
+      <button class="btn btn-gold btn-sm" onclick="pushToGitHub()">🚀 Push Update to GitHub</button>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Pushing to GitHub...</div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
