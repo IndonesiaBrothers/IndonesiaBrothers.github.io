@@ -1301,6 +1301,120 @@ document.addEventListener("DOMContentLoaded", initTrainLottery);
 
 
 // ============================================
+
+// ============================================
+// HALL OF FAME - TOP IMPROVE
+// ============================================
+async function initHofImprove() {
+  const container = document.getElementById('hof-improve-leaderboard');
+  const weekLabel = document.getElementById('hof-improve-week');
+  if (!container) return;
+
+  try {
+    // Fetch weekly data
+    const res = await fetch('weeklydata.json?' + Date.now());
+    if (!res.ok) throw new Error('Failed to load weekly data');
+    const weekly = await res.json();
+
+    // Show week label
+    if (weekLabel && weekly.weekLabel) {
+      weekLabel.textContent = weekly.weekLabel;
+    }
+
+    const prevPower = weekly.previousPower || {};
+
+    // Calculate improvements
+    const improvements = [];
+    members.forEach(m => {
+      if (!m.power || m.power === 'N/A') return;
+      const currentPow = parsePower(m.power); // Returns in millions
+      const prevPow = (prevPower[m.name] || 0) / 1000000; // Convert from raw to millions
+
+      if (prevPow <= 0) return; // Skip if no previous data
+
+      const diff = currentPow - prevPow;
+      const pct = ((diff) / prevPow) * 100;
+
+      improvements.push({
+        name: m.name,
+        rank: m.rank,
+        currentPower: m.power,
+        prevPower: prevPow,
+        diff: diff,
+        pct: pct
+      });
+    });
+
+    // Sort by percentage descending
+    improvements.sort((a, b) => b.pct - a.pct);
+
+    // Take top 10
+    const top10 = improvements.slice(0, 10);
+
+    if (top10.length === 0) {
+      container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement minggu ini.</div>';
+      return;
+    }
+
+    const maxPct = Math.max(...top10.map(p => Math.abs(p.pct)));
+
+    container.innerHTML = '';
+    top10.forEach((player, i) => {
+      const pos = i + 1;
+      const rankClass = pos <= 3 ? ' hof-rank-' + pos : '';
+      const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '#' + pos;
+      const barWidth = maxPct > 0 ? (Math.abs(player.pct) / maxPct) * 100 : 0;
+      const barClass = pos > 3 ? ' hof-improve-bar-default' : '';
+      const arrow = player.pct > 0 ? '▲' : player.pct < 0 ? '▼' : '—';
+      const pctClass = player.pct > 0 ? 'hof-pct-up' : player.pct < 0 ? 'hof-pct-down' : 'hof-pct-same';
+
+      // Format previous power for display
+      const prevDisplay = player.prevPower >= 1000 ? (player.prevPower / 1000).toFixed(1) + 'B' : player.prevPower.toFixed(1) + 'M';
+
+      const row = document.createElement('div');
+      row.className = 'hof-improve-row' + rankClass;
+      row.style.transitionDelay = (i * 0.08) + 's';
+
+      row.innerHTML =
+        '<div class="hof-improve-badge">' + medal + '</div>' +
+        '<div class="hof-improve-info">' +
+          '<div class="hof-improve-name">' + player.name + '</div>' +
+          '<div class="hof-improve-power-detail"><span>' + prevDisplay + '</span> → <span>' + player.currentPower + '</span></div>' +
+        '</div>' +
+        '<div class="hof-improve-bar-wrap">' +
+          '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
+        '</div>' +
+        '<div class="hof-improve-percent ' + pctClass + '">' +
+          '<span class="hof-improve-arrow">' + arrow + '</span>' + Math.abs(player.pct).toFixed(1) + '%' +
+        '</div>';
+
+      container.appendChild(row);
+    });
+
+    // Animate on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const rows = container.querySelectorAll('.hof-improve-row');
+          rows.forEach((row, i) => {
+            setTimeout(() => {
+              row.classList.add('hof-row-visible');
+              const bar = row.querySelector('.hof-improve-bar');
+              if (bar) bar.style.width = bar.dataset.width + '%';
+            }, i * 100);
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    observer.observe(container);
+
+  } catch (err) {
+    console.error('HoF Improve error:', err);
+    container.innerHTML = '<div class="hof-improve-no-data">Data belum tersedia. Admin perlu upload power mingguan.</div>';
+  }
+}
+
 // HALL OF FAME TABS
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1318,4 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('hof-' + target).classList.add('active');
     });
   });
+
+  // Initialize Hall of Fame - Top Improve
+  initHofImprove();
 });
