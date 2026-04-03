@@ -893,24 +893,54 @@
     if (ao) ao.onclick = function() {
       var updated = 0;
       if (state.scanCategory === "power") {
+        var added = 0;
         state.ocrResults.forEach(function(r) {
           if (r.matched) {
             var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
             if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
+          } else {
+            // NEW MEMBER - add to roster
+            state.players.push({
+              name: r.name,
+              power: r.power || "N/A",
+              level: r.level ? String(r.level) : "1",
+              rank: "R1",
+              role: "Member"
+            });
+            updated++;
+            added++;
           }
         });
+        if (added > 0) {
+          state.msg = updated + " data updated! (" + added + " new member added)";
+          showToast("🆕 " + added + " new member ditambahkan ke roster!");
+        }
         state.dirty = true;
         state.tab = "roster";
       } else {
         // Donation or Duel - update weeklydata
         var dataField = state.scanCategory === "donation" ? "donations" : "daPoints";
         state.ocrResults.forEach(function(r) {
-          if (r.matched && r.value !== undefined) {
+          if (r.value !== undefined) {
             var pName = r.name;
             if (!state.weeklyData) state.weeklyData = {};
             if (!state.weeklyData[dataField]) state.weeklyData[dataField] = {};
             state.weeklyData[dataField][pName] = Number(r.value);
             updated++;
+            // If new member, also add to roster
+            if (!r.matched) {
+              var exists = state.players.find(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
+              if (!exists) {
+                state.players.push({
+                  name: r.name,
+                  power: "N/A",
+                  level: "1",
+                  rank: "R1",
+                  role: "Member"
+                });
+                state.dirty = true;
+              }
+            }
           }
         });
         state.weeklyDirty = true;
