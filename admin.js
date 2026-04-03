@@ -5,6 +5,7 @@
   var REPO_NAME = "IndonesiaBrothers.github.io";
   var CONFIG_PATH = "admin-config.json";
   var SCRIPT_PATH = "script.js";
+  var WEEKLY_PATH = "weeklydata.json";
   var GH_API = "https://api.github.com";
 
   var state = {
@@ -29,7 +30,11 @@
     ocrProgress: 0,
     ocrResults: [],
     ocrRawText: "",
-    dirty: false
+    dirty: false,
+    weeklyData: null,
+    weeklySHA: null,
+    hofSearch: "",
+    hofDirty: false
   };
 
   var app = document.getElementById("app");
@@ -267,6 +272,134 @@
     setTimeout(function() { t.remove(); }, 2500);
   }
 
+
+  // === WEEKLY DATA (HALL OF FAME) ===
+  async function loadWeeklyData() {
+    try {
+      var resp = await ghGet("contents/" + WEEKLY_PATH);
+      state.weeklySHA = resp.sha;
+      var text = atob(resp.content.replace(/\n/g, ""));
+      state.weeklyData = JSON.parse(text);
+    } catch(e) {
+      // File doesn't exist yet, create default
+      state.weeklyData = {
+        weekLabel: getWeekLabel(),
+        lastUpdated: new Date().toISOString().split("T")[0],
+        previousPower: {},
+        donations: {},
+        daPoints: {}
+      };
+      state.weeklySHA = null;
+    }
+    // Ensure all players exist in weekly data
+    state.players.forEach(function(p) {
+      if (state.weeklyData.donations[p.name] === undefined) state.weeklyData.donations[p.name] = 0;
+      if (state.weeklyData.daPoints[p.name] === undefined) state.weeklyData.daPoints[p.name] = 0;
+      if (state.weeklyData.previousPower[p.name] === undefined) state.weeklyData.previousPower[p.name] = parsePowerNum(p.power);
+    });
+  }
+
+  function getWeekLabel() {
+    var now = new Date();
+    var start = new Date(now.getFullYear(), 0, 1);
+    var week = Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return "Week " + week + ", " + months[now.getMonth()] + " " + now.getFullYear();
+  }
+
+  async function pushWeeklyData() {
+    if (!state.weeklyData) return;
+    state.weeklyData.weekLabel = getWeekLabel();
+    state.weeklyData.lastUpdated = new Date().toISOString().split("T")[0];
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(state.weeklyData, null, 2))));
+    var payload = { message: "Update weekly data - " + state.weeklyData.weekLabel, content: content };
+    if (state.weeklySHA) payload.sha = state.weeklySHA;
+    var resp = await ghPut("contents/" + WEEKLY_PATH, content, state.weeklySHA, "Update weekly data - " + state.weeklyData.weekLabel);
+    state.weeklySHA = resp.content.sha;
+    state.hofDirty = false;
+  }
+
+  function snapshotCurrentPower() {
+    if (!state.weeklyData) return;
+    state.weeklyData.previousPower = {};
+    state.players.forEach(function(p) {
+      state.weeklyData.previousPower[p.name] = parsePowerNum(p.power);
+    });
+    state.hofDirty = true;
+    showToast("Power snapshot saved! \ud83d\udcf8");
+  }
+
+  function renderHofTab() {
+    var html = '<div class="content">';
+
+    // Week info & snapshot button
+    html += '<div class="hof-header">';
+    html += '<div class="hof-week-info">';
+    html += '<span class="hof-week-label">\ud83d\udcc5 ' + esc(state.weeklyData ? state.weeklyData.weekLabel : "Loading...") + '</span>';
+    html += '<span class="hof-updated">Last: ' + esc(state.weeklyData ? state.weeklyData.lastUpdated : "-") + '</span>';
+    html += '</div>';
+    html += '<div class="hof-actions">';
+    html += '<button class="btn-sm" id="snapshot-btn" title="Save current power as baseline for next week">\ud83d\udcf8 Snapshot Power</button>';
+    html += '<button class="btn-sm btn-gold" id="push-hof-btn"' + (state.loading ? ' disabled' : '') + '>\ud83d\ude80 Push HoF Data</button>';
+    html += '</div>';
+    html += '</div>';
+
+    if (state.hofDirty) {
+      html += '<div class="hof-dirty-notice">\u26a0\ufe0f Unsaved changes — click Push HoF Data to save</div>';
+    }
+
+    // Search
+    html += '<div class="hof-search-bar">';
+    html += '<input type="text" id="hof-search" placeholder="Search player..." value="' + esc(state.hofSearch) + '">';
+    html += '</div>';
+
+    // Player list with donation & DA inputs
+    html += '<div class="hof-player-list">';
+
+    var filtered = (state.players || []).filter(function(p) {
+      if (state.hofSearch && p.name.toLowerCase().indexOf(state.hofSearch.toLowerCase()) === -1) return false;
+      return true;
+    });
+
+    // Sort by power desc
+    filtered.sort(function(a, b) { return parsePowerNum(b.power) - parsePowerNum(a.power); });
+
+    // Table header
+    html += '<div class="hof-table-header">';
+    html += '<span class="hof-col-name">Player</span>';
+    html += '<span class="hof-col-power">Power</span>';
+    html += '<span class="hof-col-input">\ud83d\udcb0 Donation</span>';
+    html += '<span class="hof-col-input">\ud83d\udc09 DA Point</span>';
+    html += '</div>';
+
+    filtered.forEach(function(p) {
+      var don = state.weeklyData ? (state.weeklyData.donations[p.name] || 0) : 0;
+      var da = state.weeklyData ? (state.weeklyData.daPoints[p.name] || 0) : 0;
+      var prevPow = state.weeklyData ? (state.weeklyData.previousPower[p.name] || 0) : 0;
+      var curPow = parsePowerNum(p.power);
+      var diff = prevPow > 0 ? curPow - prevPow : 0;
+      var pct = prevPow > 0 ? ((diff / prevPow) * 100).toFixed(1) : "0.0";
+      var diffClass = diff > 0 ? "positive" : diff < 0 ? "negative" : "neutral";
+      var diffSign = diff > 0 ? "+" : "";
+
+      html += '<div class="hof-row">';
+      html += '<div class="hof-col-name">';
+      html += '<span class="hof-player-name">' + esc(p.name) + '</span>';
+      html += '<span class="hof-player-meta">' + p.rank + ' · Lv.' + p.level + '</span>';
+      html += '</div>';
+      html += '<div class="hof-col-power">';
+      html += '<span class="hof-power-val">' + esc(p.power) + '</span>';
+      html += '<span class="hof-power-diff ' + diffClass + '">' + diffSign + formatPower(Math.abs(diff)) + ' (' + diffSign + pct + '%)</span>';
+      html += '</div>';
+      html += '<div class="hof-col-input"><input type="number" class="hof-input" data-player="' + esc(p.name) + '" data-field="donation" value="' + don + '" min="0"></div>';
+      html += '<div class="hof-col-input"><input type="number" class="hof-input" data-player="' + esc(p.name) + '" data-field="da" value="' + da + '" min="0"></div>';
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+    return html;
+  }
+
   // === RENDER ===
   function render() {
     switch(state.view) {
@@ -379,12 +512,15 @@
     html += '<div class="tab-bar">';
     html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">📋 Roster</button>';
     html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">📸 Update</button>';
+    html += '<button class="tab-btn' + (state.tab === "halloffame" ? " active" : "") + '" data-tab="halloffame">🏆 Hall of Fame</button>';
     html += '</div>';
 
     if (state.tab === "roster") {
       html += renderRosterTab(filtered, counts);
-    } else {
+    } else if (state.tab === "screenshot") {
       html += renderScreenshotTab();
+    } else if (state.tab === "halloffame") {
+      html += renderHofTab();
     }
 
     // Push bar
@@ -643,6 +779,53 @@
     // Push
     var pb = document.getElementById("push-btn");
     if (pb) pb.onclick = pushToGitHub;
+
+    // Hall of Fame bindings
+    var snBtn = document.getElementById("snapshot-btn");
+    if (snBtn) snBtn.onclick = function() {
+      if (confirm("Save current power values as the baseline for next week comparison?")) {
+        snapshotCurrentPower();
+        render();
+      }
+    };
+
+    var phBtn = document.getElementById("push-hof-btn");
+    if (phBtn) phBtn.onclick = async function() {
+      try {
+        state.loading = true; render();
+        await pushWeeklyData();
+        state.loading = false;
+        showToast("Hall of Fame data pushed! \ud83c\udfc6");
+        render();
+      } catch(e) {
+        state.loading = false;
+        showToast("Error: " + e.message);
+        render();
+      }
+    };
+
+    var hofSearch = document.getElementById("hof-search");
+    if (hofSearch) {
+      hofSearch.oninput = function() {
+        state.hofSearch = hofSearch.value;
+        render();
+        var el = document.getElementById("hof-search");
+        if (el) { el.focus(); el.selectionStart = el.selectionEnd = hofSearch.value.length; }
+      };
+    }
+
+    document.querySelectorAll(".hof-input").forEach(function(inp) {
+      inp.onchange = function() {
+        var name = inp.dataset.player;
+        var field = inp.dataset.field;
+        var val = parseInt(inp.value) || 0;
+        if (state.weeklyData) {
+          if (field === "donation") state.weeklyData.donations[name] = val;
+          else if (field === "da") state.weeklyData.daPoints[name] = val;
+          state.hofDirty = true;
+        }
+      };
+    });
 
     // Modal
     var ef = document.getElementById("edit-form");
