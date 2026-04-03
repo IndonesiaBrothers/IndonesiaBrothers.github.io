@@ -30,7 +30,7 @@
     ocrProgress: 0,
     ocrResults: [],
     ocrRawText: "",
-    geminiKey: null,
+    groqKey: null,
     dirty: false,
     weeklyData: null,
     weeklySHA: null,
@@ -103,7 +103,7 @@
     render();
   }
 
-  async function handleSetup(pw, token, geminiKey) {
+  async function handleSetup(pw, token, groqKey) {
     state.loading = true; state.msg = null; render();
     try {
       // Test token
@@ -111,9 +111,9 @@
       var test = await ghGet(SCRIPT_PATH);
       // Encrypt and save
       var encToken = await encryptText(token, pw);
-      var encGemini = await encryptText(geminiKey, pw);
-      state.geminiKey = geminiKey;
-      var configContent = JSON.stringify({ encrypted_token: encToken, encrypted_gemini: encGemini, version: 2 });
+      var encGroq = await encryptText(groqKey, pw);
+      state.groqKey = groqKey;
+      var configContent = JSON.stringify({ encrypted_token: encToken, encrypted_groq: encGroq, version: 2 });
       var existing = null;
       try { existing = await ghGet(CONFIG_PATH); } catch(e) {}
       await ghPut(CONFIG_PATH, configContent, existing ? existing.sha : null, "Setup admin config");
@@ -145,12 +145,12 @@
         return;
       }
       state.token = token;
-      // Decrypt Gemini key
+      // Decrypt Groq key
       try {
-        if (state.configData.encrypted_gemini) {
-          state.geminiKey = await decryptText(state.configData.encrypted_gemini, pw);
+        if (state.configData.encrypted_groq) {
+          state.groqKey = await decryptText(state.configData.encrypted_groq, pw);
         }
-      } catch(ge) { /* Old config without Gemini key */ }
+      } catch(ge) { /* Old config without Groq key */ }
       try {
         var data = await ghGet(SCRIPT_PATH);
         state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
@@ -436,15 +436,15 @@
           '<ul class="step-details"><li>Repository: <code>' + REPO_NAME + '</code></li><li>Permission: Contents → <strong>Read and Write</strong></li></ul>' +
         '</div></div>' +
         '<div class="step"><span class="step-num">2</span><div>' +
-          '<strong>Create Gemini API Key (Gratis)</strong>' +
-          '<a href="https://aistudio.google.com/apikey" target="_blank" class="step-link">aistudio.google.com/apikey</a>' +
-          '<ul class="step-details"><li>Klik <strong>Create API Key</strong></li><li>Copy key yang muncul</li></ul>' +
+          '<strong>Create Groq API Key (Gratis)</strong>' +
+          '<a href="https://console.groq.com/keys" target="_blank" class="step-link">console.groq.com/keys</a>' +
+          '<ul class="step-details"><li>Login dengan Google account</li><li>Klik <strong>Create API Key</strong></li><li>Copy key yang muncul</li></ul>' +
         '</div></div>' +
         '<div class="step"><span class="step-num">3</span><div><strong>Paste kedua key & set password di bawah</strong></div></div>' +
       '</div>' +
       '<form id="sf">' +
         '<div class="form-group"><label>GitHub Token</label><input type="password" id="st" placeholder="github_pat_..." required></div>' +
-        '<div class="form-group"><label>Gemini API Key</label><input type="password" id="sg" placeholder="AIza..." required></div>' +
+        '<div class="form-group"><label>Groq API Key</label><input type="password" id="sg" placeholder="gsk_..." required></div>' +
         '<div class="form-group"><label>Admin Password</label><input type="password" id="sp" placeholder="Choose a password" required minlength="4"></div>' +
         '<div class="form-group"><label>Confirm Password</label><input type="password" id="sp2" placeholder="Confirm password" required></div>' +
         msgHtml +
@@ -474,7 +474,7 @@
     document.getElementById("lf").onsubmit = function(e) { e.preventDefault(); handleLogin(document.getElementById("lp").value); };
     document.getElementById("reset-link").onclick = function(e) {
       e.preventDefault();
-      if (confirm("Reset admin setup? Kamu perlu memasukkan GitHub token dan Gemini API key lagi.")) {
+      if (confirm("Reset admin setup? Kamu perlu memasukkan GitHub token dan Groq API key lagi.")) {
         state.configData = null; state.view = "setup"; state.msg = null; render();
       }
     };
@@ -636,7 +636,7 @@
         html += '<div class="preview-thumb"><img src="' + s + '"><button class="remove-btn" data-si="' + i + '">✕</button></div>';
       });
       html += '</div>';
-      html += '<button class="btn-primary" id="ocr-btn"' + (state.loading ? ' disabled' : '') + '>🤖 Scan with Gemini AI</button>';
+      html += '<button class="btn-primary" id="ocr-btn"' + (state.loading ? ' disabled' : '') + '>🤖 Scan with Groq AI</button>';
       html += '<div style="height:12px"></div>';
     }
 
@@ -650,7 +650,7 @@
 
     // Show raw OCR text for debugging
     if (state.ocrRawText) {
-      html += '<details style="margin-bottom:12px"><summary style="color:var(--text-muted);font-size:0.75rem;cursor:pointer">📝 Gemini AI Response (debug)</summary>';
+      html += '<details style="margin-bottom:12px"><summary style="color:var(--text-muted);font-size:0.75rem;cursor:pointer">📝 Groq AI Response (debug)</summary>';
       html += '<div class="debug-text">' + esc(state.ocrRawText) + '</div></details>';
     }
 
@@ -946,16 +946,16 @@
     });
   }
 
-  // === GEMINI VISION AI ===
+  // === GROQ VISION AI ===
   async function runOCR() {
     if (state.screenshots.length === 0) return;
-    if (!state.geminiKey) {
-      state.ocrStatus = "⚠️ Gemini API Key belum di-setup. Klik 'Reset setup' di halaman login untuk setup ulang.";
+    if (!state.groqKey) {
+      state.ocrStatus = "⚠️ Groq API Key belum di-setup. Klik 'Reset setup' di halaman login untuk setup ulang.";
       render();
       return;
     }
     state.loading = true;
-    state.ocrStatus = "🤖 Mengirim ke Gemini AI...";
+    state.ocrStatus = "🤖 Mengirim ke Groq AI...";
     state.ocrProgress = 10;
     state.ocrResults = [];
     state.ocrRawText = "";
@@ -964,7 +964,7 @@
     try {
       var allResults = [];
       for (var i = 0; i < state.screenshots.length; i++) {
-        state.ocrStatus = "🤖 Menganalisis gambar " + (i+1) + "/" + state.screenshots.length + " dengan Gemini AI...";
+        state.ocrStatus = "🤖 Menganalisis gambar " + (i+1) + "/" + state.screenshots.length + " dengan Groq AI...";
         state.ocrProgress = 10 + (i / state.screenshots.length) * 80;
         render();
 
@@ -972,27 +972,30 @@
         var base64Data = dataUrl.split(",")[1];
         var mimeType = dataUrl.match(/data:(.*?);/)[1];
 
-        var response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + state.geminiKey, {
+        var response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + state.groqKey },
           body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: "Extract ALL player data from this Last War: Survival game member list screenshot. The game language is Indonesian (Bahasa Indonesia). Power may be shown as 'Kekuatan'. Look for every player entry visible.\nFor each player extract:\n- name: exact player name as displayed\n- power: power value with suffix (e.g. \"64.3M\", \"1.2B\", \"850.5K\")\n- level: level number (integer)\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"power\":\"64.3M\",\"level\":28}]" },
-                { inline_data: { mime_type: mimeType, data: base64Data } }
+            model: "llama-3.2-90b-vision-preview",
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: "Extract ALL player data from this Last War: Survival game member list screenshot. The game language is Indonesian (Bahasa Indonesia). Power may be shown as 'Kekuatan'. Look for every player entry visible.\nFor each player extract:\n- name: exact player name as displayed\n- power: power value with suffix (e.g. \"64.3M\", \"1.2B\", \"850.5K\")\n- level: level number (integer)\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"power\":\"64.3M\",\"level\":28}]" },
+                { type: "image_url", image_url: { url: dataUrl } }
               ]
             }],
-            generationConfig: { temperature: 0, maxOutputTokens: 8192 }
+            temperature: 0,
+            max_tokens: 8192
           })
         });
 
         if (!response.ok) {
           var errData = await response.json().catch(function() { return {}; });
-          throw new Error("Gemini API error: " + (errData.error ? errData.error.message : response.statusText));
+          throw new Error("Groq API error: " + (errData.error ? errData.error.message : response.statusText));
         }
 
         var data = await response.json();
-        var text = data.candidates[0].content.parts[0].text;
+        var text = data.choices[0].message.content;
         state.ocrRawText += "=== Image " + (i+1) + " ===\n" + text + "\n\n";
 
         // Parse JSON from response (handle markdown code blocks)
@@ -1040,7 +1043,7 @@
       }
 
       state.ocrResults = deduped;
-      state.ocrStatus = "✅ Gemini AI menemukan " + deduped.length + " players!";
+      state.ocrStatus = "✅ Groq AI menemukan " + deduped.length + " players!";
       state.ocrProgress = 100;
 
       if (deduped.length === 0) {
