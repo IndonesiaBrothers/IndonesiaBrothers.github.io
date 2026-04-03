@@ -3457,3 +3457,135 @@ ul { list-style: none; }
     display: none !important;
   }
 }
+
+
+/* ============================================
+   HALL OF FAME SECTION
+   ============================================ */
+.hof-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.hof-tab {
+  padding: 12px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.hof-tab:hover {
+  border-color: var(--red-primary);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.hof-tab.active {
+  background: linear-gradient(135deg, rgba(255,23,68,0.2), rgba(255,23,68,0.05));
+  border-color: var(--red-primary);
+  color: #fff;
+  box-shadow: 0 0 20px var(--red-glow-soft);
+}
+
+.hof-panel {
+  display: none;
+}
+
+.hof-panel.active {
+  display: block;
+  animation: hofFadeIn 0.4s ease;
+}
+
+@keyframes hofFadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hof-coming-soon {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.hof-cs-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  animation: hofFloat 3s ease-in-out infinite;
+}
+
+@keyframes hofFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.hof-cs-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--red-primary), var(--gold-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hof-cs-desc {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.hof-cs-badge {
+  display: inline-block;
+  padding: 10px 32px;
+  background: linear-gradient(135deg, rgba(255,23,68,0.15), rgba(255,214,0,0.1));
+  border: 1px solid var(--red-primary);
+  border-radius: 50px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--red-primary);
+  animation: hofPulse 2s ease-in-out infinite;
+}
+
+@keyframes hofPulse {
+  0%, 100% { box-shadow: 0 0 10px var(--red-glow-soft); }
+  50% { box-shadow: 0 0 25px var(--red-glow); }
+}
+
+.hof-cs-note {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .hof-tabs { gap: 6px; }
+  .hof-tab {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  .hof-coming-soon { padding: 40px 16px; }
+  .hof-cs-icon { font-size: 3rem; }
+  .hof-cs-title { font-size: 1.3rem; }
+}
