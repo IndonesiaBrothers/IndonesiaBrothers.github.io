@@ -5,6 +5,7 @@
   var REPO_NAME = "IndonesiaBrothers.github.io";
   var CONFIG_PATH = "admin-config.json";
   var SCRIPT_PATH = "script.js";
+  var MEMBERS_PATH = "members.json";
   var WEEKLY_PATH = "weeklydata.json";
   var HISTORY_PATH = "powerhistory.json";
   var GH_API = "https://api.github.com";
@@ -110,7 +111,7 @@
     try {
       // Test token
       state.token = token;
-      var test = await ghGet(SCRIPT_PATH);
+      var test = await ghGet(MEMBERS_PATH);
       // Encrypt and save
       var encToken = await encryptText(token, pw);
       var encGroq = await encryptText(groqKey, pw);
@@ -120,10 +121,10 @@
       try { existing = await ghGet(CONFIG_PATH); } catch(e) {}
       await ghPut(CONFIG_PATH, configContent, existing ? existing.sha : null, "Setup admin config");
       state.configData = JSON.parse(configContent);
-      // Load players
-      state.originalScript = decodeURIComponent(escape(atob(test.content.replace(/\n/g, ""))));
-      state.scriptSHA = test.sha;
-      state.players = parseMembers(state.originalScript);
+      // Load players from members.json
+      var membersRaw = decodeURIComponent(escape(atob(test.content.replace(/\n/g, ""))));
+      state.membersSHA = test.sha;
+      state.players = JSON.parse(membersRaw);
       state.view = "dashboard";
       state.msg = "Setup complete! " + state.players.length + " players loaded.";
       state.msgType = "success";
@@ -154,10 +155,10 @@
         }
       } catch(ge) { /* Old config without Groq key */ }
       try {
-        var data = await ghGet(SCRIPT_PATH);
-        state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-        state.scriptSHA = data.sha;
-        state.players = parseMembers(state.originalScript);
+        var data = await ghGet(MEMBERS_PATH);
+        var membersRaw = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+        state.membersSHA = data.sha;
+        state.players = JSON.parse(membersRaw);
       } catch(ge) {
         state.msg = "❌ GitHub token expired atau tidak valid. Silakan reset setup.";
         state.msgType = "error";
@@ -255,15 +256,14 @@
   async function pushToGitHub() {
     state.loading = true; state.msg = "Pushing to GitHub..."; state.msgType = "info"; render();
     try {
+      // Get latest SHA for members.json
       try {
-        var latest = await ghGet(SCRIPT_PATH);
-        state.scriptSHA = latest.sha;
-        state.originalScript = decodeURIComponent(escape(atob(latest.content.replace(/\n/g, ""))));
+        var latest = await ghGet(MEMBERS_PATH);
+        state.membersSHA = latest.sha;
       } catch(e) {}
-      var ns = generateScript(state.originalScript, state.players);
-      var result = await ghPut(SCRIPT_PATH, ns, state.scriptSHA, "Update member data (" + state.players.length + " players)");
-      state.scriptSHA = result.content.sha;
-      state.originalScript = ns;
+      var membersContent = JSON.stringify(state.players, null, 2);
+      var result = await ghPut(MEMBERS_PATH, membersContent, state.membersSHA, "Update member data (" + state.players.length + " players)");
+      state.membersSHA = result.content.sha;
       state.dirty = false;
       state.msg = "✅ Pushed! Website updates in ~1 min.";
       state.msgType = "success";
@@ -288,7 +288,7 @@
 
   async function loadPowerHistory() {
     try {
-      var resp = await ghGet("contents/" + HISTORY_PATH);
+      var resp = await ghGet(HISTORY_PATH);
       state.historySHA = resp.sha;
       var text = atob(resp.content.replace(/\n/g, ""));
       state.powerHistory = JSON.parse(text);
@@ -301,7 +301,7 @@
   // === WEEKLY DATA (HALL OF FAME) ===
   async function loadWeeklyData() {
     try {
-      var resp = await ghGet("contents/" + WEEKLY_PATH);
+      var resp = await ghGet(WEEKLY_PATH);
       state.weeklySHA = resp.sha;
       var text = atob(resp.content.replace(/\n/g, ""));
       state.weeklyData = JSON.parse(text);
@@ -339,13 +339,13 @@
     
     // Push weeklydata.json
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(state.weeklyData, null, 2))));
-    var resp = await ghPut("contents/" + WEEKLY_PATH, content, state.weeklySHA, "Update weekly data - " + state.weeklyData.weekLabel);
+    var resp = await ghPut(WEEKLY_PATH, content, state.weeklySHA, "Update weekly data - " + state.weeklyData.weekLabel);
     state.weeklySHA = resp.content.sha;
     
     // Push powerhistory.json
     if (state.powerHistory && state.powerHistory.weeks.length > 0) {
       var hContent = btoa(unescape(encodeURIComponent(JSON.stringify(state.powerHistory, null, 2))));
-      var hResp = await ghPut("contents/" + HISTORY_PATH, hContent, state.historySHA, "Update power history - " + getWeekLabel());
+      var hResp = await ghPut(HISTORY_PATH, hContent, state.historySHA, "Update power history - " + getWeekLabel());
       state.historySHA = hResp.content.sha;
     }
     
