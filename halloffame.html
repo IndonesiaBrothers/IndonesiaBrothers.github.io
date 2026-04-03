@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050507">
+  <title>Hall of Fame | IDs - Indonesian Brothers</title>
+  <meta name="description" content="Hall of Fame - Top performers, donors, and DA warriors of IDs Indonesian Brothers alliance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="halloffame.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <span class="holo-logo" data-text="IDs">IDs</span>
+      </a>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="index.html#members" class="nav-link">Roster</a></li>
+        <li><a href="#" class="nav-link active">Hall of Fame</a></li>
+        <li><a href="index.html#train-lottery" class="nav-link">Train</a></li>
+        <li><a href="index.html#allies" class="nav-link">Allies</a></li>
+        <li><a href="index.html#join" class="nav-link nav-link-cta">Join Us</a></li>
+      </ul>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+
+  <!-- HERO BANNER -->
+  <section class="hof-hero">
+    <div class="hof-hero-bg"></div>
+    <div class="hof-hero-content">
+      <div class="hof-hero-icon">👑</div>
+      <h1 class="hof-hero-title">HALL OF <span class="text-accent">FAME</span></h1>
+      <p class="hof-hero-subtitle">Honoring our greatest warriors every week</p>
+      <div class="hof-week-badge" id="week-badge">Loading...</div>
+    </div>
+  </section>
+
+  <!-- TAB NAVIGATION -->
+  <div class="hof-tabs-wrapper">
+    <div class="container">
+      <div class="hof-tabs" id="hof-tabs">
+        <button class="hof-tab active" data-tab="improve">🚀 Top Improve</button>
+        <button class="hof-tab" data-tab="donation">💰 Top Donation</button>
+        <button class="hof-tab" data-tab="da">🐉 Top DA Point</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT SECTIONS -->
+  <section class="section section-dark">
+    <div class="container">
+
+      <!-- TOP IMPROVE -->
+      <div class="hof-section active" id="section-improve">
+        <div class="section-header">
+          <span class="section-tag">// WEEKLY IMPROVEMENT</span>
+          <h2 class="section-title">TOP <span class="text-accent">IMPROVERS</span></h2>
+          <div class="section-divider">
+            <span class="divider-line"></span>
+            <span class="divider-diamond">◆</span>
+            <span class="divider-line"></span>
+          </div>
+          <p class="section-subtitle">Warriors with the greatest power growth this week</p>
+        </div>
+
+        <!-- Podium -->
+        <div class="hof-podium" id="podium-improve"></div>
+
+        <!-- Full Rankings -->
+        <div class="hof-rankings" id="rankings-improve"></div>
+      </div>
+
+      <!-- TOP DONATION -->
+      <div class="hof-section" id="section-donation">
+        <div class="section-header">
+          <span class="section-tag">// GENEROSITY</span>
+          <h2 class="section-title">TOP <span class="text-accent">DONORS</span></h2>
+          <div class="section-divider">
+            <span class="divider-line"></span>
+            <span class="divider-diamond">◆</span>
+            <span class="divider-line"></span>
+          </div>
+          <p class="section-subtitle">Those who give the most for the brotherhood</p>
+        </div>
+        <div class="hof-podium" id="podium-donation"></div>
+        <div class="hof-rankings" id="rankings-donation"></div>
+      </div>
+
+      <!-- TOP DA POINT -->
+      <div class="hof-section" id="section-da">
+        <div class="section-header">
+          <span class="section-tag">// DRAGON ARENA</span>
+          <h2 class="section-title">TOP <span class="text-accent">DA WARRIORS</span></h2>
+          <div class="section-divider">
+            <span class="divider-line"></span>
+            <span class="divider-diamond">◆</span>
+            <span class="divider-line"></span>
+          </div>
+          <p class="section-subtitle">The fiercest fighters in the Dragon Arena</p>
+        </div>
+        <div class="hof-podium" id="podium-da"></div>
+        <div class="hof-rankings" id="rankings-da"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-glow"></div>
+    <div class="container">
+      <div class="footer-tagline">
+        <span class="tagline-glow">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-line"></span>
+        <p>© 2026 IDs - Indonesian Brothers | Server #2059 | Last War: Survival</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="halloffame.js"></script>
+</body>
+</html>
