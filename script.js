@@ -335,8 +335,8 @@ function initParticleCanvas() {
   let width, height;
   let particles = [];
   let animId;
-  const PARTICLE_COUNT = 60;
-  const CONNECTION_DIST = 140;
+  const PARTICLE_COUNT = 35;
+  const CONNECTION_DIST = 100;
   const MOUSE = { x: -1000, y: -1000 };
 
   function resize() {
@@ -640,7 +640,9 @@ function initSmoothScroll() {
       if (targetId === "#") return;
       const target = document.querySelector(targetId);
       if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        const navHeight = document.querySelector('.navbar') ? document.querySelector('.navbar').offsetHeight : 70;
+        const targetPos = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        window.scrollTo({ top: targetPos, behavior: "smooth" });
       }
     });
   });
@@ -1046,15 +1048,15 @@ function initTrainLottery() {
       const decoy = namePool.find(n => n !== winner.name) || namePool[0];
 
       const seq = [];
-      for (let i = 0; i < 15; i++) seq.push({d: Math.round((35 + i*1.3)*sp), p: "turbo"});
-      for (let i = 0; i < 12; i++) { const t=i/12; seq.push({d: Math.round((55 + t*t*130)*sp), p: "fast"}); }
-      for (let i = 0; i < 10; i++) { const t=i/10; seq.push({d: Math.round((185 + t*250)*sp), p: "medium"}); }
-      for (let i = 0; i < 6; i++) { const t=i/6; seq.push({d: Math.round((430 + t*380)*sp), p: "slow"}); }
+      for (let i = 0; i < 8; i++) seq.push({d: Math.round((40 + i*2)*sp), p: "turbo"});
+      for (let i = 0; i < 6; i++) { const t=i/6; seq.push({d: Math.round((70 + t*t*120)*sp), p: "fast"}); }
+      for (let i = 0; i < 4; i++) { const t=i/4; seq.push({d: Math.round((200 + t*200)*sp), p: "medium"}); }
+      for (let i = 0; i < 3; i++) { const t=i/3; seq.push({d: Math.round((400 + t*300)*sp), p: "slow"}); }
       if (hasFake) {
-        seq.push({d: Math.round(1600*sp), p: "fakeout"});
-        seq.push({d: 250, p: "jerk"});
+        seq.push({d: Math.round(1200*sp), p: "fakeout"});
+        seq.push({d: 200, p: "jerk"});
       }
-      seq.push({d: 350, p: "winner"});
+      seq.push({d: 300, p: "winner"});
 
       let ti = 0;
       function tick() {
@@ -1067,38 +1069,29 @@ function initTrainLottery() {
           nextEl.textContent = "";
           currEl.classList.remove("spin-fakeout-glow");
           currEl.style.transition = "none";
-          currEl.style.transform = "scale(0.3) rotateX(90deg)";
+          currEl.style.transform = "scale(0.5)";
           currEl.style.opacity = "0";
-          currEl.style.filter = "blur(10px)";
           currEl.textContent = winner.name;
           currEl.className = "slot-item spin-curr spin-winner-name";
           // Use rAF double-frame instead of forced reflow for better mobile perf
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              currEl.style.transition = "transform 0.7s cubic-bezier(0.17,0.67,0.35,1.5), opacity 0.3s ease-out, filter 0.4s ease-out";
-              currEl.style.transform = "scale(1.15) rotateX(0deg)";
+              currEl.style.transition = "transform 0.5s cubic-bezier(0.17,0.67,0.35,1.3), opacity 0.3s ease-out";
+              currEl.style.transform = "scale(1.1)";
               currEl.style.opacity = "1";
-              currEl.style.filter = "blur(0)";
               slotFrame.className = "slot-frame spin-winner-explode";
             });
           });
-          if (window.innerWidth > 768) {
-            const flash = document.createElement("div");
-            flash.className = "winner-flash";
-            document.body.appendChild(flash);
-            setTimeout(() => flash.remove(), 900);
-          }
-          resultsContainer.classList.add("winner-active");
-          setTimeout(() => resultsContainer.classList.remove("winner-active"), 700);
+          // Winner flash removed for performance
+          // Screen shake removed for performance
           launchConfetti();
-          if (window.innerWidth > 768) setTimeout(launchConfetti, 400);
           setTimeout(() => {
             const card = document.createElement("div");
             card.className = "result-card";
             card.style.animationDelay = "0s";
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
             card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
-            const sparkleCount = window.innerWidth <= 768 ? 2 : 6;
+            const sparkleCount = window.innerWidth <= 768 ? 0 : 2;
             for (let s = 0; s < sparkleCount; s++) {
               const sparkle = document.createElement("div");
               sparkle.className = "result-sparkle";
@@ -1111,7 +1104,7 @@ function initTrainLottery() {
               card.appendChild(sparkle);
             }
             resultsContainer.appendChild(card);
-            if (wIdx === 0 && window.innerWidth > 768) launchConfetti();
+            // Extra confetti removed for performance
             wIdx++;
             if (wIdx < count) {
               setTimeout(() => {
@@ -1144,19 +1137,13 @@ function initTrainLottery() {
         currEl.style.transform = "translateY(22px)";
         currEl.style.opacity = "0.3";
         currEl.textContent = centerName;
-        currEl.style.filter = (p === "turbo" && window.innerWidth > 768) ? "blur(1.5px)" : "none";
-        void currEl.offsetWidth;
-        currEl.style.transition = "transform " + slideDur + "ms ease-out, opacity " + slideDur + "ms ease-out";
+        // blur removed for perf
+                currEl.style.transition = "transform " + slideDur + "ms ease-out, opacity " + slideDur + "ms ease-out";
         currEl.style.transform = "translateY(0)";
         currEl.style.opacity = "1";
         if (p === "fakeout") currEl.classList.add("spin-fakeout-glow");
         else currEl.classList.remove("spin-fakeout-glow");
-        if ((p === "slow" || p === "fakeout") && window.innerWidth > 768) {
-          const tf = document.createElement("div");
-          tf.className = "slot-tick-flash";
-          slotReel.parentElement.appendChild(tf);
-          setTimeout(() => tf.remove(), 250);
-        }
+        // Tick flash removed for performance
         if (p === "jerk") {
           slotFrame.classList.add("spin-jerk-shake");
           setTimeout(() => slotFrame.classList.remove("spin-jerk-shake"), 250);
@@ -1222,7 +1209,7 @@ function launchConfetti() {
   const shapes = ["rect", "circle", "star", "ribbon"];
   const confetti = [];
   const isMobile = window.innerWidth <= 768;
-  const TOTAL = isMobile ? 40 : 150;
+  const TOTAL = isMobile ? 20 : 60;
 
   for (let i = 0; i < TOTAL; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -1246,7 +1233,7 @@ function launchConfetti() {
   }
 
   let frame = 0;
-  const maxFrames = isMobile ? 100 : 180;
+  const maxFrames = isMobile ? 70 : 120;
 
   function drawStar(ctx, x, y, size) {
     ctx.beginPath();
@@ -1283,8 +1270,7 @@ function launchConfetti() {
       ctx.rotate((p.rotation * Math.PI) / 180);
       ctx.globalAlpha = p.opacity;
       ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 8;
+      // Shadow removed for perf
 
       switch (p.shape) {
         case "rect":

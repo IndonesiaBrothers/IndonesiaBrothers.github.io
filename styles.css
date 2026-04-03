@@ -719,6 +719,10 @@ ul { list-style: none; }
   margin-bottom: 60px;
 }
 
+#train-lottery {
+  scroll-margin-top: 90px;
+}
+
 .section-tag {
   display: inline-block;
   font-family: var(--font-accent);
@@ -2599,16 +2603,11 @@ ul { list-style: none; }
   padding: 0;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(255, 0, 60, 0.1), 0 0 80px rgba(0, 240, 255, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 15px rgba(255, 0, 60, 0.1);
 }
 
 .slot-glow {
-  position: absolute;
-  top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: conic-gradient(from 0deg, transparent, rgba(255, 0, 60, 0.05), transparent, rgba(0, 240, 255, 0.05), transparent);
-  animation: slotGlowSpin 8s linear infinite;
-  pointer-events: none;
+  display: none;
 }
 @keyframes slotGlowSpin {
   to { transform: rotate(360deg); }
@@ -2793,11 +2792,11 @@ ul { list-style: none; }
   overflow: hidden;
   transition: all 0.3s ease;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 30px rgba(255, 0, 60, 0.3), 0 0 60px rgba(255, 0, 60, 0.1);
+  box-shadow: 0 0 12px rgba(255, 0, 60, 0.25);
 }
 .spin-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 50px rgba(255, 0, 60, 0.5), 0 0 100px rgba(255, 0, 60, 0.2);
+  box-shadow: 0 0 20px rgba(255, 0, 60, 0.4);
 }
 .spin-btn:active {
   transform: scale(0.97);
@@ -2833,7 +2832,7 @@ ul { list-style: none; }
 .spin-curr {
   color: #fff !important;
   font-size: 1.5rem !important;
-  text-shadow: 0 0 15px rgba(255,255,255,0.3);
+  text-shadow: 0 0 8px rgba(255,255,255,0.2);
   will-change: transform, opacity, filter;
 }
 .slot-frame.spin-p-turbo {
@@ -2841,45 +2840,43 @@ ul { list-style: none; }
   animation: dramaTurbo 0.12s ease-in-out infinite alternate !important;
 }
 @keyframes dramaTurbo {
-  0% { border-color: rgba(255,0,60,0.9); box-shadow: 0 0 60px rgba(255,0,60,0.5), 0 0 120px rgba(0,240,255,0.2), inset 0 0 80px rgba(255,0,60,0.1); }
-  100% { border-color: rgba(0,240,255,0.9); box-shadow: 0 0 60px rgba(0,240,255,0.5), 0 0 120px rgba(255,0,60,0.2), inset 0 0 80px rgba(0,240,255,0.1); }
+  0% { border-color: rgba(255,0,60,0.9); box-shadow: 0 0 20px rgba(255,0,60,0.3); }
+  100% { border-color: rgba(0,240,255,0.9); box-shadow: 0 0 20px rgba(0,240,255,0.3); }
 }
 .slot-frame.spin-p-fast {
   border-color: rgba(255,0,60,0.6) !important;
-  box-shadow: 0 0 50px rgba(255,0,60,0.35), 0 0 100px rgba(0,240,255,0.12), inset 0 0 60px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 0 15px rgba(255,0,60,0.25) !important;
 }
 .slot-frame.spin-p-medium {
   border-color: rgba(0,240,255,0.5) !important;
   animation: dramaMedium 0.8s ease-in-out infinite !important;
 }
 @keyframes dramaMedium {
-  0%, 100% { box-shadow: 0 0 40px rgba(0,240,255,0.2), 0 0 80px rgba(255,0,60,0.1), inset 0 0 60px rgba(0,0,0,0.5); }
-  50% { box-shadow: 0 0 70px rgba(0,240,255,0.45), 0 0 130px rgba(255,0,60,0.2), inset 0 0 80px rgba(0,0,0,0.3); }
+  0%, 100% { box-shadow: 0 0 15px rgba(0,240,255,0.2); }
+  50% { box-shadow: 0 0 25px rgba(0,240,255,0.35); }
 }
 .slot-frame.spin-p-slow {
   border-color: rgba(255,215,0,0.4) !important;
   animation: dramaHeartbeat 0.7s ease-in-out infinite !important;
 }
 @keyframes dramaHeartbeat {
-  0% { transform: scale(1); box-shadow: 0 0 40px rgba(255,215,0,0.15), inset 0 0 60px rgba(0,0,0,0.5); }
-  14% { transform: scale(1.02); box-shadow: 0 0 80px rgba(255,215,0,0.45), inset 0 0 40px rgba(255,215,0,0.05); }
-  28% { transform: scale(1); box-shadow: 0 0 40px rgba(255,215,0,0.15), inset 0 0 60px rgba(0,0,0,0.5); }
-  42% { transform: scale(1.012); box-shadow: 0 0 60px rgba(255,215,0,0.3), inset 0 0 50px rgba(255,215,0,0.03); }
-  56%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255,215,0,0.15), inset 0 0 60px rgba(0,0,0,0.5); }
+  0%, 56%, 100% { border-color: rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.15); }
+  14% { border-color: rgba(255,215,0,0.6); box-shadow: 0 0 25px rgba(255,215,0,0.35); }
+  42% { border-color: rgba(255,215,0,0.45); box-shadow: 0 0 18px rgba(255,215,0,0.25); }
 }
 .slot-frame.spin-p-fakeout {
   border-color: rgba(255,215,0,0.6) !important;
-  box-shadow: 0 0 80px rgba(255,215,0,0.3), 0 0 160px rgba(255,0,60,0.12), inset 0 0 60px rgba(255,215,0,0.05) !important;
+  box-shadow: 0 0 25px rgba(255,215,0,0.3) !important;
 }
 .spin-fakeout-glow {
   color: #ffd700 !important;
-  text-shadow: 0 0 20px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.4) !important;
+  text-shadow: 0 0 12px rgba(255,215,0,0.6) !important;
   font-size: 1.6rem !important;
   animation: fakeoutPulse 0.5s ease-in-out infinite !important;
 }
 @keyframes fakeoutPulse {
-  0%, 100% { text-shadow: 0 0 20px rgba(255,215,0,0.8), 0 0 40px rgba(255,215,0,0.4); }
-  50% { text-shadow: 0 0 35px rgba(255,215,0,1), 0 0 70px rgba(255,215,0,0.6), 0 0 100px rgba(255,215,0,0.3); }
+  0%, 100% { text-shadow: 0 0 12px rgba(255,215,0,0.6); }
+  50% { text-shadow: 0 0 20px rgba(255,215,0,0.8); }
 }
 .slot-frame.spin-p-jerk {
   border-color: rgba(255,0,60,0.5) !important;
@@ -2899,7 +2896,7 @@ ul { list-style: none; }
   color: #ffd700 !important;
   font-size: 1.9rem !important;
   font-weight: 900 !important;
-  text-shadow: 0 0 20px rgba(255,215,0,0.9), 0 0 40px rgba(255,215,0,0.5), 0 0 80px rgba(255,215,0,0.3), 0 0 120px rgba(255,0,60,0.2) !important;
+  text-shadow: 0 0 15px rgba(255,215,0,0.7), 0 0 30px rgba(255,215,0,0.3) !important;
   letter-spacing: 4px !important;
 }
 .spin-winner-explode {
@@ -2908,9 +2905,9 @@ ul { list-style: none; }
 }
 @keyframes winnerGlowExplode {
   0% { box-shadow: 0 0 0 rgba(255,215,0,0); }
-  15% { box-shadow: 0 0 120px rgba(255,215,0,0.7), 0 0 240px rgba(255,0,60,0.35), inset 0 0 120px rgba(255,215,0,0.2); }
-  40% { box-shadow: 0 0 80px rgba(255,215,0,0.5), 0 0 160px rgba(255,0,60,0.2), inset 0 0 80px rgba(255,215,0,0.1); }
-  100% { box-shadow: 0 0 50px rgba(255,215,0,0.3), 0 0 100px rgba(255,0,60,0.1), inset 0 0 50px rgba(255,215,0,0.05); }
+  15% { box-shadow: 0 0 40px rgba(255,215,0,0.5); }
+  40% { box-shadow: 0 0 25px rgba(255,215,0,0.35); }
+  100% { box-shadow: 0 0 15px rgba(255,215,0,0.2); }
 }
 .slot-tick-flash {
   position: absolute;
@@ -2951,7 +2948,7 @@ ul { list-style: none; }
 }
 
 .lottery-results.winner-active {
-  animation: screenShake 0.6s ease-out;
+  animation: none;
 }
 
 @keyframes screenShake {
@@ -3013,52 +3010,23 @@ ul { list-style: none; }
   border-left: 4px solid #ffd700;
   border-radius: 12px;
   opacity: 0;
-  transform: scale(0.3) rotateY(90deg);
+  transform: translateX(-15px) scale(0.9);
   animation: resultExplosion 0.8s cubic-bezier(0.17, 0.67, 0.35, 1.3) forwards;
-  box-shadow:
-    0 0 30px rgba(255, 215, 0, 0.15),
-    0 0 60px rgba(255, 0, 60, 0.08),
-    inset 0 0 30px rgba(255, 215, 0, 0.03);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.12);
 }
 
 .result-card::before {
-  content: "";
-  position: absolute;
-  top: -100%; left: -100%;
-  width: 300%; height: 300%;
-  background: conic-gradient(
-    from 0deg,
-    transparent,
-    rgba(255, 215, 0, 0.1),
-    transparent,
-    rgba(255, 0, 60, 0.1),
-    transparent
-  );
-  animation: resultSpin 4s linear infinite;
+  display: none;
 }
 
 .result-card::after {
-  content: "";
-  position: absolute;
-  top: -2px; left: -150%;
-  width: 80%; height: calc(100% + 4px);
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 215, 0, 0.2),
-    rgba(255, 255, 255, 0.15),
-    transparent
-  );
-  transform: skewX(-25deg);
-  animation: resultShimmer 3s ease-in-out infinite;
+  display: none;
 }
 
 @keyframes resultExplosion {
-  0%   { opacity: 0; transform: scale(0.3) rotateY(90deg); filter: blur(10px); }
-  40%  { opacity: 0.8; transform: scale(1.15) rotateY(-10deg); filter: blur(2px); }
-  60%  { transform: scale(0.95) rotateY(5deg); filter: blur(0); }
-  80%  { transform: scale(1.03) rotateY(-2deg); }
-  100% { opacity: 1; transform: scale(1) rotateY(0deg); filter: blur(0); }
+  0%   { opacity: 0; transform: translateX(-15px) scale(0.9); }
+  60%  { opacity: 1; transform: translateX(3px) scale(1.02); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @keyframes resultSpin {
@@ -3077,10 +3045,7 @@ ul { list-style: none; }
     rgba(10, 10, 25, 0.95)
   );
   transform: translateX(8px) scale(1.02) !important;
-  box-shadow:
-    0 0 50px rgba(255, 215, 0, 0.25),
-    0 0 80px rgba(255, 0, 60, 0.15),
-    inset 0 0 40px rgba(255, 215, 0, 0.05);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
   border-color: rgba(255, 215, 0, 0.5);
 }
 
@@ -3097,17 +3062,15 @@ ul { list-style: none; }
   font-weight: 900;
   font-size: 0.9rem;
   border-radius: 10px;
-  box-shadow:
-    0 0 20px rgba(255, 215, 0, 0.5),
-    0 0 40px rgba(255, 107, 0, 0.2);
-  animation: badgePulseResult 1.5s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  animation: badgePulseResult 2s ease-in-out infinite;
   position: relative;
   z-index: 1;
 }
 
 @keyframes badgePulseResult {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.2); transform: scale(1); }
-  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 107, 0, 0.4); transform: scale(1.08); }
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
 }
 
 .result-info {
@@ -3124,13 +3087,8 @@ ul { list-style: none; }
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 2px;
-  background: linear-gradient(90deg, #ffd700, #fff, #ff003c, #ffd700);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: nameRainbow 3s linear infinite;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
 @keyframes nameRainbow {
@@ -3153,9 +3111,7 @@ ul { list-style: none; }
   font-size: 0.9rem;
   font-weight: 700;
   color: #ff003c;
-  text-shadow:
-    0 0 10px rgba(255, 0, 60, 0.5),
-    0 0 30px rgba(255, 0, 60, 0.2);
+  text-shadow: 0 0 8px rgba(255, 0, 60, 0.3);
   white-space: nowrap;
   position: relative;
   z-index: 1;
@@ -3163,8 +3119,8 @@ ul { list-style: none; }
 }
 
 @keyframes powerFlash {
-  0%, 100% { text-shadow: 0 0 10px rgba(255, 0, 60, 0.5), 0 0 30px rgba(255, 0, 60, 0.2); }
-  50% { text-shadow: 0 0 20px rgba(255, 0, 60, 0.8), 0 0 50px rgba(255, 0, 60, 0.4), 0 0 80px rgba(255, 0, 60, 0.15); }
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
 }
 
 /* Sparkle particles on each card */
