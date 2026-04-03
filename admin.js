@@ -706,7 +706,13 @@
     });
     html += '</select></div>';
     html += '<div class="form-group"><label>Role (optional)</label><input id="ed-role" value="' + esc(ep.role) + '" placeholder="Leader, Warlord..."></div>';
-    html += '<div class="modal-actions"><button type="submit" class="btn-primary">💾 SAVE</button><button type="button" class="btn-secondary" id="cancel-edit">CANCEL</button></div>';
+    html += '<div class="modal-actions">';
+    html += '<button type="submit" class="btn-primary">💾 SAVE</button>';
+    if (state.editIdx !== -1) {
+      html += '<button type="button" class="btn-danger" id="modal-delete" style="background:#e53935;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem">🗑 DELETE</button>';
+    }
+    html += '<button type="button" class="btn-secondary" id="cancel-edit">CANCEL</button>';
+    html += '</div>';
     html += '</form></div></div>';
     return html;
   }
@@ -831,6 +837,21 @@
 
     var ce = document.getElementById("cancel-edit");
     if (ce) ce.onclick = function() { state.editPlayer = null; state.editIdx = -1; render(); };
+
+    // Delete from edit modal
+    var md = document.getElementById("modal-delete");
+    if (md) md.onclick = function() {
+      var name = state.players[state.editIdx].name;
+      if (confirm("⚠️ Hapus " + name + " dari roster?\n\nData player ini akan dihapus permanen setelah di-push ke GitHub.")) {
+        state.players.splice(state.editIdx, 1);
+        state.dirty = true;
+        state.editPlayer = null;
+        state.editIdx = -1;
+        state.msg = "🗑 " + name + " telah dihapus dari roster. Jangan lupa PUSH ke GitHub!";
+        state.msgType = "info";
+        render();
+      }
+    };
 
     var mo = document.getElementById("modal-overlay");
     if (mo) mo.onclick = function(e) { if (e.target === mo) { state.editPlayer = null; state.editIdx = -1; render(); } };
