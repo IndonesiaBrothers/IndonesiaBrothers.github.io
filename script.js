@@ -125,8 +125,13 @@ const rankLabels = {
   R1: "Inactive"
 };
 
-// Sort members by power (highest first)
-members.sort((a, b) => parsePower(b.power) - parsePower(a.power));
+// Sort members by Rank (R5→R1) then by power (highest first) within each rank
+const rankOrder = { 'R5': 1, 'R4': 2, 'R3': 3, 'R2': 4, 'R1': 5 };
+members.sort((a, b) => {
+  const rankDiff = (rankOrder[a.rank] || 9) - (rankOrder[b.rank] || 9);
+  if (rankDiff !== 0) return rankDiff;
+  return parsePower(b.power) - parsePower(a.power);
+});
 
 // ============================================
 // DOM READY
