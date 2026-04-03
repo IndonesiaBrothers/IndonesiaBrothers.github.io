@@ -1298,3 +1298,24 @@ function launchConfetti() {
 
 // Init lottery on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", initTrainLottery);
+
+
+// ============================================
+// HALL OF FAME TABS
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  const hofTabs = document.querySelectorAll('.hof-tab');
+  const hofPanels = document.querySelectorAll('.hof-panel');
+  
+  hofTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.hof;
+      
+      hofTabs.forEach(t => t.classList.remove('active'));
+      hofPanels.forEach(p => p.classList.remove('active'));
+      
+      tab.classList.add('active');
+      document.getElementById('hof-' + target).classList.add('active');
+    });
+  });
+});
