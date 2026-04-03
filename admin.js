@@ -30,6 +30,7 @@
     ocrProgress: 0,
     ocrResults: [],
     ocrRawText: "",
+    geminiKey: null,
     dirty: false,
     weeklyData: null,
     weeklySHA: null,
@@ -102,15 +103,17 @@
     render();
   }
 
-  async function handleSetup(pw, token) {
+  async function handleSetup(pw, token, geminiKey) {
     state.loading = true; state.msg = null; render();
     try {
       // Test token
       state.token = token;
       var test = await ghGet(SCRIPT_PATH);
       // Encrypt and save
-      var enc = await encryptText(token, pw);
-      var configContent = JSON.stringify({ encrypted_token: enc, version: 1 });
+      var encToken = await encryptText(token, pw);
+      var encGemini = await encryptText(geminiKey, pw);
+      state.geminiKey = geminiKey;
+      var configContent = JSON.stringify({ encrypted_token: encToken, encrypted_gemini: encGemini, version: 2 });
       var existing = null;
       try { existing = await ghGet(CONFIG_PATH); } catch(e) {}
       await ghPut(CONFIG_PATH, configContent, existing ? existing.sha : null, "Setup admin config");
@@ -142,6 +145,12 @@
         return;
       }
       state.token = token;
+      // Decrypt Gemini key
+      try {
+        if (state.configData.encrypted_gemini) {
+          state.geminiKey = await decryptText(state.configData.encrypted_gemini, pw);
+        }
+      } catch(ge) { /* Old config without Gemini key */ }
       try {
         var data = await ghGet(SCRIPT_PATH);
         state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
@@ -426,10 +435,16 @@
           '<a href="https://github.com/settings/tokens?type=beta" target="_blank" class="step-link">github.com/settings/tokens</a>' +
           '<ul class="step-details"><li>Repository: <code>' + REPO_NAME + '</code></li><li>Permission: Contents → <strong>Read and Write</strong></li></ul>' +
         '</div></div>' +
-        '<div class="step"><span class="step-num">2</span><div><strong>Paste token & set password below</strong></div></div>' +
+        '<div class="step"><span class="step-num">2</span><div>' +
+          '<strong>Create Gemini API Key (Gratis)</strong>' +
+          '<a href="https://aistudio.google.com/apikey" target="_blank" class="step-link">aistudio.google.com/apikey</a>' +
+          '<ul class="step-details"><li>Klik <strong>Create API Key</strong></li><li>Copy key yang muncul</li></ul>' +
+        '</div></div>' +
+        '<div class="step"><span class="step-num">3</span><div><strong>Paste kedua key & set password di bawah</strong></div></div>' +
       '</div>' +
       '<form id="sf">' +
         '<div class="form-group"><label>GitHub Token</label><input type="password" id="st" placeholder="github_pat_..." required></div>' +
+        '<div class="form-group"><label>Gemini API Key</label><input type="password" id="sg" placeholder="AIza..." required></div>' +
         '<div class="form-group"><label>Admin Password</label><input type="password" id="sp" placeholder="Choose a password" required minlength="4"></div>' +
         '<div class="form-group"><label>Confirm Password</label><input type="password" id="sp2" placeholder="Confirm password" required></div>' +
         msgHtml +
@@ -440,7 +455,7 @@
       e.preventDefault();
       var pw = document.getElementById("sp").value, pw2 = document.getElementById("sp2").value;
       if (pw !== pw2) { state.msg = "Passwords don't match!"; state.msgType = "error"; render(); return; }
-      handleSetup(pw, document.getElementById("st").value.trim());
+      handleSetup(pw, document.getElementById("st").value.trim(), document.getElementById("sg").value.trim());
     };
   }
 
@@ -459,7 +474,7 @@
     document.getElementById("lf").onsubmit = function(e) { e.preventDefault(); handleLogin(document.getElementById("lp").value); };
     document.getElementById("reset-link").onclick = function(e) {
       e.preventDefault();
-      if (confirm("Reset admin setup? You'll need to enter the GitHub token again.")) {
+      if (confirm("Reset admin setup? Kamu perlu memasukkan GitHub token dan Gemini API key lagi.")) {
         state.configData = null; state.view = "setup"; state.msg = null; render();
       }
     };
@@ -621,7 +636,7 @@
         html += '<div class="preview-thumb"><img src="' + s + '"><button class="remove-btn" data-si="' + i + '">✕</button></div>';
       });
       html += '</div>';
-      html += '<button class="btn-primary" id="ocr-btn"' + (state.loading ? ' disabled' : '') + '>🔍 Scan & Parse Screenshots</button>';
+      html += '<button class="btn-primary" id="ocr-btn"' + (state.loading ? ' disabled' : '') + '>🤖 Scan with Gemini AI</button>';
       html += '<div style="height:12px"></div>';
     }
 
@@ -635,7 +650,7 @@
 
     // Show raw OCR text for debugging
     if (state.ocrRawText) {
-      html += '<details style="margin-bottom:12px"><summary style="color:var(--text-muted);font-size:0.75rem;cursor:pointer">📝 Raw OCR Text (debug)</summary>';
+      html += '<details style="margin-bottom:12px"><summary style="color:var(--text-muted);font-size:0.75rem;cursor:pointer">📝 Gemini AI Response (debug)</summary>';
       html += '<div class="debug-text">' + esc(state.ocrRawText) + '</div></details>';
     }
 
@@ -646,7 +661,7 @@
         var statusText = r.matched ? "✅ Match" : "🆕 New";
         html += '<div class="ocr-result-card">';
         html += '<div class="orc-name">' + esc(r.name) + '</div>';
-        html += '<div class="orc-power">' + esc(r.power) + '</div>';
+        html += '<div class="orc-power">' + esc(r.power) + (r.level ? ' | Lv.' + r.level : '') + '</div>';
         html += '<div class="orc-status" style="color:' + statusColor + '">' + statusText + '</div>';
         html += '</div>';
       });
@@ -882,7 +897,7 @@
       state.ocrResults.forEach(function(r) {
         if (r.matched) {
           var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
-          if (idx !== -1) { state.players[idx].power = r.power; updated++; }
+          if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
         }
       });
       state.ocrResults = [];
@@ -931,181 +946,111 @@
     });
   }
 
-  // === OCR with Image Preprocessing ===
-  function preprocessImage(dataUrl) {
-    return new Promise(function(resolve) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext("2d");
-        // Scale up for better OCR
-        var scale = Math.max(1, 2000 / img.width);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Grayscale + contrast boost
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var data = imageData.data;
-        for (var i = 0; i < data.length; i += 4) {
-          // Grayscale
-          var gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-          // Contrast boost
-          gray = ((gray - 128) * 1.8) + 128;
-          gray = Math.max(0, Math.min(255, gray));
-          // Threshold to black/white for cleaner OCR
-          var bw = gray > 140 ? 255 : 0;
-          data[i] = bw;
-          data[i+1] = bw;
-          data[i+2] = bw;
-        }
-        ctx.putImageData(imageData, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      img.src = dataUrl;
-    });
-  }
-
+  // === GEMINI VISION AI ===
   async function runOCR() {
     if (state.screenshots.length === 0) return;
+    if (!state.geminiKey) {
+      state.ocrStatus = "⚠️ Gemini API Key belum di-setup. Klik 'Reset setup' di halaman login untuk setup ulang.";
+      render();
+      return;
+    }
     state.loading = true;
-    state.ocrStatus = "Loading OCR engine...";
-    state.ocrProgress = 5;
+    state.ocrStatus = "🤖 Mengirim ke Gemini AI...";
+    state.ocrProgress = 10;
     state.ocrResults = [];
     state.ocrRawText = "";
     render();
 
     try {
-      if (typeof Tesseract === "undefined") {
-        await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
-      }
-
-      var allText = "";
+      var allResults = [];
       for (var i = 0; i < state.screenshots.length; i++) {
-        state.ocrStatus = "Preprocessing image " + (i+1) + "/" + state.screenshots.length + "...";
-        state.ocrProgress = 5 + (i / state.screenshots.length) * 10;
+        state.ocrStatus = "🤖 Menganalisis gambar " + (i+1) + "/" + state.screenshots.length + " dengan Gemini AI...";
+        state.ocrProgress = 10 + (i / state.screenshots.length) * 80;
         render();
 
-        // Preprocess image for better OCR
-        var processed = await preprocessImage(state.screenshots[i]);
+        var dataUrl = state.screenshots[i];
+        var base64Data = dataUrl.split(",")[1];
+        var mimeType = dataUrl.match(/data:(.*?);/)[1];
 
-        state.ocrStatus = "Scanning image " + (i+1) + "/" + state.screenshots.length + "...";
-        render();
-
-        var result = await Tesseract.recognize(processed, "eng", {
-          logger: function(m) {
-            if (m.status === "recognizing text") {
-              state.ocrProgress = 15 + ((i + m.progress) / state.screenshots.length) * 70;
-              render();
-            }
-          }
+        var response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + state.geminiKey, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: "Extract ALL player data from this Last War: Survival game member list screenshot. The game language is Indonesian (Bahasa Indonesia). Power may be shown as 'Kekuatan'. Look for every player entry visible.\nFor each player extract:\n- name: exact player name as displayed\n- power: power value with suffix (e.g. \"64.3M\", \"1.2B\", \"850.5K\")\n- level: level number (integer)\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"power\":\"64.3M\",\"level\":28}]" },
+                { inline_data: { mime_type: mimeType, data: base64Data } }
+              ]
+            }],
+            generationConfig: { temperature: 0, maxOutputTokens: 8192 }
+          })
         });
-        allText += result.data.text + "\n";
+
+        if (!response.ok) {
+          var errData = await response.json().catch(function() { return {}; });
+          throw new Error("Gemini API error: " + (errData.error ? errData.error.message : response.statusText));
+        }
+
+        var data = await response.json();
+        var text = data.candidates[0].content.parts[0].text;
+        state.ocrRawText += "=== Image " + (i+1) + " ===\n" + text + "\n\n";
+
+        // Parse JSON from response (handle markdown code blocks)
+        var cleanText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        var jsonMatch = cleanText.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          try {
+            var parsed = JSON.parse(jsonMatch[0]);
+            allResults = allResults.concat(parsed);
+          } catch(pe) {
+            state.ocrRawText += "\n⚠️ JSON parse error: " + pe.message + "\n";
+          }
+        }
       }
 
-      state.ocrRawText = allText;
-      state.ocrStatus = "Parsing results...";
-      state.ocrProgress = 90;
-      render();
+      // Match results to existing players (fuzzy matching)
+      var matched = [];
+      allResults.forEach(function(r) {
+        if (!r.name || !r.power) return;
+        var exactMatch = state.players.find(function(p) {
+          return p.name.toLowerCase() === r.name.toLowerCase();
+        });
+        if (exactMatch) {
+          matched.push({ name: exactMatch.name, power: r.power, level: r.level, matched: true });
+        } else {
+          var bestMatch = null, bestScore = 0;
+          state.players.forEach(function(p) {
+            var score = similarity(r.name.toLowerCase(), p.name.toLowerCase());
+            if (score > bestScore && score > 0.5) { bestScore = score; bestMatch = p; }
+          });
+          if (bestMatch) {
+            matched.push({ name: bestMatch.name, power: r.power, level: r.level, matched: true, originalName: r.name });
+          } else {
+            matched.push({ name: r.name, power: r.power, level: r.level, matched: false });
+          }
+        }
+      });
 
-      // Parse OCR text with multiple strategies
-      var results = parseOCRText(allText);
+      // Deduplicate (keep last occurrence)
+      var seen = {};
+      var deduped = [];
+      for (var di = matched.length - 1; di >= 0; di--) {
+        var key = matched[di].name.toLowerCase();
+        if (!seen[key]) { seen[key] = true; deduped.unshift(matched[di]); }
+      }
 
-      state.ocrResults = results;
-      state.ocrStatus = "Found " + results.length + " players from screenshots.";
+      state.ocrResults = deduped;
+      state.ocrStatus = "✅ Gemini AI menemukan " + deduped.length + " players!";
       state.ocrProgress = 100;
 
-      if (results.length === 0) {
-        state.ocrStatus = "⚠️ Could not parse any players. Try using Quick Manual Update below, or check the Raw OCR Text for debugging.";
+      if (deduped.length === 0) {
+        state.ocrStatus = "⚠️ Tidak ada player yang ditemukan. Coba screenshot yang lebih jelas.";
       }
     } catch(e) {
-      state.ocrStatus = "OCR Error: " + e.message;
+      state.ocrStatus = "❌ Error: " + e.message;
     }
     state.loading = false;
     render();
-  }
-
-  function parseOCRText(text) {
-    var lines = text.split("\n");
-    var results = [];
-    var powerPatterns = [
-      /([\d]+[.,]\d+)\s*[MmBb]/,           // 64.3M, 50,1M
-      /([\d]+[.,]\d+)\s*[Mm]illion/i,       // 64.3 Million
-      /([\d]+[.,]\d+)\s*[Mm]il/i,           // 64.3 mil
-      /([\d]+)\s*[.,]\s*([\d]+)\s*[MmBb]/,  // 64 . 3 M (OCR space errors)
-    ];
-
-    lines.forEach(function(line) {
-      line = line.trim();
-      if (!line || line.length < 4) return;
-
-      var powerVal = null;
-      var powerIdx = -1;
-      var suffix = "M";
-
-      // Try each power pattern
-      for (var pi = 0; pi < powerPatterns.length; pi++) {
-        var pm = line.match(powerPatterns[pi]);
-        if (pm) {
-          if (pi === 3) {
-            // Pattern with spaces: "64 . 3 M"
-            powerVal = pm[1] + "." + pm[2];
-          } else {
-            powerVal = pm[1].replace(",", ".");
-          }
-          powerIdx = pm.index;
-          if (/[Bb]/.test(line.substring(pm.index, pm.index + pm[0].length + 2))) suffix = "B";
-          break;
-        }
-      }
-
-      if (!powerVal || powerIdx < 2) return;
-
-      var beforePower = line.substring(0, powerIdx).trim();
-      // Clean up: remove leading numbers, special chars, level indicators
-      var name = beforePower
-        .replace(/^[\d.\s#:]+/, "")
-        .replace(/\b[Ll][Vv]\.?\s*\d+/g, "")
-        .replace(/\b\d{1,2}\s*$/, "")
-        .replace(/[|[\]{}()\\/]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      if (name.length < 2 || name.length > 30) return;
-
-      // Match against existing players
-      var exactMatch = state.players.find(function(p) {
-        return p.name.toLowerCase() === name.toLowerCase();
-      });
-
-      if (exactMatch) {
-        results.push({ name: exactMatch.name, power: powerVal + suffix, matched: true });
-      } else {
-        // Fuzzy match
-        var bestMatch = null, bestScore = 0;
-        state.players.forEach(function(p) {
-          var score = similarity(name.toLowerCase(), p.name.toLowerCase());
-          if (score > bestScore && score > 0.55) { bestScore = score; bestMatch = p; }
-        });
-        if (bestMatch) {
-          results.push({ name: bestMatch.name, power: powerVal + suffix, matched: true });
-        } else if (parseFloat(powerVal) > 0) {
-          results.push({ name: name, power: powerVal + suffix, matched: false });
-        }
-      }
-    });
-
-    // Deduplicate (keep last)
-    var seen = {};
-    var deduped = [];
-    for (var i = results.length - 1; i >= 0; i--) {
-      var key = results[i].name.toLowerCase();
-      if (!seen[key]) {
-        seen[key] = true;
-        deduped.unshift(results[i]);
-      }
-    }
-    return deduped;
   }
 
   function similarity(a, b) {
@@ -1128,16 +1073,6 @@
       }
     }
     return m[b.length][a.length];
-  }
-
-  function loadScript(src) {
-    return new Promise(function(resolve, reject) {
-      var s = document.createElement("script");
-      s.src = src;
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
   }
 
   // === START ===
