@@ -30,6 +30,7 @@
     ocrProgress: 0,
     ocrResults: [],
     ocrRawText: "",
+    scanCategory: "power",
     groqKey: null,
     dirty: false,
     weeklyData: null,
@@ -626,8 +627,25 @@
   function renderScreenshotTab() {
     var html = '<div class="content"><div class="screenshot-tab">';
 
+    // Category selector
+    html += '<div class="section-title">📂 KATEGORI DATA</div>';
+    html += '<div class="category-selector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">';
+    var cats = [
+      {id:"power", icon:"⚡", label:"Power Update", desc:"Update kekuatan player"},
+      {id:"donation", icon:"💰", label:"Top Donasi", desc:"Data donasi aliansi"},
+      {id:"duel", icon:"⚔️", label:"Duel Aliansi", desc:"Poin duel aliansi"}
+    ];
+    cats.forEach(function(c) {
+      var active = state.scanCategory === c.id;
+      html += '<button class="cat-btn' + (active ? ' active' : '') + '" data-cat="' + c.id + '" style="flex:1;min-width:100px;padding:10px 8px;border-radius:8px;border:2px solid ' + (active ? 'var(--gold-primary)' : 'var(--border-color)') + ';background:' + (active ? 'rgba(255,215,0,0.1)' : 'var(--bg-card)') + ';color:' + (active ? 'var(--gold-primary)' : 'var(--text-muted)') + ';cursor:pointer;text-align:center;font-size:0.85rem;transition:all 0.2s">';
+      html += '<div style="font-size:1.4rem">' + c.icon + '</div>';
+      html += '<div style="font-weight:600;margin-top:4px">' + c.label + '</div>';
+      html += '</button>';
+    });
+    html += '</div>';
+
     // Upload zone
-    html += '<div class="upload-zone" id="upload-zone"><div class="icon">📸</div><p>Tap to upload Member List screenshots</p><p class="hint">Upload screenshots from game, multiple images OK</p></div>';
+    html += '<div class="upload-zone" id="upload-zone"><div class="icon">📸</div><p>Upload screenshot (' + cats.find(function(c){return c.id===state.scanCategory}).label + ')</p><p class="hint">Maks 5 gambar per batch (' + state.screenshots.length + '/5)</p></div>';
     html += '<input type="file" id="file-input" accept="image/*" multiple style="display:none">';
 
     if (state.screenshots.length > 0) {
@@ -660,13 +678,18 @@
         var statusColor = r.matched ? "#00c853" : "var(--gold-primary)";
         var statusText = r.matched ? "✅ Match" : "🆕 New";
         html += '<div class="ocr-result-card">';
-        html += '<div class="orc-name">' + esc(r.name) + '</div>';
-        html += '<div class="orc-power">' + esc(r.power) + (r.level ? ' | Lv.' + r.level : '') + '</div>';
+        html += '<div class="orc-name">' + esc(r.name) + (r.originalName ? ' <span style="color:var(--text-muted);font-size:0.75rem">(dari: ' + esc(r.originalName) + ')</span>' : '') + '</div>';
+        if (state.scanCategory === "power") {
+          html += '<div class="orc-power">' + esc(r.power) + (r.level ? ' | Lv.' + r.level : '') + '</div>';
+        } else {
+          html += '<div class="orc-power">' + (state.scanCategory === "donation" ? "💰 " : "⚔️ ") + (r.value !== undefined ? Number(r.value).toLocaleString() : "N/A") + '</div>';
+        }
         html += '<div class="orc-status" style="color:' + statusColor + '">' + statusText + '</div>';
         html += '</div>';
       });
       html += '<div style="height:12px"></div>';
-      html += '<button class="btn-gold" id="apply-ocr" style="width:100%">✅ Apply ' + state.ocrResults.length + ' Results to Roster</button>';
+      var catLabel = state.scanCategory === "power" ? "Roster" : state.scanCategory === "donation" ? "Donasi" : "Duel Aliansi";
+      html += '<button class="btn-gold" id="apply-ocr" style="width:100%">✅ Apply ' + state.ocrResults.length + ' Results ke ' + catLabel + '</button>';
     }
 
     // Separator
@@ -870,6 +893,18 @@
     var mo = document.getElementById("modal-overlay");
     if (mo) mo.onclick = function(e) { if (e.target === mo) { state.editPlayer = null; state.editIdx = -1; render(); } };
 
+    // Category buttons
+    document.querySelectorAll(".cat-btn[data-cat]").forEach(function(btn) {
+      btn.onclick = function() {
+        state.scanCategory = btn.dataset.cat;
+        state.screenshots = [];
+        state.ocrResults = [];
+        state.ocrStatus = "";
+        state.ocrRawText = "";
+        render();
+      };
+    });
+
     // Screenshot upload
     var uz = document.getElementById("upload-zone");
     var fi = document.getElementById("file-input");
@@ -894,21 +929,36 @@
     var ao = document.getElementById("apply-ocr");
     if (ao) ao.onclick = function() {
       var updated = 0;
-      state.ocrResults.forEach(function(r) {
-        if (r.matched) {
-          var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
-          if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
-        }
-      });
+      if (state.scanCategory === "power") {
+        state.ocrResults.forEach(function(r) {
+          if (r.matched) {
+            var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
+            if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
+          }
+        });
+        state.dirty = true;
+        state.tab = "roster";
+      } else {
+        // Donation or Duel - update weeklydata
+        var dataField = state.scanCategory === "donation" ? "donations" : "daPoints";
+        state.ocrResults.forEach(function(r) {
+          if (r.matched && r.value !== undefined) {
+            var pName = r.name;
+            if (!state.weeklyData) state.weeklyData = {};
+            if (!state.weeklyData[dataField]) state.weeklyData[dataField] = {};
+            state.weeklyData[dataField][pName] = Number(r.value);
+            updated++;
+          }
+        });
+        state.weeklyDirty = true;
+      }
       state.ocrResults = [];
       state.ocrStatus = "";
       state.ocrRawText = "";
       state.screenshots = [];
-      state.dirty = true;
-      state.msg = updated + " players updated!";
+      state.msg = updated + " data updated!";
       state.msgType = "success";
-      state.tab = "roster";
-      showToast(updated + " players updated! ✅");
+      showToast(updated + " data updated! ✅");
       render();
     };
 
@@ -938,15 +988,36 @@
   }
 
   function addFiles(files) {
+    var remaining = 5 - state.screenshots.length;
+    if (remaining <= 0) {
+      showToast("Maksimal 5 gambar per batch! ⚠️");
+      return;
+    }
+    var added = 0;
     Array.from(files).forEach(function(f) {
-      if (!f.type.startsWith("image/")) return;
+      if (!f.type.startsWith("image/") || added >= remaining) return;
       var reader = new FileReader();
       reader.onload = function(e) { state.screenshots.push(e.target.result); render(); };
       reader.readAsDataURL(f);
+      added++;
     });
+    if (Array.from(files).length > remaining) {
+      showToast("Hanya " + remaining + " gambar yang ditambahkan (maks 5) ⚠️");
+    }
   }
 
   // === GROQ VISION AI ===
+
+  function getPromptForCategory(cat) {
+    if (cat === "donation") {
+      return "Extract ALL player donation data from this Last War: Survival game screenshot. The game language is Indonesian (Bahasa Indonesia). Look for player names and their donation amounts.\nFor each player extract:\n- name: exact player name as displayed\n- value: donation amount as number (e.g. 1500000, 250000). If shown as abbreviated like 1.5M, convert to full number.\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"value\":1500000}]";
+    } else if (cat === "duel") {
+      return "Extract ALL player duel/battle point data from this Last War: Survival game alliance duel screenshot. The game language is Indonesian (Bahasa Indonesia). Look for player names and their duel points or battle scores.\nFor each player extract:\n- name: exact player name as displayed\n- value: point/score as number\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"value\":85000}]";
+    } else {
+      return "Extract ALL player data from this Last War: Survival game member list screenshot. The game language is Indonesian (Bahasa Indonesia). Power may be shown as 'Kekuatan'. Look for every player entry visible.\nFor each player extract:\n- name: exact player name as displayed\n- power: power value with suffix (e.g. \"64.3M\", \"1.2B\", \"850.5K\")\n- level: level number (integer)\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"power\":\"64.3M\",\"level\":28}]";
+    }
+  }
+
   async function runOCR() {
     if (state.screenshots.length === 0) return;
     if (!state.groqKey) {
@@ -980,7 +1051,7 @@
             messages: [{
               role: "user",
               content: [
-                { type: "text", text: "Extract ALL player data from this Last War: Survival game member list screenshot. The game language is Indonesian (Bahasa Indonesia). Power may be shown as 'Kekuatan'. Look for every player entry visible.\nFor each player extract:\n- name: exact player name as displayed\n- power: power value with suffix (e.g. \"64.3M\", \"1.2B\", \"850.5K\")\n- level: level number (integer)\n\nReturn ONLY a valid JSON array, no markdown backticks, no explanation. Example:\n[{\"name\":\"PlayerName\",\"power\":\"64.3M\",\"level\":28}]" },
+                { type: "text", text: getPromptForCategory(state.scanCategory) },
                 { type: "image_url", image_url: { url: dataUrl } }
               ]
             }],
@@ -1014,7 +1085,9 @@
       // Match results to existing players (fuzzy matching)
       var matched = [];
       allResults.forEach(function(r) {
-        if (!r.name || !r.power) return;
+        if (!r.name) return;
+        if (state.scanCategory === "power" && !r.power) return;
+        if ((state.scanCategory === "donation" || state.scanCategory === "duel") && r.value === undefined) return;
         var exactMatch = state.players.find(function(p) {
           return p.name.toLowerCase() === r.name.toLowerCase();
         });
