@@ -972,7 +972,7 @@
         var base64Data = dataUrl.split(",")[1];
         var mimeType = dataUrl.match(/data:(.*?);/)[1];
 
-        var response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + state.geminiKey, {
+        var response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + state.geminiKey, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
