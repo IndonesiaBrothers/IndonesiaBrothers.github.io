@@ -127,17 +127,32 @@
   async function handleLogin(pw) {
     state.loading = true; state.msg = null; render();
     try {
-      var token = await decryptText(state.configData.encrypted_token, pw);
+      var token;
+      try {
+        token = await decryptText(state.configData.encrypted_token, pw);
+      } catch(de) {
+        state.msg = "❌ Password salah. Coba lagi.";
+        state.msgType = "error";
+        state.loading = false; render();
+        return;
+      }
       state.token = token;
-      var data = await ghGet(SCRIPT_PATH);
-      state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-      state.scriptSHA = data.sha;
-      state.players = parseMembers(state.originalScript);
+      try {
+        var data = await ghGet(SCRIPT_PATH);
+        state.originalScript = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+        state.scriptSHA = data.sha;
+        state.players = parseMembers(state.originalScript);
+      } catch(ge) {
+        state.msg = "❌ GitHub token expired atau tidak valid. Silakan reset setup.";
+        state.msgType = "error";
+        state.loading = false; render();
+        return;
+      }
       state.view = "dashboard";
-      state.msg = state.players.length + " players loaded.";
+      state.msg = "✅ " + state.players.length + " players loaded.";
       state.msgType = "success";
     } catch(e) {
-      state.msg = "Wrong password or connection error.";
+      state.msg = "❌ Error: " + e.message;
       state.msgType = "error";
     }
     state.loading = false; render();
