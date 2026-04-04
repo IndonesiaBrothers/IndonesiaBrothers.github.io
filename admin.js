@@ -566,21 +566,6 @@
     });
     html += '</div></div>';
 
-    // Rank breakdown
-    html += '<div class="monitor-section"><div class="monitor-title">🏅 Rank Breakdown</div>';
-    html += '<div class="rank-bars">';
-    ["R5","R4","R3","R2","R1"].forEach(function(r) {
-      var c = counts[r] || 0;
-      var pct = counts.all > 0 ? (c / counts.all * 100).toFixed(0) : 0;
-      var colors = { R5: "#FFD700", R4: "#ff1744", R3: "#b040f0", R2: "#2979ff", R1: "#546e7a" };
-      html += '<div class="rank-bar-row">';
-      html += '<span class="rank-bar-label">' + r + '</span>';
-      html += '<div class="rank-bar-track"><div class="rank-bar-fill" style="width:' + pct + '%;background:' + (colors[r]||"#666") + '"></div></div>';
-      html += '<span class="rank-bar-count">' + c + '</span>';
-      html += '</div>';
-    });
-    html += '</div></div>';
-
     // Loading state for weekly/history data
     if (!state.weeklyData || !state.powerHistory) {
       html += '<div class="monitor-section"><div class="monitor-loading">⏳ Loading data...</div></div>';
