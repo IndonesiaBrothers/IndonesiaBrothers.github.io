@@ -16,7 +16,7 @@
     players: [],
     originalScript: "",
     scriptSHA: null,
-    tab: "roster",
+    tab: "monitor",
     search: "",
     filterRank: "all",
     sortCol: "rank",
@@ -503,11 +503,14 @@
 
     // Tabs
     html += '<div class="tab-bar">';
+    html += '<button class="tab-btn' + (state.tab === "monitor" ? " active" : "") + '" data-tab="monitor">📊 Monitor</button>';
     html += '<button class="tab-btn' + (state.tab === "roster" ? " active" : "") + '" data-tab="roster">📋 Roster</button>';
     html += '<button class="tab-btn' + (state.tab === "screenshot" ? " active" : "") + '" data-tab="screenshot">📸 Update</button>';
     html += '</div>';
 
-    if (state.tab === "roster") {
+    if (state.tab === "monitor") {
+      html += renderMonitorTab(counts, totalPower, powerStr);
+    } else if (state.tab === "roster") {
       html += renderRosterTab(filtered, counts);
     } else if (state.tab === "screenshot") {
       html += renderScreenshotTab();
@@ -528,6 +531,167 @@
 
     app.innerHTML = html;
     bindDashboard();
+  }
+
+
+  function renderMonitorTab(counts, totalPower, powerStr) {
+    var html = '';
+
+    // Overview Cards
+    html += '<div class="monitor-grid">';
+    html += '<div class="monitor-card"><div class="monitor-icon">👥</div><div class="monitor-val">' + counts.all + '</div><div class="monitor-label">Total Members</div></div>';
+    html += '<div class="monitor-card"><div class="monitor-icon">⚡</div><div class="monitor-val">' + powerStr + '</div><div class="monitor-label">Alliance Power</div></div>';
+    html += '<div class="monitor-card"><div class="monitor-icon">📅</div><div class="monitor-val">' + getWeekLabel() + '</div><div class="monitor-label">Current Week</div></div>';
+    html += '</div>';
+
+    // HQ Breakdown
+    var hqCounts = {};
+    state.players.forEach(function(m) {
+      var lvl = m.level || 0;
+      hqCounts[lvl] = (hqCounts[lvl] || 0) + 1;
+    });
+    var hqLevels = Object.keys(hqCounts).map(Number).sort(function(a,b) { return b - a; });
+
+    html += '<div class="monitor-section"><div class="monitor-title">🏰 HQ Breakdown</div>';
+    html += '<div class="hq-grid">';
+    hqLevels.forEach(function(lvl) {
+      html += '<div class="hq-chip">';
+      html += '<div class="hq-level">HQ ' + lvl + '</div>';
+      html += '<div class="hq-count">' + hqCounts[lvl] + '</div>';
+      html += '<div class="hq-label">members</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    // Rank breakdown
+    html += '<div class="monitor-section"><div class="monitor-title">🏅 Rank Breakdown</div>';
+    html += '<div class="rank-bars">';
+    ["R5","R4","R3","R2","R1"].forEach(function(r) {
+      var c = counts[r] || 0;
+      var pct = counts.all > 0 ? (c / counts.all * 100).toFixed(0) : 0;
+      var colors = { R5: "#FFD700", R4: "#ff1744", R3: "#b040f0", R2: "#2979ff", R1: "#546e7a" };
+      html += '<div class="rank-bar-row">';
+      html += '<span class="rank-bar-label">' + r + '</span>';
+      html += '<div class="rank-bar-track"><div class="rank-bar-fill" style="width:' + pct + '%;background:' + (colors[r]||"#666") + '"></div></div>';
+      html += '<span class="rank-bar-count">' + c + '</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    // Loading state for weekly/history data
+    if (!state.weeklyData || !state.powerHistory) {
+      html += '<div class="monitor-section"><div class="monitor-loading">⏳ Loading data...</div></div>';
+      // Trigger load
+      loadMonitorData();
+      return html;
+    }
+
+    // === TOP 10 IMPROVE ===
+    html += '<div class="monitor-section"><div class="monitor-title">🚀 Top 10 Improve</div>';
+    var weeks = state.powerHistory.weeks || [];
+    if (weeks.length >= 2) {
+      var sorted = weeks.slice().sort(function(a,b) { return a.weekLabel > b.weekLabel ? 1 : -1; });
+      var prev = sorted[sorted.length - 2];
+      var curr = sorted[sorted.length - 1];
+      html += '<div class="monitor-week-label">📅 ' + prev.weekLabel + ' → ' + curr.weekLabel + '</div>';
+      var improves = [];
+      Object.keys(curr.data).forEach(function(name) {
+        var currPow = curr.data[name];
+        var prevPow = prev.data[name];
+        if (prevPow && prevPow > 0 && currPow > prevPow) {
+          var pctChange = ((currPow - prevPow) / prevPow * 100).toFixed(1);
+          improves.push({ name: name, prev: prevPow, curr: currPow, pct: parseFloat(pctChange) });
+        }
+      });
+      improves.sort(function(a,b) { return b.pct - a.pct; });
+      var top10 = improves.slice(0, 10);
+      if (top10.length > 0) {
+        html += '<div class="monitor-list">';
+        top10.forEach(function(item, i) {
+          var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i+1) + ".";
+          html += '<div class="monitor-row' + (i < 3 ? ' top3' : '') + '">';
+          html += '<span class="monitor-rank">' + medal + '</span>';
+          html += '<span class="monitor-name">' + esc(item.name) + '</span>';
+          html += '<span class="monitor-pct">+' + item.pct + '%</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div class="monitor-empty">Belum ada data improve</div>';
+      }
+    } else {
+      html += '<div class="monitor-empty">⚠️ Butuh minimal 2 minggu data power history</div>';
+    }
+    html += '</div>';
+
+    // === TOP 10 DONASI ===
+    html += '<div class="monitor-section"><div class="monitor-title">💰 Top 10 Donasi</div>';
+    if (state.weeklyData.weekLabel) {
+      html += '<div class="monitor-week-label">📅 ' + state.weeklyData.weekLabel + '</div>';
+    }
+    var donations = state.weeklyData.donations || {};
+    var donList = [];
+    Object.keys(donations).forEach(function(name) {
+      if (donations[name] > 0) donList.push({ name: name, val: donations[name] });
+    });
+    donList.sort(function(a,b) { return b.val - a.val; });
+    var topDon = donList.slice(0, 10);
+    if (topDon.length > 0) {
+      html += '<div class="monitor-list">';
+      topDon.forEach(function(item, i) {
+        var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i+1) + ".";
+        html += '<div class="monitor-row' + (i < 3 ? ' top3' : '') + '">';
+        html += '<span class="monitor-rank">' + medal + '</span>';
+        html += '<span class="monitor-name">' + esc(item.name) + '</span>';
+        html += '<span class="monitor-val-text">' + item.val.toLocaleString() + '</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="monitor-empty">Belum ada data donasi</div>';
+    }
+    html += '</div>';
+
+    // === TOP 10 DUEL ALIANSI ===
+    html += '<div class="monitor-section"><div class="monitor-title">⚔️ Top 10 Duel Aliansi</div>';
+    if (state.weeklyData.weekLabel) {
+      html += '<div class="monitor-week-label">📅 ' + state.weeklyData.weekLabel + '</div>';
+    }
+    var daPoints = state.weeklyData.daPoints || {};
+    var duelList = [];
+    Object.keys(daPoints).forEach(function(name) {
+      if (daPoints[name] > 0) duelList.push({ name: name, val: daPoints[name] });
+    });
+    duelList.sort(function(a,b) { return b.val - a.val; });
+    var topDuel = duelList.slice(0, 10);
+    if (topDuel.length > 0) {
+      html += '<div class="monitor-list">';
+      topDuel.forEach(function(item, i) {
+        var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i+1) + ".";
+        html += '<div class="monitor-row' + (i < 3 ? ' top3' : '') + '">';
+        html += '<span class="monitor-rank">' + medal + '</span>';
+        html += '<span class="monitor-name">' + esc(item.name) + '</span>';
+        html += '<span class="monitor-val-text">' + item.val.toLocaleString() + ' pts</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="monitor-empty">Belum ada data duel</div>';
+    }
+    html += '</div>';
+
+    // Refresh button
+    html += '<div style="text-align:center;margin:1rem 0">';
+    html += '<button class="btn-secondary" id="monitor-refresh-btn">🔄 Refresh Data</button>';
+    html += '</div>';
+
+    return html;
+  }
+
+  async function loadMonitorData() {
+    if (!state.weeklyData) await loadWeeklyData();
+    if (!state.powerHistory) await loadPowerHistory();
+    render();
   }
 
   function renderRosterTab(filtered, counts) {
@@ -726,6 +890,14 @@
     document.querySelectorAll(".tab-btn").forEach(function(b) {
       b.onclick = function() { state.tab = b.dataset.tab; state.msg = null; render(); };
     });
+
+    // Monitor refresh
+    var mr = document.getElementById("monitor-refresh-btn");
+    if (mr) mr.onclick = async function() {
+      state.weeklyData = null;
+      state.powerHistory = null;
+      render();
+    };
 
     // Search
     var si = document.getElementById("search-input");
@@ -1189,3 +1361,4 @@
   // === START ===
   init();
 })();
+

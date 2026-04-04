@@ -997,3 +997,249 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     font-size: 1rem;
   }
 }
+
+/* ============================================
+   MONITOR DASHBOARD TAB
+   ============================================ */
+
+.monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.monitor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.monitor-card:hover {
+  border-color: var(--red-primary);
+  box-shadow: 0 0 15px var(--red-glow);
+}
+
+.monitor-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.monitor-val {
+  font-family: var(--font-accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  letter-spacing: 0.5px;
+}
+
+.monitor-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.2rem;
+}
+
+.monitor-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.monitor-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.monitor-week-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.monitor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.monitor-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  transition: all 0.2s;
+}
+
+.monitor-row:hover {
+  background: var(--bg-card-hover);
+}
+
+.monitor-row.top3 {
+  background: rgba(255, 214, 0, 0.06);
+  border: 1px solid rgba(255, 214, 0, 0.12);
+}
+
+.monitor-rank {
+  min-width: 28px;
+  text-align: center;
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.monitor-name {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.monitor-pct {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #00e676;
+  min-width: 60px;
+  text-align: right;
+}
+
+.monitor-val-text {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  min-width: 70px;
+  text-align: right;
+}
+
+.monitor-empty {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem;
+}
+
+.monitor-loading {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 2rem;
+}
+
+/* HQ Breakdown */
+.hq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.hq-chip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.hq-chip:hover {
+  border-color: var(--cyan-primary);
+}
+
+.hq-level {
+  font-family: var(--font-accent);
+  font-size: 0.7rem;
+  color: var(--cyan-primary);
+  letter-spacing: 0.5px;
+}
+
+.hq-count {
+  font-family: var(--font-accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hq-label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Rank bars for monitor */
+.rank-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rank-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rank-bar-label {
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: center;
+}
+
+.rank-bar-track {
+  flex: 1;
+  height: 20px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+  min-width: 4px;
+}
+
+.rank-bar-count {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 24px;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .monitor-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+  .monitor-card { padding: 0.6rem 0.4rem; }
+  .monitor-val { font-size: 1rem; }
+  .monitor-label { font-size: 0.55rem; }
+  .hq-grid { grid-template-columns: repeat(3, 1fr); }
+  .monitor-row { padding: 0.4rem; gap: 0.3rem; }
+  .monitor-name { font-size: 0.8rem; }
+  .monitor-pct, .monitor-val-text { font-size: 0.7rem; }
+}
