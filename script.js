@@ -67,6 +67,58 @@ const rankLabels = {
   R1: "Inactive"
 };
 
+// --- Hall of Fame Weekly Titles ---
+const HOF_TITLES = {
+  improve: ['⚡ Supreme Ascendant', '⚡ Power Titan', '⚡ Rising Force'],
+  donation: ['🎁 Grand Benefactor', '🎁 Elite Patron', '🎁 Noble Giver'],
+  duel: ['⚔️ Duel Overlord', '⚔️ Shadow Slayer', '⚔️ Battle Fury']
+};
+let hofTitles = {};
+
+async function loadHofTitles() {
+  hofTitles = {};
+  // Top Improve from powerhistory.json
+  try {
+    const histResp = await fetch('powerhistory.json?t=' + Date.now());
+    if (histResp.ok) {
+      const history = await histResp.json();
+      const weeks = history.weeks || [];
+      if (weeks.length >= 2) {
+        const curr = weeks[weeks.length - 1];
+        const prev = weeks[weeks.length - 2];
+        const improvements = [];
+        Object.keys(curr.power || {}).forEach(function(name) {
+          const c = curr.power[name] || 0;
+          const p = prev.power[name] || 0;
+          if (p > 0 && c > 0) improvements.push({ name: name, pct: ((c - p) / p) * 100 });
+        });
+        improvements.sort(function(a, b) { return b.pct - a.pct; });
+        improvements.slice(0, 3).forEach(function(p, i) {
+          if (!hofTitles[p.name]) hofTitles[p.name] = [];
+          hofTitles[p.name].push(HOF_TITLES.improve[i]);
+        });
+      }
+    }
+  } catch(e) {}
+  // Donation & Duel from weeklydata.json
+  try {
+    const wResp = await fetch('weeklydata.json?t=' + Date.now());
+    if (wResp.ok) {
+      const weekly = await wResp.json();
+      var donations = weekly.donations || {};
+      Object.entries(donations).filter(function(e) { return e[1] > 0; }).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 3).forEach(function(entry, i) {
+        if (!hofTitles[entry[0]]) hofTitles[entry[0]] = [];
+        hofTitles[entry[0]].push(HOF_TITLES.donation[i]);
+      });
+      var daPoints = weekly.daPoints || {};
+      Object.entries(daPoints).filter(function(e) { return e[1] > 0; }).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 3).forEach(function(entry, i) {
+        if (!hofTitles[entry[0]]) hofTitles[entry[0]] = [];
+        hofTitles[entry[0]].push(HOF_TITLES.duel[i]);
+      });
+    }
+  } catch(e) {}
+}
+
 // Sort members by Rank (R5→R1) then by power (highest first) within each rank
 const rankOrder = { 'R5': 1, 'R4': 2, 'R3': 3, 'R2': 4, 'R1': 5 };
 members.sort((a, b) => {
@@ -93,6 +145,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initMobileNav();
   initSmoothScroll();
   initTypingEffect();
+  await loadHofTitles();
   initMembers();
   initTopPower();
   initScrollReveal();
@@ -800,8 +853,10 @@ function renderMembers() {
             <span class="member-stat-value">${member.level}</span>
           </div>
           <div class="member-stat">
-            <span class="member-stat-label">Rank</span>
-            <span class="member-stat-value">${rankLabels[member.rank] || member.rank}</span>
+            <span class="member-stat-label">Title</span>
+            ${(hofTitles[member.name] || []).length > 0
+              ? (hofTitles[member.name]).map(function(t) { return '<span class="member-stat-value member-weekly-title">' + t + '</span>'; }).join('')
+              : '<span class="member-stat-value">—</span>'}
           </div>
         </div>
       </div>

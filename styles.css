@@ -1300,6 +1300,18 @@ ul { list-style: none; }
   letter-spacing: 1px;
 }
 
+/* Weekly HoF Title in member card */
+.member-weekly-title {
+  font-family: var(--font-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--cyan-primary);
+  letter-spacing: 0.5px;
+  display: block;
+  line-height: 1.5;
+  text-shadow: 0 0 8px var(--cyan-glow);
+}
+
 /* No results */
 .no-results {
   grid-column: 1 / -1;
