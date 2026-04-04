@@ -538,6 +538,7 @@
 
   function renderMonitorTab(counts, totalPower, powerStr) {
     var html = '';
+    html += '<div class="content" style="padding-bottom:100px">';
 
     // Overview Cards
     html += '<div class="monitor-grid">';
@@ -689,6 +690,7 @@
     html += '<button class="btn-secondary" id="monitor-refresh-btn">🔄 Refresh Data</button>';
     html += '</div>';
 
+    html += '</div>'; // close .content
     return html;
   }
 
