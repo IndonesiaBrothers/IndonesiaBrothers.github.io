@@ -1133,9 +1133,12 @@
           state.weeklyDirty = false;
         }
         
-        // Snapshot power history if power scan
+        // Snapshot power history if power scan, then push to GitHub
         if (state.scanCategory === "power") {
-          try { await snapshotCurrentPower(); } catch(e) { console.log("History snapshot skipped:", e); }
+          try {
+            await snapshotCurrentPower();
+            await pushWeeklyData();
+          } catch(e) { console.log("History/weekly push skipped:", e); }
         }
         
         state.msg = "\u2705 " + pushMsg + " \u2014 Pushed to GitHub! Site updates in ~1 min.";
