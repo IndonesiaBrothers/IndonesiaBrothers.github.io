@@ -168,6 +168,8 @@
       state.view = "dashboard";
       state.msg = "✅ " + state.players.length + " players loaded.";
       state.msgType = "success";
+      // Pre-load monitor data in background
+      loadMonitorData();
     } catch(e) {
       state.msg = "❌ Error: " + e.message;
       state.msgType = "error";
@@ -595,9 +597,11 @@
       var curr = sorted[sorted.length - 1];
       html += '<div class="monitor-week-label">📅 ' + prev.weekLabel + ' → ' + curr.weekLabel + '</div>';
       var improves = [];
-      Object.keys(curr.data).forEach(function(name) {
-        var currPow = curr.data[name];
-        var prevPow = prev.data[name];
+      var currData = curr.power || curr.data || {};
+      var prevData = prev.power || prev.data || {};
+      Object.keys(currData).forEach(function(name) {
+        var currPow = currData[name];
+        var prevPow = prevData[name];
         if (prevPow && prevPow > 0 && currPow > prevPow) {
           var pctChange = ((currPow - prevPow) / prevPow * 100).toFixed(1);
           improves.push({ name: name, prev: prevPow, curr: currPow, pct: parseFloat(pctChange) });
@@ -689,8 +693,10 @@
   }
 
   async function loadMonitorData() {
-    if (!state.weeklyData) await loadWeeklyData();
-    if (!state.powerHistory) await loadPowerHistory();
+    await Promise.all([
+      state.weeklyData ? Promise.resolve() : loadWeeklyData(),
+      state.powerHistory ? Promise.resolve() : loadPowerHistory()
+    ]);
     render();
   }
 
