@@ -661,6 +661,27 @@ function initTranslateToggle() {
   // Detect if we're inside Google Translate proxy
   const isTranslated = location.hostname.includes('.translate.goog');
 
+  // Actively hide Google Translate toolbar when inside proxy
+  if (isTranslated) {
+    function hideGoogleTranslateBar() {
+      var selectors = 'body > .skiptranslate, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, #goog-gt-tt, iframe.goog-te-banner-frame';
+      document.querySelectorAll(selectors).forEach(function(el) {
+        el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('height', '0', 'important');
+        el.style.setProperty('visibility', 'hidden', 'important');
+      });
+      document.body.style.setProperty('top', '0', 'important');
+      document.documentElement.style.setProperty('margin-top', '0', 'important');
+    }
+    hideGoogleTranslateBar();
+    setTimeout(hideGoogleTranslateBar, 100);
+    setTimeout(hideGoogleTranslateBar, 500);
+    setTimeout(hideGoogleTranslateBar, 1500);
+    setTimeout(hideGoogleTranslateBar, 3000);
+    var gtObserver = new MutationObserver(hideGoogleTranslateBar);
+    gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  }
+
   // Build custom dropdown
   dropdown.innerHTML = languages.map(lang => {
     const isActive = lang.code === '' ? !isTranslated : false;
