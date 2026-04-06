@@ -691,32 +691,29 @@ function initTranslateToggle() {
     dropdown.classList.remove('show');
 
     // Trigger Google Translate
-    const setLang = (code, retries) => {
-      const combo = document.querySelector('.goog-te-combo');
-      if (combo) {
-        combo.value = code;
-        combo.dispatchEvent(new Event('change'));
-        return;
-      }
-      if (retries > 0) {
-        setTimeout(() => setLang(code, retries - 1), 300);
-      }
+    const domain = location.hostname;
+    const clearCookies = () => {
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + domain;
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + domain;
     };
 
     if (langCode === '') {
-      // Reset to original language
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
+      clearCookies();
+      location.reload();
+    } else {
+      // Try combo select first (instant, no reload)
       const combo = document.querySelector('.goog-te-combo');
       if (combo) {
-        combo.value = '';
+        combo.value = langCode;
         combo.dispatchEvent(new Event('change'));
-        setTimeout(() => location.reload(), 300);
       } else {
+        // Fallback: set cookie and reload — Google Translate picks it up on init
+        clearCookies();
+        document.cookie = 'googtrans=/id/' + langCode + '; path=/';
+        document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=.' + domain;
         location.reload();
       }
-    } else {
-      setLang(langCode, 15);
     }
   });
 }
