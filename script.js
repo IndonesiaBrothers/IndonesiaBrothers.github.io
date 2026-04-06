@@ -1641,7 +1641,12 @@ document.addEventListener('DOMContentLoaded', () => {
       hofPanels.forEach(p => p.classList.remove('active'));
       
       tab.classList.add('active');
-      document.getElementById('hof-' + target).classList.add('active');
+      const panel = document.getElementById('hof-' + target);
+      panel.classList.add('active');
+      
+      // Auto-scroll to Hall of Fame section
+      const hofSection = document.getElementById('halloffame');
+      if (hofSection) hofSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 
