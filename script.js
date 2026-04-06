@@ -948,6 +948,10 @@ function initTrainLottery() {
   let isSpinning = false;
   const rankLabels = { R5: "LEADER", R4: "OFFICER", R3: "ELITE", R2: "SOLDIER", R1: "RECRUIT" };
 
+  // HoF Bonus System: players with weekly titles get +0.1% per title
+  // Once a player wins, bonus resets to 0 (same as everyone else)
+  const hofBonusUsed = new Set(); // tracks winners this session
+
   // Count selector
   document.querySelectorAll(".slot-count-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1015,6 +1019,47 @@ function initTrainLottery() {
   }
 
   // ============================================
+  // WEIGHTED SELECTION WITH HoF BONUS
+  // Base weight = 1.0 (equal for all)
+  // HoF title holders: +0.1 per title (max +0.3 for 3 titles)
+  // After winning: bonus resets, back to 1.0
+  // ============================================
+  function weightedSelect(pool, count) {
+    const selected = [];
+    const remaining = [...pool];
+
+    for (let i = 0; i < count && remaining.length > 0; i++) {
+      // Calculate weight for each player
+      const weights = remaining.map(function(m) {
+        var base = 1.0;
+        // If already won this session, no bonus
+        if (hofBonusUsed.has(m.name)) return base;
+        // +0.1 per HoF title category
+        var titleCount = (hofTitles[m.name] || []).length;
+        return base + (titleCount * 0.1);
+      });
+
+      var totalWeight = 0;
+      for (var w = 0; w < weights.length; w++) totalWeight += weights[w];
+
+      // Crypto-random weighted pick
+      var rand = cryptoRandom() * totalWeight;
+      var pickIdx = 0;
+      for (var j = 0; j < weights.length; j++) {
+        rand -= weights[j];
+        if (rand <= 0) { pickIdx = j; break; }
+      }
+
+      var winner = remaining[pickIdx];
+      selected.push(winner);
+      // Reset bonus — winner goes back to base weight
+      hofBonusUsed.add(winner.name);
+      remaining.splice(pickIdx, 1);
+    }
+    return selected;
+  }
+
+  // ============================================
   // DRAMATIC SPIN SYSTEM - Epic name cycling
   // True random winner selection at spin time
   // Winner is ONLY determined at the final moment
@@ -1029,10 +1074,10 @@ function initTrainLottery() {
     spinBtn.querySelector(".spin-btn-text").textContent = "\u23F3 SPINNING...";
     resultsContainer.innerHTML = "";
 
-    // Winners selected with cryptographic randomness
-    // Each player has EXACTLY 1/N probability (max 0.09% per spin)
-    // Selection happens via unbiased rejection sampling
-    const winners = hyperShuffle(pool).slice(0, count);
+    // Winners selected with weighted cryptographic randomness
+    // Base: equal 1/N probability — HoF title holders get +0.1% per title
+    // Bonus resets after winning (back to same as everyone else)
+    const winners = weightedSelect(pool, count);
     const namePool = hyperShuffle(pool.map(m => m.name));
     const slotFrame = document.querySelector(".slot-frame");
 
@@ -1113,7 +1158,9 @@ function initTrainLottery() {
             card.className = "result-card";
             card.style.animationDelay = "0s";
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
-            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
+            const titleCount = (hofTitles[winner.name] || []).length;
+            const hofBadge = titleCount > 0 ? '<span class="result-hof-badge">\uD83C\uDFC6 HoF +'+(titleCount*0.1).toFixed(1)+'%</span>' : '';
+            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
             const sparkleCount = window.innerWidth <= 768 ? 0 : 2;
             for (let s = 0; s < sparkleCount; s++) {
               const sparkle = document.createElement("div");

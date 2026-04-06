@@ -3200,6 +3200,34 @@ body { top: 0 !important; }
   100% { background-position: 300% 50%; }
 }
 
+.lottery-hof-info {
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: #d4af37;
+  letter-spacing: 1px;
+  margin-top: 6px;
+  opacity: 0.8;
+}
+.lottery-hof-info strong {
+  color: #fff;
+}
+
+.result-hof-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+  letter-spacing: 1px;
+  vertical-align: middle;
+}
+
 .result-rank {
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.78rem;
