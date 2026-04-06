@@ -691,38 +691,32 @@ function initTranslateToggle() {
     dropdown.classList.remove('show');
 
     // Trigger Google Translate
-    if (langCode === '') {
-      // Reset to original
-      const frame = document.querySelector('.goog-te-banner-frame');
-      if (frame) {
-        const closeBtn = frame.contentDocument.querySelector('.goog-close-link');
-        if (closeBtn) closeBtn.click();
+    const setLang = (code, retries) => {
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = code;
+        combo.dispatchEvent(new Event('change'));
+        return;
       }
-      // Fallback: clear the cookie
+      if (retries > 0) {
+        setTimeout(() => setLang(code, retries - 1), 300);
+      }
+    };
+
+    if (langCode === '') {
+      // Reset to original language
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
-      if (langCode === '') {
-        // Try using the select as well
-        const combo = document.querySelector('.goog-te-combo');
-        if (combo) {
-          combo.value = '';
-          combo.dispatchEvent(new Event('change'));
-        } else {
-          location.reload();
-        }
+      const combo = document.querySelector('.goog-te-combo');
+      if (combo) {
+        combo.value = '';
+        combo.dispatchEvent(new Event('change'));
+        setTimeout(() => location.reload(), 300);
+      } else {
+        location.reload();
       }
     } else {
-      // Wait for Google Translate to be ready, then select language
-      const trySelect = () => {
-        const combo = document.querySelector('.goog-te-combo');
-        if (combo) {
-          combo.value = langCode;
-          combo.dispatchEvent(new Event('change'));
-        } else {
-          setTimeout(trySelect, 200);
-        }
-      };
-      trySelect();
+      setLang(langCode, 15);
     }
   });
 }
