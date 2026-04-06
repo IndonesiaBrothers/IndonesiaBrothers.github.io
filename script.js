@@ -143,6 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initParticleCanvas();
   initNavbar();
   initMobileNav();
+  initTranslateToggle();
   initSmoothScroll();
   initTypingEffect();
   await loadHofTitles();
@@ -625,6 +626,26 @@ function initMobileNav() {
   document.addEventListener("click", (e) => {
     if (!toggle.contains(e.target) && !navLinks.contains(e.target)) {
       closeNav();
+    }
+  });
+}
+
+// ============================================
+// TRANSLATE BUTTON
+// ============================================
+function initTranslateToggle() {
+  const btn = document.getElementById('translate-btn');
+  const el = document.getElementById('google_translate_element');
+  if (!btn || !el) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    el.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!btn.contains(e.target) && !el.contains(e.target)) {
+      el.classList.remove('show');
     }
   });
 }

@@ -40,6 +40,12 @@
         <li><a href="#allies" class="nav-link">Allies</a></li>
         <li><a href="#join" class="nav-link nav-link-cta">Join Us</a></li>
       </ul>
+      <div class="nav-translate" id="nav-translate">
+        <button class="translate-btn" id="translate-btn" aria-label="Translate page">
+          <span class="translate-icon">🌐</span>
+        </button>
+        <div id="google_translate_element"></div>
+      </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
         <span></span>
         <span></span>
@@ -560,6 +566,17 @@
     </div>
   </footer>
 
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'id',
+        includedLanguages: 'id,en,zh-CN,zh-TW,ja,ko,ms,th,vi,ar,fr,es,de,ru,pt,hi',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <script src="script.js"></script>
 </body>
 </html>
