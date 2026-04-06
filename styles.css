@@ -15,10 +15,10 @@
   --red-dark: #e53935;
   --red-glow: rgba(255, 23, 68, 0.4);
   --red-glow-soft: rgba(255, 23, 68, 0.15);
-  --gold-primary: #ff8a95;
-  --gold-dark: #e07080;
-  --gold-glow: rgba(255, 138, 149, 0.25);
-  --gold-glow-soft: rgba(255, 138, 149, 0.08);
+  --gold-primary: #d4af37;
+  --gold-dark: #b8960f;
+  --gold-glow: rgba(212, 175, 55, 0.3);
+  --gold-glow-soft: rgba(212, 175, 55, 0.12);
   --cyan-primary: #c0b8c8;
   --cyan-glow: rgba(192, 184, 200, 0.15);
   --text-primary: #eeeef5;
@@ -2037,7 +2037,7 @@ body { top: 0 !important; }
   border-radius: 4px;
 }
 .sv-king {
-  color: #ff8a95;
+  color: #ff6b6b;
   text-shadow: 0 0 15px rgba(255, 138, 149, 0.5);
   border: 1px solid rgba(255, 138, 149, 0.2);
   background: rgba(255, 138, 149, 0.05);
@@ -2239,9 +2239,9 @@ body { top: 0 !important; }
   pointer-events: none;
   z-index: 0;
 }
-.role-glow-muse { background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%); }
-.role-glow-butler { background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%); }
-.role-glow-recruiter { background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%); }
+.role-glow-muse { background: radial-gradient(circle, rgba(140, 80, 200, 0.15) 0%, transparent 70%); }
+.role-glow-butler { background: radial-gradient(circle, rgba(50, 150, 160, 0.15) 0%, transparent 70%); }
+.role-glow-recruiter { background: radial-gradient(circle, rgba(60, 160, 80, 0.15) 0%, transparent 70%); }
 
 .role-emoji {
   font-size: 2.2rem;
@@ -2284,9 +2284,9 @@ body { top: 0 !important; }
   position: relative;
   z-index: 1;
 }
-.role-theme-muse .role-card-name { color: #c084fc; }
-.role-theme-butler .role-card-name { color: #22d3ee; }
-.role-theme-recruiter .role-card-name { color: #4ade80; }
+.role-theme-muse .role-card-name { color: #b07cd8; }
+.role-theme-butler .role-card-name { color: #4db8b8; }
+.role-theme-recruiter .role-card-name { color: #5cb85c; }
 
 .role-card-rank {
   font-family: 'Rajdhani', sans-serif;
@@ -2347,8 +2347,8 @@ body { top: 0 !important; }
   margin-bottom: 8px;
   opacity: 0.5;
 }
-.role-theme-muse .role-card-power { color: #c0a0c0; }
-.role-theme-butler .role-card-power { color: #90a8b8; }
+.role-theme-muse .role-card-power { color: #b0a0c0; }
+.role-theme-butler .role-card-power { color: #90b0b0; }
 .role-theme-recruiter .role-card-power { color: #90b0a0; }
 
 .role-card-desc {
@@ -2453,7 +2453,7 @@ body { top: 0 !important; }
 
 .power-row:hover {
   background: linear-gradient(135deg, rgba(255, 0, 60, 0.1), rgba(10, 10, 30, 0.95));
-  border-left-color: #c0b8c8;
+  border-left-color: #d4af37;
   transform: translateX(8px) scale(1.01) !important;
   box-shadow: 0 0 25px rgba(255, 0, 60, 0.2), 0 0 50px rgba(160, 160, 184, 0.05);
 }
@@ -2572,7 +2572,7 @@ body { top: 0 !important; }
 }
 
 .rank-1 .power-player-name { color: #ff8a95; text-shadow: 0 0 12px rgba(255, 138, 149, 0.4); }
-.rank-2 .power-player-name { color: #c0b8c8; text-shadow: 0 0 10px rgba(160, 160, 184, 0.3); }
+.rank-2 .power-player-name { color: #d4af37; text-shadow: 0 0 10px rgba(160, 160, 184, 0.3); }
 .rank-3 .power-player-name { color: #d0a8a0; text-shadow: 0 0 10px rgba(200, 160, 152, 0.3); }
 
 .power-player-rank {
@@ -2596,7 +2596,7 @@ body { top: 0 !important; }
 }
 
 .rank-1 .power-value { color: #ff8a95; text-shadow: 0 0 15px rgba(255, 138, 149, 0.5); }
-.rank-2 .power-value { color: #c0b8c8; text-shadow: 0 0 12px rgba(160, 160, 184, 0.4); }
+.rank-2 .power-value { color: #d4af37; text-shadow: 0 0 12px rgba(160, 160, 184, 0.4); }
 .rank-3 .power-value { color: #c8a098; text-shadow: 0 0 12px rgba(200, 160, 152, 0.4); }
 
 .power-bar-container {
@@ -2805,7 +2805,7 @@ body { top: 0 !important; }
 }
 
 .slot-item.selected {
-  color: #c0b8c8;
+  color: #d4af37;
   text-shadow: 0 0 20px rgba(160, 160, 184, 0.6), 0 0 40px rgba(160, 160, 184, 0.3);
   font-size: 1.5rem;
 }
@@ -2865,8 +2865,8 @@ body { top: 0 !important; }
 }
 .slot-rank-btn.active {
   background: linear-gradient(135deg, rgba(160, 160, 184, 0.2), rgba(160, 160, 184, 0.1));
-  border-color: #c0b8c8;
-  color: #c0b8c8;
+  border-color: #d4af37;
+  color: #d4af37;
   box-shadow: 0 0 15px rgba(160, 160, 184, 0.2);
   text-shadow: 0 0 8px rgba(160, 160, 184, 0.5);
 }
@@ -3302,7 +3302,7 @@ body { top: 0 !important; }
 }
 .history-names {
   flex: 1;
-  color: #c0b8c8;
+  color: #d4af37;
   font-weight: 600;
 }
 
@@ -4086,13 +4086,13 @@ body { top: 0 !important; }
   width: 0;
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.hof-lb-bar-gold {
+.hof-lb-bar-gold { background: linear-gradient(90deg, #d4af37, #b8960f) !important;
   background: linear-gradient(90deg, #ff8a95, #ffb0b8);
 }
-.hof-lb-bar-silver {
+.hof-lb-bar-silver { background: linear-gradient(90deg, #c0c0c0, #909090) !important;
   background: linear-gradient(90deg, #aaa, #ddd);
 }
-.hof-lb-bar-bronze {
+.hof-lb-bar-bronze { background: linear-gradient(90deg, #cd7f32, #a0622e) !important;
   background: linear-gradient(90deg, #c0a098, #c8a898);
 }
 .hof-lb-bar-default {
