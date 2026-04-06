@@ -1059,8 +1059,17 @@ body { top: 0 !important; }
 .timeline-icon {
   font-size: 2rem;
   flex-shrink: 0;
+  min-width: 48px;
   width: 48px;
   text-align: center;
+  overflow: hidden;
+}
+
+.timeline-body {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  flex: 1;
 }
 
 .timeline-title {
