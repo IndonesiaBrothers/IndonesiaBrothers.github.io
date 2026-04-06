@@ -319,7 +319,9 @@ ul { list-style: none; }
   line-height: 1;
 }
 
-/* Hide Google Translate default top bar - comprehensive */
+/* Hide Google Translate Element API UI - we use our own custom dropdown */
+#google_translate_element,
+.goog-te-gadget,
 .goog-te-banner-frame,
 #goog-gt-tt,
 .goog-te-balloon-frame,
@@ -330,8 +332,6 @@ iframe.goog-te-banner-frame {
   visibility: hidden !important;
   height: 0 !important;
   overflow: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
 }
 body {
   top: 0 !important;

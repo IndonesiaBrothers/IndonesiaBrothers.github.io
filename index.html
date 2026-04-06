@@ -576,5 +576,17 @@
 
 
   <script src="script.js"></script>
+
+  <!-- Google Translate Element API (hidden - controlled by custom dropdown) -->
+  <div id="google_translate_element" style="display:none;"></div>
+  <script>
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'id',
+      autoDisplay: false
+    }, 'google_translate_element');
+  }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

@@ -658,69 +658,85 @@ function initTranslateToggle() {
     { code: 'pt', flag: '🇵🇹', name: 'Português' }
   ];
 
-  // Detect if we're inside Google Translate proxy
-  const isTranslated = location.hostname.includes('.translate.goog');
-
-  // Actively hide Google Translate toolbar when inside proxy
-  if (isTranslated) {
-    function hideGoogleTranslateBar() {
-      var selectors = 'body > .skiptranslate, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, #goog-gt-tt, iframe.goog-te-banner-frame';
-      document.querySelectorAll(selectors).forEach(function(el) {
-        el.style.setProperty('display', 'none', 'important');
-        el.style.setProperty('height', '0', 'important');
-        el.style.setProperty('visibility', 'hidden', 'important');
-      });
-      document.body.style.setProperty('top', '0', 'important');
-      document.documentElement.style.setProperty('margin-top', '0', 'important');
-    }
-    hideGoogleTranslateBar();
-    setTimeout(hideGoogleTranslateBar, 100);
-    setTimeout(hideGoogleTranslateBar, 500);
-    setTimeout(hideGoogleTranslateBar, 1500);
-    setTimeout(hideGoogleTranslateBar, 3000);
-    var gtObserver = new MutationObserver(hideGoogleTranslateBar);
-    gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  // Get current language from googtrans cookie
+  function getCurrentLang() {
+    var match = document.cookie.match(/googtrans=\/[a-z-]+\/([a-z-]+)/i);
+    return match ? match[1] : '';
   }
+
+  // Also check if we're still on translate.goog (legacy/bookmarked links)
+  var isOnProxy = location.hostname.includes('.translate.goog');
+  var currentLang = getCurrentLang();
 
   // Build custom dropdown
   dropdown.innerHTML = languages.map(lang => {
-    const isActive = lang.code === '' ? !isTranslated : false;
-    return `<button class="lang-option${isActive ? ' active' : ''}" data-lang="${lang.code}">
-      <span class="lang-flag">${lang.flag}</span>
-      <span class="lang-name">${lang.name}</span>
-    </button>`;
+    const isActive = lang.code === currentLang || (lang.code === '' && !currentLang && !isOnProxy);
+    return '<button class="lang-option' + (isActive ? ' active' : '') + '" data-lang="' + lang.code + '">' +
+      '<span class="lang-flag">' + lang.flag + '</span>' +
+      '<span class="lang-name">' + lang.name + '</span>' +
+      '</button>';
   }).join('');
 
   // Toggle dropdown
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('click', function(e) {
     e.stopPropagation();
     dropdown.classList.toggle('show');
   });
 
   // Close on outside click
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', function(e) {
     if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.classList.remove('show');
     }
   });
 
   // Handle language selection
-  dropdown.addEventListener('click', (e) => {
-    const option = e.target.closest('.lang-option');
+  dropdown.addEventListener('click', function(e) {
+    var option = e.target.closest('.lang-option');
     if (!option) return;
-    const langCode = option.dataset.lang;
+    var langCode = option.dataset.lang;
     dropdown.classList.remove('show');
 
-    const originalUrl = 'https://indonesiabrothers.github.io/';
+    var originalUrl = 'https://indonesiabrothers.github.io/';
+
+    if (isOnProxy) {
+      // If currently on proxy, redirect back to original site first
+      // Set cookie so translation picks up on original domain
+      if (langCode !== '') {
+        document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
+      }
+      window.location.href = originalUrl;
+      return;
+    }
 
     if (langCode === '') {
-      // Go back to original site
-      window.location.href = originalUrl;
+      // Go back to original (remove translation)
+      document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'googtrans=;path=/;domain=' + location.hostname + ';expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.reload();
     } else {
-      // Redirect through Google Translate proxy
-      window.location.href = 'https://translate.google.com/translate?sl=id&tl=' + langCode + '&u=' + encodeURIComponent(originalUrl);
+      // Set Google Translate cookie and reload
+      document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
+      document.cookie = 'googtrans=/id/' + langCode + ';path=/;domain=' + location.hostname + ';';
+      window.location.reload();
     }
   });
+
+  // Hide Google Translate injected UI elements (banner bar, etc.)
+  function hideGoogleTranslateUI() {
+    var selectors = 'body > .skiptranslate, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, #goog-gt-tt';
+    document.querySelectorAll(selectors).forEach(function(el) {
+      el.style.setProperty('display', 'none', 'important');
+    });
+    document.body.style.setProperty('top', '0', 'important');
+  }
+  hideGoogleTranslateUI();
+  setTimeout(hideGoogleTranslateUI, 500);
+  setTimeout(hideGoogleTranslateUI, 1500);
+  setTimeout(hideGoogleTranslateUI, 3000);
+  var gtObserver = new MutationObserver(hideGoogleTranslateUI);
+  gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+}
 }
 
 // ============================================
