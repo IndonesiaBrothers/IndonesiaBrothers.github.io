@@ -188,14 +188,14 @@ function initTopPower() {
         <div class="duo-crown">${roleConfig.king.emoji}</div>
         <div class="duo-title-tag tag-king">${roleConfig.king.tag}</div>
       </div>
-      <div class="duo-name duo-name-king">${king.name}</div>
+      <div class="duo-name duo-name-king notranslate">${king.name}</div>
       <div class="duo-role">R4 · Warlord</div>
       <div class="duo-specialty-wrap">
         <span class="duo-specialty-label">SPECIALTY</span>
         <span class="duo-specialty-value sv-king">${roleConfig.king.specialty}</span>
       </div>
-      <div class="duo-power-small">${king.power}</div>
-      <div class="duo-level">LVL ${king.level}</div>
+      <div class="duo-power-small notranslate">${king.power}</div>
+      <div class="duo-level notranslate">LVL ${king.level}</div>
       <div class="duo-desc">${roleConfig.king.desc}</div>
       <div class="duo-aura duo-aura-king"></div>
     </div>
@@ -208,14 +208,14 @@ function initTopPower() {
         <div class="duo-crown">${roleConfig.leader.emoji}</div>
         <div class="duo-title-tag tag-leader">${roleConfig.leader.tag}</div>
       </div>
-      <div class="duo-name duo-name-leader">${leader.name}</div>
+      <div class="duo-name duo-name-leader notranslate">${leader.name}</div>
       <div class="duo-role">R5 · Leader</div>
       <div class="duo-specialty-wrap">
         <span class="duo-specialty-label">SPECIALTY</span>
         <span class="duo-specialty-value sv-leader">${roleConfig.leader.specialty}</span>
       </div>
-      <div class="duo-power-small">${leader.power !== "N/A" ? leader.power : "—"}</div>
-      <div class="duo-level">LVL ${leader.level}</div>
+      <div class="duo-power-small notranslate">${leader.power !== "N/A" ? leader.power : "—"}</div>
+      <div class="duo-level notranslate">LVL ${leader.level}</div>
       <div class="duo-desc">${roleConfig.leader.desc}</div>
       <div class="duo-aura duo-aura-leader"></div>
     </div>
@@ -237,13 +237,13 @@ function initTopPower() {
         <div class="role-glow role-glow-${cfg.theme}"></div>
         <div class="role-emoji">${cfg.emoji}</div>
         <div class="role-tag-badge tag-${cfg.theme}">${cfg.tag}</div>
-        <div class="role-card-name">${m.name}</div>
+        <div class="role-card-name notranslate">${m.name}</div>
         <div class="role-card-rank">${m.rank} · ${rankLabels[m.rank]}</div>
         <div class="role-specialty">
           <span class="role-specialty-label">SPECIALTY</span>
           <span class="role-specialty-value role-sv-${cfg.theme}">${cfg.specialty}</span>
         </div>
-        <div class="role-card-power">${pw}</div>
+        <div class="role-card-power notranslate">${pw}</div>
         <div class="role-card-desc">${cfg.desc}</div>
       </div>
     `;
@@ -281,13 +281,13 @@ function initTopPower() {
     row.innerHTML = `
       <div class="power-rank-badge${badgeClass}">${medalEmoji || "#" + pos}</div>
       <div class="power-player-info">
-        <div class="power-player-name">${member.name}${roleBadge}</div>
-        <div class="power-player-rank">${member.rank} · ${rankTag}</div>
+        <div class="power-player-name notranslate">${member.name}${roleBadge}</div>
+        <div class="power-player-rank notranslate">${member.rank} · ${rankTag}</div>
       </div>
       <div class="power-bar-container">
         <div class="power-bar" data-width="${barWidth}"></div>
       </div>
-      <div class="power-value">${member.power}</div>
+      <div class="power-value notranslate">${member.power}</div>
     `;
     lbContainer.appendChild(row);
   });
@@ -912,18 +912,18 @@ function renderMembers() {
     return `
       <div class="member-card" data-rank="${member.rank}" style="animation-delay: ${Math.min(index * 0.03, 1.5)}s">
         <div class="member-header">
-          <div class="member-name">${badgeIcon} ${escapeHtml(member.name)}</div>
+          <div class="member-name notranslate">${badgeIcon} ${escapeHtml(member.name)}</div>
           <span class="member-rank-badge rank-${member.rank}">${member.rank}</span>
         </div>
         ${roleHTML}
         <div class="member-stats">
           <div class="member-stat">
             <span class="member-stat-label">Power</span>
-            <span class="member-stat-value">${escapeHtml(member.power)}</span>
+            <span class="member-stat-value notranslate">${escapeHtml(member.power)}</span>
           </div>
           <div class="member-stat">
             <span class="member-stat-label">Level</span>
-            <span class="member-stat-value">${member.level}</span>
+            <span class="member-stat-value notranslate">${member.level}</span>
           </div>
           <div class="member-stat">
             <span class="member-stat-label">Title</span>
@@ -1212,7 +1212,7 @@ function initTrainLottery() {
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
             const titleCount = (hofTitles[winner.name] || []).length;
             const hofBadge = titleCount > 0 ? '<span class="result-hof-badge">\uD83C\uDFC6 HoF Bonus</span>' : '';
-            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
+            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name notranslate">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
             const sparkleCount = window.innerWidth <= 768 ? 0 : 2;
             for (let s = 0; s < sparkleCount; s++) {
               const sparkle = document.createElement("div");
@@ -1298,7 +1298,7 @@ function initTrainLottery() {
     entry.className = "history-entry";
     entry.innerHTML = `
       <span class="history-time">${timeStr}</span>
-      <span class="history-names">${names}</span>
+      <span class="history-names notranslate">${names}</span>
     `;
 
     historyList.insertBefore(entry, historyList.firstChild);
@@ -1505,8 +1505,8 @@ async function initHofImprove() {
         row.innerHTML =
           '<div class="hof-improve-badge">' + medal + '</div>' +
           '<div class="hof-improve-info">' +
-            '<div class="hof-improve-name">' + player.name + '</div>' +
-            '<div class="hof-improve-power-detail"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
+            '<div class="hof-improve-name notranslate">' + player.name + '</div>' +
+            '<div class="hof-improve-power-detail notranslate"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
           '</div>' +
           '<div class="hof-improve-bar-wrap">' +
             '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
@@ -1582,8 +1582,8 @@ async function initHofImprove() {
         row.innerHTML =
           '<div class="hof-improve-badge">' + medal + '</div>' +
           '<div class="hof-improve-info">' +
-            '<div class="hof-improve-name">' + player.name + '</div>' +
-            '<div class="hof-improve-power-detail"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
+            '<div class="hof-improve-name notranslate">' + player.name + '</div>' +
+            '<div class="hof-improve-power-detail notranslate"><span>' + player.previousPower + '</span> → <span>' + player.currentPower + '</span></div>' +
           '</div>' +
           '<div class="hof-improve-bar-wrap">' +
             '<div class="hof-improve-bar' + barClass + '" data-width="' + barWidth + '"></div>' +
@@ -1662,12 +1662,12 @@ async function initHofDonation() {
       row.innerHTML =
         '<div class="hof-lb-badge">' + medal + '</div>' +
         '<div class="hof-lb-info">' +
-          '<div class="hof-lb-name">' + name + '</div>' +
+          '<div class="hof-lb-name notranslate">' + name + '</div>' +
         '</div>' +
         '<div class="hof-lb-bar-wrap">' +
           '<div class="hof-lb-bar ' + barColorClass + '" data-width="' + barWidth + '"></div>' +
         '</div>' +
-        '<div class="hof-lb-value">' + formatDonationValue(val) + '</div>';
+        '<div class="hof-lb-value notranslate">' + formatDonationValue(val) + '</div>';
       container.appendChild(row);
     });
     
@@ -1725,12 +1725,12 @@ async function initHofDuel() {
       row.innerHTML =
         '<div class="hof-lb-badge">' + medal + '</div>' +
         '<div class="hof-lb-info">' +
-          '<div class="hof-lb-name">' + name + '</div>' +
+          '<div class="hof-lb-name notranslate">' + name + '</div>' +
         '</div>' +
         '<div class="hof-lb-bar-wrap">' +
           '<div class="hof-lb-bar ' + barColorClass + '" data-width="' + barWidth + '"></div>' +
         '</div>' +
-        '<div class="hof-lb-value">' + val.toLocaleString() + ' pts</div>';
+        '<div class="hof-lb-value notranslate">' + val.toLocaleString() + ' pts</div>';
       container.appendChild(row);
     });
     
