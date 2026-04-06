@@ -1340,7 +1340,7 @@ async function initHofImprove() {
       const currentWeek = weeks[weeks.length - 1];
       const prevWeek = weeks[weeks.length - 2];
       
-      if (weekLabel) weekLabel.textContent = '📅 ' + currentWeek.weekLabel + ' vs ' + prevWeek.weekLabel;
+      // Week label hidden by request
       
       const improvements = [];
       const currentPower = currentWeek.power || {};
