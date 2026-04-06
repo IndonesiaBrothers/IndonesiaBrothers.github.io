@@ -233,17 +233,17 @@ ul { list-style: none; }
 
 .nav-links {
   display: flex;
-  gap: 32px;
+  gap: 20px;
   align-items: center;
 }
 
 .nav-link {
   font-family: var(--font-heading);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 1.5px;
   transition: all var(--transition-fast);
   position: relative;
   padding: 6px 0;
@@ -1663,7 +1663,7 @@ ul { list-style: none; }
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .nav-links {
     position: fixed;
     top: 0;
@@ -4177,14 +4177,26 @@ ul { list-style: none; }
   font-weight: 600;
 }
 
-/* Desktop: show language selector in navbar */
-@media (min-width: 769px) {
+/* Desktop: show only globe icon, compact */
+@media (min-width: 993px) {
   .nav-lang-item {
-    margin-left: 12px;
+    margin-left: 4px;
   }
   .nav-lang-btn {
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: 0.88rem;
+    gap: 4px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .nav-lang-btn .lang-current {
+    display: none;
+  }
+  .nav-lang-btn .lang-arrow {
+    display: none;
+  }
+  .nav-lang-btn .lang-globe {
+    font-size: 1.3em;
   }
   .nav-lang-dropdown {
     bottom: auto;
@@ -4196,12 +4208,18 @@ ul { list-style: none; }
   }
 }
 
-/* Mobile: adjust for burger menu */
-@media (max-width: 768px) {
+/* Mobile/Tablet: adjust for burger menu */
+@media (max-width: 992px) {
   .nav-lang-item {
     padding: 8px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 8px;
+  }
+  .nav-lang-btn .lang-current {
+    display: inline;
+  }
+  .nav-lang-btn .lang-arrow {
+    display: inline;
   }
   .nav-lang-dropdown {
     position: relative;
