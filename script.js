@@ -13,7 +13,7 @@ function t(key, fallback) {
 }
 
 function initI18n() {
-  _i18nLang = localStorage.getItem('ids-lang') || '';
+  _i18nLang = localStorage.getItem('ids-lang') || 'id';
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
     _i18nOriginals[el.dataset.i18n] = el.innerHTML;
   });
@@ -86,7 +86,7 @@ function initLanguageSelector() {
     }
   });
   if (!_i18nLang) {
-    var first = dropdown.querySelector('.lang-option[data-lang=""]');
+    var first = dropdown.querySelector('.lang-option[data-lang="id"]');
     if (first) first.classList.add('active');
   }
 
