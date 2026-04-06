@@ -1159,7 +1159,7 @@ function initTrainLottery() {
             card.style.animationDelay = "0s";
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
             const titleCount = (hofTitles[winner.name] || []).length;
-            const hofBadge = titleCount > 0 ? '<span class="result-hof-badge">\uD83C\uDFC6 HoF +'+(titleCount*0.1).toFixed(1)+'%</span>' : '';
+            const hofBadge = titleCount > 0 ? '<span class="result-hof-badge">\uD83C\uDFC6 HoF Bonus</span>' : '';
             card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
             const sparkleCount = window.innerWidth <= 768 ? 0 : 2;
             for (let s = 0; s < sparkleCount; s++) {
