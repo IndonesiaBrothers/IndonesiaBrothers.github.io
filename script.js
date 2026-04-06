@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTypingEffect();
   await loadHofTitles();
   initMembers();
-  initTopPower();
+  // initTopPower() already called by initI18n → setLanguage
   initScrollReveal();
   initCounterAnimation();
   initCardTiltEffect();
@@ -292,6 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ============================================
 // TOP POWER LEADERBOARD — COMMAND CENTER
 // ============================================
+let _topPowerObserver = null;
 
 // Role config: emoji, color theme, description
 const roleConfig = {
@@ -440,6 +441,8 @@ function initTopPower() {
     lbContainer.appendChild(row);
   });
 
+  // Disconnect previous observer if any
+  if (_topPowerObserver) _topPowerObserver.disconnect();
   // Animate everything on scroll
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -468,6 +471,7 @@ function initTopPower() {
       }
     });
   }, { threshold: 0.1 });
+  _topPowerObserver = observer;
   observer.observe(duoContainer);
 }
 
