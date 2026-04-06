@@ -104,7 +104,8 @@
         "Dearmeow": 37300000.0,
         "supersupi": 34400000.0,
         "MonstersBoy": 34000000.0
-      }
+      },
+      "data": {}
     },
     {
       "weekLabel": "Week 14, April 2026",
@@ -210,7 +211,8 @@
         "supersupi": 40500000.0,
         "MonstersBoy": 38000000.0,
         "Dark Orca": 44100000.0
-      }
+      },
+      "data": {}
     }
   ]
 }

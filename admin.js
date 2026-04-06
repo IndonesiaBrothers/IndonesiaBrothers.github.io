@@ -10,6 +10,27 @@
   var HISTORY_PATH = "powerhistory.json";
   var GH_API = "https://api.github.com";
 
+  // ===== DEDUP PREVENTION SYSTEM =====
+  function normalizeName(name) {
+    return String(name || "")
+      .replace(/\s*\[.*?\]\s*/g, " ")    // Remove [IDs], [xxx] tags
+      .replace(/indonesian brothers/gi, "")  // Remove alliance suffix
+      .replace(/[^a-zA-Z0-9]/g, "")       // Remove all non-alphanumeric
+      .toLowerCase()
+      .trim();
+  }
+
+  function findDuplicatePlayer(name, players) {
+    var normalizedNew = normalizeName(name);
+    if (!normalizedNew) return -1;
+    for (var i = 0; i < players.length; i++) {
+      var normalizedExisting = normalizeName(players[i].name);
+      if (normalizedExisting === normalizedNew) return i;
+    }
+    return -1;
+  }
+  // ===== END DEDUP =====
+
   var state = {
     view: "loading",
     token: null,
@@ -989,8 +1010,19 @@
         rank: document.getElementById("ed-rank").value,
         role: document.getElementById("ed-role").value.trim()
       };
-      if (state.editIdx === -1) state.players.push(np);
-      else state.players[state.editIdx] = np;
+      if (state.editIdx === -1) {
+        var dupeIdx = findDuplicatePlayer(np.name, state.players);
+        if (dupeIdx !== -1) {
+          state.msg = "⚠️ Duplikat terdeteksi! Player '" + state.players[dupeIdx].name + "' sudah ada.";
+          state.msgType = "error";
+          showToast("❌ Duplikat! " + state.players[dupeIdx].name + " sudah ada.");
+          render();
+          return;
+        }
+        state.players.push(np);
+      } else {
+        state.players[state.editIdx] = np;
+      }
       state.editPlayer = null;
       state.editIdx = -1;
       state.dirty = true;
@@ -1066,8 +1098,17 @@
             var idx = state.players.findIndex(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
             if (idx !== -1) { state.players[idx].power = r.power; if (r.level) state.players[idx].level = String(r.level); updated++; }
           } else {
-            state.players.push({ name: r.name, power: r.power || "N/A", level: r.level ? String(r.level) : "1", rank: "R1", role: "Member" });
-            updated++; added++;
+            // Dedup check: cari player mirip sebelum tambah baru
+            var dupeIdx = findDuplicatePlayer(r.name, state.players);
+            if (dupeIdx !== -1) {
+              // Update existing player instead of adding duplicate
+              state.players[dupeIdx].power = r.power || state.players[dupeIdx].power;
+              if (r.level) state.players[dupeIdx].level = String(r.level);
+              updated++;
+            } else {
+              state.players.push({ name: r.name, power: r.power || "N/A", level: r.level ? String(r.level) : "1", rank: "R1", role: "Member" });
+              updated++; added++;
+            }
           }
         });
       } else {
@@ -1080,7 +1121,8 @@
             updated++;
             if (!r.matched) {
               var exists = state.players.find(function(p) { return p.name.toLowerCase() === r.name.toLowerCase(); });
-              if (!exists) { state.players.push({ name: r.name, power: "N/A", level: "1", rank: "R1", role: "Member" }); added++; }
+              var dupeExists = findDuplicatePlayer(r.name, state.players);
+              if (!exists && dupeExists === -1) { state.players.push({ name: r.name, power: "N/A", level: "1", rank: "R1", role: "Member" }); added++; }
             }
           }
         });
