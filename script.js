@@ -271,7 +271,7 @@ function initTopPower() {
     row.style.animationDelay = `${i * 0.1}s`;
 
     const rankTag = rankLabels[member.rank];
-    const roleColors = { Warlord: "#ffd700", Leader: "#dc2626", Muse: "#a855f7", Butler: "#06b6d4", Recruiter: "#22c55e" };
+    const roleColors = { Warlord: "#ffffff", Leader: "#ff4444", Muse: "#d0a0b8", Butler: "#a0b0c0", Recruiter: "#a0b8a8" };
     let displayRole = member.role;
     if (member.name === "JubekBoy") displayRole = "Warlord";
     const roleBadge = displayRole && roleColors[displayRole]
@@ -355,7 +355,7 @@ function initParticleCanvas() {
       size: Math.random() * 3 + 1.5,
       shape: shapes[Math.floor(Math.random() * shapes.length)],
       opacity: Math.random() * 0.5 + 0.15,
-      color: Math.random() > 0.5 ? "rgba(255,23,68," : "rgba(255,214,0,",
+      color: Math.random() > 0.5 ? "rgba(255,23,68," : "rgba(255,138,149,",
       rotation: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.02,
     };
@@ -1123,7 +1123,7 @@ function initTrainLottery() {
               sparkle.style.left = Math.random()*100+"%";
               sparkle.style.top = Math.random()*100+"%";
               sparkle.style.animationDelay = Math.random()*2+"s";
-              sparkle.style.background = ["#ffd700","#ff003c","#00f0ff","#fff"][Math.floor(Math.random()*4)];
+              sparkle.style.background = ["#ff1744","#ff8a95","#ffffff","#e0d0d8"][Math.floor(Math.random()*4)];
               card.appendChild(sparkle);
             }
             resultsContainer.appendChild(card);
@@ -1225,9 +1225,9 @@ function launchConfetti() {
   canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;";
 
   const colors = [
-    "#ff003c", "#ffd700", "#00f0ff", "#ff6b00",
-    "#a855f7", "#ff1744", "#00e676", "#ffffff",
-    "#ff4081", "#18ffff", "#ffea00", "#e040fb"
+    "#ff1744", "#ff8a95", "#ffffff", "#e07080",
+    "#d0a0b8", "#ff4060", "#e0d0d8", "#c0b8c8",
+    "#ff6b7a", "#f0e0e4", "#ffa0a8", "#b0a8b8"
   ];
   const shapes = ["rect", "circle", "star", "ribbon"];
   const confetti = [];
