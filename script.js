@@ -639,7 +639,7 @@ function initTranslateToggle() {
   if (!btn || !dropdown) return;
 
   const languages = [
-    { code: '', flag: '🇮🇩', name: 'Indonesia' },
+    { code: '', flag: '🇮🇩', name: 'Indonesia (Original)' },
     { code: 'en', flag: '🇬🇧', name: 'English' },
     { code: 'zh-CN', flag: '🇨🇳', name: '中文 简体' },
     { code: 'zh-TW', flag: '🇹🇼', name: '中文 繁體' },
@@ -658,13 +658,17 @@ function initTranslateToggle() {
     { code: 'pt', flag: '🇵🇹', name: 'Português' }
   ];
 
+  // Detect if we're inside Google Translate proxy
+  const isTranslated = location.hostname.includes('.translate.goog');
+
   // Build custom dropdown
-  dropdown.innerHTML = languages.map(lang =>
-    `<button class="lang-option${lang.code === '' ? ' active' : ''}" data-lang="${lang.code}">
+  dropdown.innerHTML = languages.map(lang => {
+    const isActive = lang.code === '' ? !isTranslated : false;
+    return `<button class="lang-option${isActive ? ' active' : ''}" data-lang="${lang.code}">
       <span class="lang-flag">${lang.flag}</span>
       <span class="lang-name">${lang.name}</span>
-    </button>`
-  ).join('');
+    </button>`;
+  }).join('');
 
   // Toggle dropdown
   btn.addEventListener('click', (e) => {
@@ -684,36 +688,16 @@ function initTranslateToggle() {
     const option = e.target.closest('.lang-option');
     if (!option) return;
     const langCode = option.dataset.lang;
-
-    // Update active state
-    dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
-    option.classList.add('active');
     dropdown.classList.remove('show');
 
-    // Trigger Google Translate
-    const domain = location.hostname;
-    const clearCookies = () => {
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + domain;
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + domain;
-    };
+    const originalUrl = 'https://indonesiabrothers.github.io/';
 
     if (langCode === '') {
-      clearCookies();
-      location.reload();
+      // Go back to original site
+      window.location.href = originalUrl;
     } else {
-      // Try combo select first (instant, no reload)
-      const combo = document.querySelector('.goog-te-combo');
-      if (combo) {
-        combo.value = langCode;
-        combo.dispatchEvent(new Event('change'));
-      } else {
-        // Fallback: set cookie and reload — Google Translate picks it up on init
-        clearCookies();
-        document.cookie = 'googtrans=/id/' + langCode + '; path=/';
-        document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=.' + domain;
-        location.reload();
-      }
+      // Redirect through Google Translate proxy
+      window.location.href = 'https://translate.google.com/translate?sl=id&tl=' + langCode + '&u=' + encodeURIComponent(originalUrl);
     }
   });
 }
