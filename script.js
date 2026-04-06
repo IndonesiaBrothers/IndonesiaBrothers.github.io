@@ -197,7 +197,9 @@ const rankLabels = {
 };
 
 function getRankLabel(rank) {
-  return rankLabels[rank] || 'Member';
+  var keys = { R5: 'rank_leader', R4: 'rank_officer', R3: 'rank_elite', R2: 'rank_member', R1: 'rank_inactive' };
+  var fallbacks = { R5: 'Leader', R4: 'Officer', R3: 'Elite', R2: 'Member', R1: 'Inactive' };
+  return t(keys[rank] || 'rank_member', fallbacks[rank] || 'Member');
 }
 
 // --- Hall of Fame Weekly Titles ---
@@ -402,6 +404,7 @@ function initTopPower() {
   const top8 = sorted.slice(0, 8);
   const maxPower = parsePower(top8[0].power);
 
+  lbContainer.innerHTML = '';
   top8.forEach((member, i) => {
     const pos = i + 1;
     const rankClass = pos <= 3 ? ` rank-${pos}` : "";
