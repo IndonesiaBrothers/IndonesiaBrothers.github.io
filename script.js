@@ -162,7 +162,10 @@ function updateAlliancePowerDisplay(memberList) {
   
   // Update hero section
   var heroEl = document.getElementById("hero-alliance-power");
-  if (heroEl) alliancePowerValue = formatted; heroEl.textContent = formatted + " " + t("alliance_power_suffix", "ALLIANCE POWER");
+  if (heroEl) {
+    alliancePowerValue = formatted;
+    heroEl.textContent = formatted + " " + t("alliance_power_suffix", "ALLIANCE POWER");
+  }
   
   // Update stats counter
   var statEl = document.getElementById("stat-alliance-power");
@@ -192,6 +195,10 @@ const rankLabels = {
   R2: "Member",
   R1: "Inactive"
 };
+
+function getRankLabel(rank) {
+  return rankLabels[rank] || 'Member';
+}
 
 // --- Hall of Fame Weekly Titles ---
 const HOF_TITLES = {
