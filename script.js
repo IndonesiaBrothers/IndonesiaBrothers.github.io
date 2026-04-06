@@ -650,6 +650,7 @@ function initTranslateToggle() {
     { code: 'vi', flag: '🇻🇳', name: 'Tiếng Việt' },
     { code: 'hi', flag: '🇮🇳', name: 'हिन्दी' },
     { code: 'ar', flag: '🇸🇦', name: 'العربية' },
+    { code: 'tr', flag: '🇹🇷', name: 'Türkçe' },
     { code: 'fr', flag: '🇫🇷', name: 'Français' },
     { code: 'es', flag: '🇪🇸', name: 'Español' },
     { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
