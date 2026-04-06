@@ -4032,13 +4032,19 @@ ul { list-style: none; }
 @media (max-width: 600px) {
   .hof-lb-row {
     padding: 10px 12px;
-    gap: 8px;
+    gap: 2px 8px;
+    flex-wrap: wrap;
   }
   .hof-lb-badge {
     font-size: 1.2rem;
     min-width: 32px;
+    flex-shrink: 0;
   }
-  .hof-lb-name { font-size: 0.9rem; }
-  .hof-lb-bar-wrap { flex: 0 0 60px; }
-  .hof-lb-value { min-width: 60px; font-size: 0.85rem; }
+  .hof-lb-info {
+    flex: 1 1 auto;
+    min-width: calc(100% - 48px);
+  }
+  .hof-lb-name { font-size: 0.9rem; white-space: normal; overflow: visible; text-overflow: unset; }
+  .hof-lb-bar-wrap { display: none; }
+  .hof-lb-value { flex: 0 0 100%; min-width: auto; font-size: 0.85rem; text-align: right; padding-left: 40px; }
 }
