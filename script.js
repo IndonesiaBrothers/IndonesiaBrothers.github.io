@@ -664,9 +664,29 @@ function initTranslateToggle() {
     return match ? match[1] : '';
   }
 
+  // Lazy-load Google Translate Element API (only when translation is needed)
+  function loadGoogleTranslateAPI() {
+    if (document.getElementById('google-translate-script')) return; // already loaded
+    window.googleTranslateElementInit = function() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'id',
+        autoDisplay: false
+      }, 'google_translate_element');
+    };
+    var s = document.createElement('script');
+    s.id = 'google-translate-script';
+    s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    document.body.appendChild(s);
+  }
+
   // Also check if we're still on translate.goog (legacy/bookmarked links)
   var isOnProxy = location.hostname.includes('.translate.goog');
   var currentLang = getCurrentLang();
+
+  // Only load Google Translate API if there's an active translation cookie
+  if (currentLang) {
+    loadGoogleTranslateAPI();
+  }
 
   // Build custom dropdown
   dropdown.innerHTML = languages.map(lang => {
@@ -701,7 +721,6 @@ function initTranslateToggle() {
 
     if (isOnProxy) {
       // If currently on proxy, redirect back to original site first
-      // Set cookie so translation picks up on original domain
       if (langCode !== '') {
         document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
       }
@@ -715,7 +734,7 @@ function initTranslateToggle() {
       document.cookie = 'googtrans=;path=/;domain=' + location.hostname + ';expires=Thu, 01 Jan 1970 00:00:00 GMT';
       window.location.reload();
     } else {
-      // Set Google Translate cookie and reload
+      // Set Google Translate cookie and reload — API will load on next page load
       document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
       document.cookie = 'googtrans=/id/' + langCode + ';path=/;domain=' + location.hostname + ';';
       window.location.reload();
@@ -730,13 +749,16 @@ function initTranslateToggle() {
     });
     document.body.style.setProperty('top', '0', 'important');
   }
-  hideGoogleTranslateUI();
-  setTimeout(hideGoogleTranslateUI, 500);
-  setTimeout(hideGoogleTranslateUI, 1500);
-  setTimeout(hideGoogleTranslateUI, 3000);
-  var gtObserver = new MutationObserver(hideGoogleTranslateUI);
-  gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-}
+
+  if (currentLang) {
+    // Only run hide logic when translation is active
+    hideGoogleTranslateUI();
+    setTimeout(hideGoogleTranslateUI, 500);
+    setTimeout(hideGoogleTranslateUI, 1500);
+    setTimeout(hideGoogleTranslateUI, 3000);
+    var gtObserver = new MutationObserver(hideGoogleTranslateUI);
+    gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  }
 }
 
 // ============================================
