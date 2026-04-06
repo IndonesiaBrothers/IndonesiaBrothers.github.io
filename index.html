@@ -10,12 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <style>
-    /* Early hide Google Translate toolbar before CSS loads */
-    body > .skiptranslate, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, #goog-gt-tt { display: none !important; height: 0 !important; visibility: hidden !important; }
-    body { top: 0 !important; }
-    .translated-ltr, .translated-rtl { margin-top: 0 !important; }
-  </style>
+
   <script>
     // Suppress errors from browser extensions (e.g. MetaMask)
     window.addEventListener('unhandledrejection', function(e) {
@@ -37,22 +32,42 @@
         <span class="holo-logo" data-text="IDs">IDs</span>
       </a>
       <ul class="nav-links" id="nav-links">
-        <li><a href="#hero" class="nav-link">Home</a></li>
-        <li><a href="#about" class="nav-link">About</a></li>
-        <li><a href="#philosophy" class="nav-link">Philosophy</a></li>
-        <li><a href="#members" class="nav-link">Roster</a></li>
-        <li><a href="#halloffame" class="nav-link">Hall of Fame</a></li>
-        <li><a href="#train-lottery" class="nav-link">Lottery</a></li>
-        <li><a href="#allies" class="nav-link">Allies</a></li>
-        <li><a href="#join" class="nav-link nav-link-cta">Join Us</a></li>
+        <li><a href="#hero" class="nav-link" data-i18n="nav_home">Home</a></li>
+        <li><a href="#about" class="nav-link" data-i18n="nav_about">About</a></li>
+        <li><a href="#philosophy" class="nav-link" data-i18n="nav_philosophy">Philosophy</a></li>
+        <li><a href="#members" class="nav-link" data-i18n="nav_roster">Roster</a></li>
+        <li><a href="#halloffame" class="nav-link" data-i18n="nav_halloffame">Hall of Fame</a></li>
+        <li><a href="#train-lottery" class="nav-link" data-i18n="nav_lottery">Lottery</a></li>
+        <li><a href="#allies" class="nav-link" data-i18n="nav_allies">Allies</a></li>
+        <li><a href="#join" class="nav-link nav-link-cta" data-i18n="nav_join">Join Us</a></li>
+        <li class="nav-lang-item">
+          <button class="nav-lang-btn" id="lang-toggle">
+            <span class="lang-globe">🌐</span>
+            <span class="lang-current" id="lang-current">Indonesia (Original)</span>
+            <span class="lang-arrow">▾</span>
+          </button>
+          <div class="nav-lang-dropdown" id="lang-dropdown">
+            <button class="lang-option active" data-lang="">🇮🇩 Indonesia (Original)</button>
+            <button class="lang-option" data-lang="en">🇬🇧 English</button>
+            <button class="lang-option" data-lang="zh-CN">🇨🇳 简体中文</button>
+            <button class="lang-option" data-lang="zh-TW">🇹🇼 繁體中文</button>
+            <button class="lang-option" data-lang="ja">🇯🇵 日本語</button>
+            <button class="lang-option" data-lang="ko">🇰🇷 한국어</button>
+            <button class="lang-option" data-lang="ms">🇲🇾 Bahasa Melayu</button>
+            <button class="lang-option" data-lang="th">🇹🇭 ภาษาไทย</button>
+            <button class="lang-option" data-lang="vi">🇻🇳 Tiếng Việt</button>
+            <button class="lang-option" data-lang="hi">🇮🇳 हिन्दी</button>
+            <button class="lang-option" data-lang="ar">🇸🇦 العربية</button>
+            <button class="lang-option" data-lang="tr">🇹🇷 Türkçe</button>
+            <button class="lang-option" data-lang="fr">🇫🇷 Français</button>
+            <button class="lang-option" data-lang="es">🇪🇸 Español</button>
+            <button class="lang-option" data-lang="de">🇩🇪 Deutsch</button>
+            <button class="lang-option" data-lang="ru">🇷🇺 Русский</button>
+            <button class="lang-option" data-lang="pt">🇧🇷 Português</button>
+          </div>
+        </li>
       </ul>
-      <div class="nav-translate" id="nav-translate">
-        <button class="translate-btn" id="translate-btn" aria-label="Translate page">
-          <span class="translate-icon">🌐</span>
-        </button>
 
-        <div class="translate-dropdown" id="translate-dropdown"></div>
-      </div>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
         <span></span>
         <span></span>
@@ -79,7 +94,7 @@
 
       <div class="hero-tag">
         <span class="tag-diamond">◆</span>
-        LAST WAR: SURVIVAL — ALLIANCE
+        <span data-i18n="hero_tag">LAST WAR: SURVIVAL — ALLIANCE</span>
         <span class="tag-diamond">◆</span>
       </div>
 
@@ -113,8 +128,8 @@
   <section id="about" class="section section-dark">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">// ABOUT US</span>
-        <h2 class="section-title">ABOUT THE <span class="text-accent">ALLIANCE</span></h2>
+        <span class="section-tag" data-i18n="section_tag_about">// ABOUT US</span>
+        <h2 class="section-title"><span data-i18n="section_title_about_pre">ABOUT THE</span> <span class="text-accent" data-i18n="section_title_about_accent">ALLIANCE</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
@@ -122,44 +137,44 @@
         </div>
       </div>
 
-      <p class="about-motto reveal">"Strength in Unity, Power in Brotherhood."</p>
+      <p class="about-motto reveal" data-i18n="about_motto">"Strength in Unity, Power in Brotherhood."</p>
 
       <div class="stats-grid">
         <div class="stat-card reveal" data-delay="0">
           <div class="stat-card-border"></div>
           <div class="stat-icon">⚡</div>
           <div class="stat-value counter notranslate" id="stat-alliance-power" data-target="0" data-suffix="" data-format="comma">0</div>
-          <div class="stat-label">ALLIANCE POWER</div>
+          <div class="stat-label" data-i18n="stat_label_power">ALLIANCE POWER</div>
         </div>
         <div class="stat-card reveal" data-delay="100">
           <div class="stat-card-border"></div>
           <div class="stat-icon">👥</div>
           <div class="stat-value notranslate"><span class="counter" data-target="100" data-suffix="" data-format="plain">0</span> / 100</div>
-          <div class="stat-label">MEMBERS</div>
+          <div class="stat-label" data-i18n="stat_label_members">MEMBERS</div>
         </div>
         <div class="stat-card reveal" data-delay="200">
           <div class="stat-card-border"></div>
           <div class="stat-icon">⭐</div>
           <div class="stat-value notranslate"><span class="counter" data-target="5.0" data-suffix="" data-format="decimal">0</span></div>
-          <div class="stat-label">RATING</div>
+          <div class="stat-label" data-i18n="stat_label_rating">RATING</div>
         </div>
         <div class="stat-card reveal" data-delay="300">
           <div class="stat-card-border"></div>
           <div class="stat-icon">🎁</div>
           <div class="stat-value notranslate">Lv. <span class="counter" data-target="23" data-suffix="" data-format="plain">0</span></div>
-          <div class="stat-label">ALLIANCE GIFTS</div>
+          <div class="stat-label" data-i18n="stat_label_gifts">ALLIANCE GIFTS</div>
         </div>
         <div class="stat-card reveal" data-delay="400">
           <div class="stat-card-border"></div>
           <div class="stat-icon">🇮🇩</div>
           <div class="stat-value notranslate">Indonesian</div>
-          <div class="stat-label">LANGUAGE</div>
+          <div class="stat-label" data-i18n="stat_label_language">LANGUAGE</div>
         </div>
         <div class="stat-card reveal" data-delay="500">
           <div class="stat-card-border"></div>
           <div class="stat-icon">🌐</div>
           <div class="stat-value notranslate">#<span class="counter" data-target="2059" data-suffix="" data-format="plain">0</span></div>
-          <div class="stat-label">SERVER</div>
+          <div class="stat-label" data-i18n="stat_label_server">SERVER</div>
         </div>
       </div>
 
@@ -167,7 +182,7 @@
       <div class="top-power-section reveal">
         <div class="top-power-header">
           <span class="top-power-icon">⚔️</span>
-          <h3 class="top-power-title">COMMAND <span class="text-accent">CENTER</span></h3>
+          <h3 class="top-power-title"><span data-i18n="cmd_title_pre">COMMAND</span> <span class="text-accent" data-i18n="cmd_title_accent">CENTER</span></h3>
           <span class="top-power-icon">⚔️</span>
         </div>
 
@@ -183,7 +198,7 @@
 
         <div class="top-power-divider">
           <span class="divider-line"></span>
-          <span class="divider-label">TOP POWER WARRIORS</span>
+          <span class="divider-label" data-i18n="top_power_warriors">TOP POWER WARRIORS</span>
           <span class="divider-line"></span>
         </div>
 
@@ -203,14 +218,14 @@
   <section id="philosophy" class="section section-darker">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">// OUR CREED</span>
-        <h2 class="section-title">OUR <span class="text-accent">PHILOSOPHY</span></h2>
+        <span class="section-tag" data-i18n="section_tag_philosophy">// OUR CREED</span>
+        <h2 class="section-title"><span data-i18n="section_title_philosophy_pre">OUR</span> <span class="text-accent" data-i18n="section_title_philosophy_accent">PHILOSOPHY</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
           <span class="divider-line"></span>
         </div>
-        <p class="section-subtitle">The meaning behind our emblem — every symbol tells our story.</p>
+        <p class="section-subtitle" data-i18n="section_subtitle_philosophy">The meaning behind our emblem — every symbol tells our story.</p>
       </div>
 
       <div class="philosophy-content">
@@ -221,8 +236,8 @@
             <div class="timeline-card">
               <div class="timeline-icon">🛡️</div>
               <div class="timeline-body">
-                <h3 class="timeline-title">THE SHIELD</h3>
-                <p class="timeline-desc">Represents strength, protection, and resilience. We guard our brothers and sisters against any threat.</p>
+                <h3 class="timeline-title" data-i18n="timeline_shield">THE SHIELD</h3>
+                <p class="timeline-desc" data-i18n="timeline_shield_desc">Represents strength, protection, and resilience. We guard our brothers and sisters against any threat.</p>
               </div>
             </div>
           </div>
@@ -232,8 +247,8 @@
             <div class="timeline-card">
               <div class="timeline-icon">🔴⚪</div>
               <div class="timeline-body">
-                <h3 class="timeline-title">RED &amp; WHITE</h3>
-                <p class="timeline-desc">Symbolizes courage, honor, and the spirit of unity — the colors of our Indonesian pride.</p>
+                <h3 class="timeline-title" data-i18n="timeline_redwhite">RED &amp; WHITE</h3>
+                <p class="timeline-desc" data-i18n="timeline_redwhite_desc">Symbolizes courage, honor, and the spirit of unity — the colors of our Indonesian pride.</p>
               </div>
             </div>
           </div>
@@ -243,8 +258,8 @@
             <div class="timeline-card">
               <div class="timeline-icon">🦅</div>
               <div class="timeline-body">
-                <h3 class="timeline-title">RIGHT &amp; LEFT WINGS</h3>
-                <p class="timeline-desc">Symbolizes freedom, progress, and mutual support. Together, we soar beyond limits.</p>
+                <h3 class="timeline-title" data-i18n="timeline_wings">RIGHT &amp; LEFT WINGS</h3>
+                <p class="timeline-desc" data-i18n="timeline_wings_desc">Symbolizes freedom, progress, and mutual support. Together, we soar beyond limits.</p>
               </div>
             </div>
           </div>
@@ -254,7 +269,7 @@
               <div class="timeline-icon">🏠</div>
               <div class="timeline-body">
                 <h3 class="timeline-title">#2059</h3>
-                <p class="timeline-desc">Our identity. Our server. Our home. Where legends are born and brotherhood thrives.</p>
+                <p class="timeline-desc" data-i18n="timeline_2059_desc">Our identity. Our server. Our home. Where legends are born and brotherhood thrives.</p>
               </div>
             </div>
           </div>
@@ -268,7 +283,7 @@
       </div>
 
       <div class="philosophy-tagline reveal">
-        <span class="tagline-text">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
+        <span class="tagline-text" data-i18n="philosophy_tagline">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
       </div>
     </div>
   </section>
@@ -282,14 +297,14 @@
   <section id="members" class="section section-dark">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">// TEAM ROSTER</span>
-        <h2 class="section-title">OUR <span class="text-accent">WARRIORS</span></h2>
+        <span class="section-tag" data-i18n="section_tag_roster">// TEAM ROSTER</span>
+        <h2 class="section-title"><span data-i18n="section_title_roster_pre">OUR</span> <span class="text-accent" data-i18n="section_title_roster_accent">WARRIORS</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
           <span class="divider-line"></span>
         </div>
-        <p class="section-subtitle">100 strong. Every rank earned, every battle remembered.</p>
+        <p class="section-subtitle" data-i18n="section_subtitle_roster">100 strong. Every rank earned, every battle remembered.</p>
       </div>
 
       <div class="members-controls reveal">
@@ -297,7 +312,7 @@
           <span class="search-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
-          <input type="text" id="member-search" placeholder="Search warriors by name..." autocomplete="off">
+          <input type="text" id="member-search" placeholder="Search warriors by name..." data-i18n-ph="search_placeholder" autocomplete="off">
           <span class="search-glow"></span>
         </div>
         <div class="filter-tabs">
@@ -329,21 +344,21 @@
   <section id="halloffame" class="section section-darker">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">// HALL OF FAME</span>
-        <h2 class="section-title">LEGENDS OF <span class="text-accent">IDs</span></h2>
+        <span class="section-tag" data-i18n="section_tag_halloffame">// HALL OF FAME</span>
+        <h2 class="section-title"><span data-i18n="section_title_halloffame_pre">LEGENDS OF</span> <span class="text-accent notranslate">IDs</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
           <span class="divider-line"></span>
         </div>
-        <p class="section-subtitle">Honoring our top performers, biggest donors, and fiercest DA warriors.</p>
+        <p class="section-subtitle" data-i18n="section_subtitle_halloffame">Honoring our top performers, biggest donors, and fiercest DA warriors.</p>
       </div>
 
       <!-- HoF Tabs -->
       <div class="hof-tabs reveal">
-        <button class="hof-tab active" data-hof="improve">🚀 Top Improve</button>
-        <button class="hof-tab" data-hof="donation">💰 Top Donation</button>
-        <button class="hof-tab" data-hof="duel">⚔️ Duel Aliansi</button>
+        <button class="hof-tab active" data-hof="improve" data-i18n="hof_tab_improve">🚀 Top Improve</button>
+        <button class="hof-tab" data-hof="donation" data-i18n="hof_tab_donation">💰 Top Donation</button>
+        <button class="hof-tab" data-hof="duel" data-i18n="hof_tab_duel">⚔️ Duel Aliansi</button>
       </div>
 
       <!-- Tab: Top Improve -->
@@ -351,14 +366,14 @@
         <div class="hof-improve-container reveal">
           <div class="hof-improve-header">
             <div class="hof-improve-icon">🚀</div>
-            <h3 class="hof-improve-title">TOP POWER <span class="text-accent">IMPROVE</span></h3>
-            <p class="hof-improve-subtitle">Persentase kenaikan power minggu ini</p>
+            <h3 class="hof-improve-title"><span data-i18n="hof_improve_title_pre">TOP POWER</span> <span class="text-accent" data-i18n="hof_improve_title_accent">IMPROVE</span></h3>
+            <p class="hof-improve-subtitle" data-i18n="hof_improve_subtitle">Persentase kenaikan power minggu ini</p>
             <div class="hof-improve-week" id="hof-improve-week"></div>
           </div>
           <div class="hof-improve-leaderboard" id="hof-improve-leaderboard">
             <div class="hof-improve-loading">
               <div class="hof-improve-spinner"></div>
-              <span>Memuat data...</span>
+              <span data-i18n="hof_loading">Memuat data...</span>
             </div>
           </div>
         </div>
@@ -370,7 +385,7 @@
           <div class="hof-lb-header">
             <span class="hof-lb-icon">💰</span>
             <div>
-              <h3 class="hof-lb-title">Top Donasi</h3>
+              <h3 class="hof-lb-title" data-i18n="hof_donation_title">Top Donasi</h3>
               <p class="hof-lb-week" id="hof-donation-week">📅 Loading...</p>
             </div>
           </div>
@@ -386,7 +401,7 @@
           <div class="hof-lb-header">
             <span class="hof-lb-icon">⚔️</span>
             <div>
-              <h3 class="hof-lb-title">Duel Aliansi</h3>
+              <h3 class="hof-lb-title" data-i18n="hof_duel_title">Duel Aliansi</h3>
               <p class="hof-lb-week" id="hof-duel-week">📅 Loading...</p>
             </div>
           </div>
@@ -406,15 +421,15 @@
   <section id="train" class="section section-dark">
     <div class="container">
       <div class="section-header reveal" id="train-lottery">
-        <span class="section-tag">// LUCKY DRAW</span>
-        <h2 class="section-title">MEMBER <span class="text-accent">LOTTERY</span></h2>
+        <span class="section-tag" data-i18n="section_tag_lottery">// LUCKY DRAW</span>
+        <h2 class="section-title"><span data-i18n="section_title_lottery_pre">MEMBER</span> <span class="text-accent" data-i18n="section_title_lottery_accent">LOTTERY</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
           <span class="divider-line"></span>
         </div>
-        <p class="section-subtitle">Spin the wheel of fate — who will be chosen for the next training mission?</p>
-        <p class="lottery-hof-info">🏆 Hall of Fame title holders receive a <strong>small luck bonus</strong> — resets after winning</p>
+        <p class="section-subtitle" data-i18n="section_subtitle_lottery">Spin the wheel of fate — who will be chosen for the next training mission?</p>
+        <p class="lottery-hof-info" data-i18n="lottery_hof_info">🏆 Hall of Fame title holders receive a <strong>small luck bonus</strong> — resets after winning</p>
       </div>
 
       <div class="train-lottery-container reveal">
@@ -489,14 +504,14 @@
   <section id="allies" class="section section-darker">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">// DIPLOMACY</span>
-        <h2 class="section-title">OUR <span class="text-accent">ALLIES</span></h2>
+        <span class="section-tag" data-i18n="section_tag_allies">// DIPLOMACY</span>
+        <h2 class="section-title"><span data-i18n="section_title_allies_pre">OUR</span> <span class="text-accent" data-i18n="section_title_allies_accent">ALLIES</span></h2>
         <div class="section-divider">
           <span class="divider-line"></span>
           <span class="divider-diamond">◆</span>
           <span class="divider-line"></span>
         </div>
-        <p class="section-subtitle">Bonds forged in fire. Alliances built on trust.</p>
+        <p class="section-subtitle" data-i18n="section_subtitle_allies">Bonds forged in fire. Alliances built on trust.</p>
       </div>
 
       <div class="allies-content">
@@ -517,7 +532,7 @@
             </div>
             <div class="ally-banner-glow"></div>
           </div>
-          <p class="allies-description">
+          <p class="allies-description" data-i18n="allies_description">
             Our diplomatic bonds extend beyond our own borders. Through mutual respect, shared strategies,
             and battlefield camaraderie, we have formed unbreakable alliances with <strong>TOOR</strong> from
             Server #2047 and <strong>PING</strong> from Server #2058. Together, we protect our interests and
@@ -549,22 +564,22 @@
             <span>⚔️</span>
           </div>
         </div>
-        <h2 class="join-title">JOIN THE <span class="text-accent">BROTHERHOOD</span></h2>
-        <p class="join-desc">
+        <h2 class="join-title"><span data-i18n="join_title_pre">JOIN THE</span> <span class="text-accent" data-i18n="join_title_accent">BROTHERHOOD</span></h2>
+        <p class="join-desc" data-i18n="join_desc">
           We are always looking for dedicated warriors to strengthen our ranks.<br>
           Reach out to our recruiters and become part of the IDs family.
         </p>
         <div class="contact-info">
           <div class="contact-card">
             <div class="contact-card-border"></div>
-            <div class="contact-label">🔱 RECRUITER</div>
+            <div class="contact-label" data-i18n="contact_label_recruiter">🔱 RECRUITER</div>
             <div class="contact-name notranslate">JuAnCuk Boy</div>
           </div>
         </div>
       </div>
 
       <div class="footer-tagline">
-        <span class="tagline-glow">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
+        <span class="tagline-glow" data-i18n="footer_tagline">ONE BROTHERHOOD. ONE SERVER. ONE FUTURE.</span>
       </div>
 
       <div class="footer-bottom">
@@ -575,6 +590,7 @@
   </footer>
 
 
+  <script src="translations.js"></script>
   <script src="script.js"></script>
 
   <!-- Google Translate Element container (API loaded on-demand by script.js) -->

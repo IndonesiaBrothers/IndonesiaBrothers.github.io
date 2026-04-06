@@ -1,4 +1,130 @@
 // ============================================
+// i18n ENGINE - Custom Translation System
+// ============================================
+var _i18nOriginals = {};
+var _i18nLang = '';
+var alliancePowerValue = '';
+
+function t(key, fallback) {
+  if (_i18nLang && typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[_i18nLang] && TRANSLATIONS[_i18nLang][key]) {
+    return TRANSLATIONS[_i18nLang][key];
+  }
+  return fallback || '';
+}
+
+function initI18n() {
+  _i18nLang = localStorage.getItem('ids-lang') || '';
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    _i18nOriginals[el.dataset.i18n] = el.innerHTML;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    _i18nOriginals['ph_' + el.dataset.i18nPh] = el.placeholder;
+  });
+  if (_i18nLang) applyI18n();
+  initLanguageSelector();
+}
+
+function applyI18n() {
+  var lang = (_i18nLang && typeof TRANSLATIONS !== 'undefined') ? TRANSLATIONS[_i18nLang] : null;
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.dataset.i18n;
+    if (lang && lang[key]) {
+      el.innerHTML = lang[key];
+    } else if (_i18nOriginals[key] !== undefined) {
+      el.innerHTML = _i18nOriginals[key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    var key = el.dataset.i18nPh;
+    if (lang && lang[key]) {
+      el.placeholder = lang[key];
+    } else if (_i18nOriginals['ph_' + key] !== undefined) {
+      el.placeholder = _i18nOriginals['ph_' + key];
+    }
+  });
+}
+
+function setLanguage(lang) {
+  _i18nLang = lang;
+  if (lang) {
+    localStorage.setItem('ids-lang', lang);
+  } else {
+    localStorage.removeItem('ids-lang');
+  }
+  applyI18n();
+  // Re-render all dynamic content
+  if (typeof members !== 'undefined' && members.length > 0) {
+    renderMembers();
+    initTopPower();
+  }
+  // Update hero slogan
+  var sloganEl = document.getElementById('hero-slogan');
+  if (sloganEl) {
+    var sloganText = t('hero_slogan', '"We stand as one. Bound by loyalty, guided by honor, and strengthened through unity. We do not seek conflict, but we will not step back from it."');
+    sloganEl.innerHTML = sloganText;
+  }
+  // Update hero power suffix
+  var heroPower = document.getElementById('hero-alliance-power');
+  if (heroPower && alliancePowerValue) {
+    heroPower.textContent = alliancePowerValue + ' ' + t('alliance_power_suffix', 'ALLIANCE POWER');
+  }
+}
+
+function initLanguageSelector() {
+  var toggle = document.getElementById('lang-toggle');
+  var dropdown = document.getElementById('lang-dropdown');
+  var currentLabel = document.getElementById('lang-current');
+  if (!toggle || !dropdown) return;
+
+  var options = dropdown.querySelectorAll('.lang-option');
+  options.forEach(function(opt) {
+    opt.classList.remove('active');
+    if (opt.dataset.lang === _i18nLang) {
+      opt.classList.add('active');
+      var txt = opt.textContent.trim();
+      currentLabel.textContent = txt.substring(txt.indexOf(' ') + 1);
+    }
+  });
+  if (!_i18nLang) {
+    var first = dropdown.querySelector('.lang-option[data-lang=""]');
+    if (first) first.classList.add('active');
+  }
+
+  toggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+    toggle.classList.toggle('open');
+  });
+
+  options.forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      options.forEach(function(o) { o.classList.remove('active'); });
+      opt.classList.add('active');
+      var txt = opt.textContent.trim();
+      currentLabel.textContent = txt.substring(txt.indexOf(' ') + 1);
+      dropdown.classList.remove('open');
+      toggle.classList.remove('open');
+      setLanguage(opt.dataset.lang);
+      // Close mobile menu if open
+      var navLinks = document.getElementById('nav-links');
+      if (navLinks && navLinks.classList.contains('active')) {
+        navLinks.classList.remove('active');
+        var navToggle = document.getElementById('nav-toggle');
+        if (navToggle) navToggle.classList.remove('active');
+        var overlay = document.getElementById('mobile-nav-overlay');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  });
+
+  document.addEventListener('click', function() {
+    dropdown.classList.remove('open');
+    toggle.classList.remove('open');
+  });
+}
+
+// ============================================
 // IDs - Indonesian Brothers | ESPORTS WEBSITE
 // ============================================
 
@@ -36,7 +162,7 @@ function updateAlliancePowerDisplay(memberList) {
   
   // Update hero section
   var heroEl = document.getElementById("hero-alliance-power");
-  if (heroEl) heroEl.textContent = formatted + " ALLIANCE POWER";
+  if (heroEl) alliancePowerValue = formatted; heroEl.textContent = formatted + " " + t("alliance_power_suffix", "ALLIANCE POWER");
   
   // Update stats counter
   var statEl = document.getElementById("stat-alliance-power");
@@ -143,7 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initParticleCanvas();
   initNavbar();
   initMobileNav();
-  initTranslateToggle();
+  initI18n();
   initSmoothScroll();
   initTypingEffect();
   await loadHofTitles();
@@ -166,6 +292,18 @@ const roleConfig = {
   butler:    { emoji: "🏛️", tag: "BUTLER",     theme: "butler",    specialty: "ORGANIZER",   desc: "The Keeper · Foundation of Order" },
   recruiter: { emoji: "🔱", tag: "RECRUITER",  theme: "recruiter", specialty: "HEADHUNTER",  desc: "The Seeker · Builder of Brotherhood" },
 };
+function roleDesc(role) {
+  var descs = {
+    king: t('desc_king', 'Highest Power \u00B7 The Pillar of Strength'),
+    leader: t('desc_leader', 'Strategic Mind \u00B7 The Brain of IDs'),
+    muse: t('desc_muse', 'The Voice \u00B7 Heart of the Alliance'),
+    butler: t('desc_butler', 'The Keeper \u00B7 Foundation of Order'),
+    recruiter: t('desc_recruiter', 'The Seeker \u00B7 Builder of Brotherhood')
+  };
+  return descs[role] || '';
+}
+function specLabel() { return t('specialty_label', 'SPECIALTY'); }
+
 
 function initTopPower() {
   const duoContainer = document.getElementById("featured-duo");
@@ -191,12 +329,12 @@ function initTopPower() {
       <div class="duo-name duo-name-king notranslate">${king.name}</div>
       <div class="duo-role">R4 · Warlord</div>
       <div class="duo-specialty-wrap">
-        <span class="duo-specialty-label">SPECIALTY</span>
+        <span class="duo-specialty-label">${specLabel()}</span>
         <span class="duo-specialty-value sv-king">${roleConfig.king.specialty}</span>
       </div>
       <div class="duo-power-small notranslate">${king.power}</div>
       <div class="duo-level notranslate">LVL ${king.level}</div>
-      <div class="duo-desc">${roleConfig.king.desc}</div>
+      <div class="duo-desc">${roleDesc('king')}</div>
       <div class="duo-aura duo-aura-king"></div>
     </div>
 
@@ -211,12 +349,12 @@ function initTopPower() {
       <div class="duo-name duo-name-leader notranslate">${leader.name}</div>
       <div class="duo-role">R5 · Leader</div>
       <div class="duo-specialty-wrap">
-        <span class="duo-specialty-label">SPECIALTY</span>
+        <span class="duo-specialty-label">${specLabel()}</span>
         <span class="duo-specialty-value sv-leader">${roleConfig.leader.specialty}</span>
       </div>
       <div class="duo-power-small notranslate">${leader.power !== "N/A" ? leader.power : "—"}</div>
       <div class="duo-level notranslate">LVL ${leader.level}</div>
-      <div class="duo-desc">${roleConfig.leader.desc}</div>
+      <div class="duo-desc">${roleDesc('leader')}</div>
       <div class="duo-aura duo-aura-leader"></div>
     </div>
   `;
@@ -238,13 +376,13 @@ function initTopPower() {
         <div class="role-emoji">${cfg.emoji}</div>
         <div class="role-tag-badge tag-${cfg.theme}">${cfg.tag}</div>
         <div class="role-card-name notranslate">${m.name}</div>
-        <div class="role-card-rank">${m.rank} · ${rankLabels[m.rank]}</div>
+        <div class="role-card-rank">${m.rank} · ${getRankLabel(m.rank)}</div>
         <div class="role-specialty">
-          <span class="role-specialty-label">SPECIALTY</span>
+          <span class="role-specialty-label">${specLabel()}</span>
           <span class="role-specialty-value role-sv-${cfg.theme}">${cfg.specialty}</span>
         </div>
         <div class="role-card-power notranslate">${pw}</div>
-        <div class="role-card-desc">${cfg.desc}</div>
+        <div class="role-card-desc">${roleDesc(cfg.theme)}</div>
       </div>
     `;
   });
@@ -270,7 +408,7 @@ function initTopPower() {
     row.className = `power-row${rankClass}`;
     row.style.animationDelay = `${i * 0.1}s`;
 
-    const rankTag = rankLabels[member.rank];
+    const rankTag = getRankLabel(member.rank);
     const roleColors = { Warlord: "#ffffff", Leader: "#ff4444", Muse: "#d0a0b8", Butler: "#a0b0c0", Recruiter: "#a0b8a8" };
     let displayRole = member.role;
     if (member.name === "JubekBoy") displayRole = "Warlord";
@@ -512,7 +650,7 @@ function initTypingEffect() {
   const cursor = document.getElementById("slogan-cursor");
   if (!el) return;
 
-  const text = "\"We stand as one. Bound by loyalty, guided by honor, and strengthened through unity. We do not seek conflict, but we will not step back from it.\"";
+  const text = t('hero_slogan', "\"We stand as one. Bound by loyalty, guided by honor, and strengthened through unity. We do not seek conflict, but we will not step back from it.\"");
   let i = 0;
   const speed = 30;
 
@@ -628,137 +766,6 @@ function initMobileNav() {
       closeNav();
     }
   });
-}
-
-// ============================================
-// TRANSLATE BUTTON
-// ============================================
-function initTranslateToggle() {
-  const btn = document.getElementById('translate-btn');
-  const dropdown = document.getElementById('translate-dropdown');
-  if (!btn || !dropdown) return;
-
-  const languages = [
-    { code: '', flag: '🇮🇩', name: 'Indonesia (Original)' },
-    { code: 'en', flag: '🇬🇧', name: 'English' },
-    { code: 'zh-CN', flag: '🇨🇳', name: '中文 简体' },
-    { code: 'zh-TW', flag: '🇹🇼', name: '中文 繁體' },
-    { code: 'ja', flag: '🇯🇵', name: '日本語' },
-    { code: 'ko', flag: '🇰🇷', name: '한국어' },
-    { code: 'ms', flag: '🇲🇾', name: 'Melayu' },
-    { code: 'th', flag: '🇹🇭', name: 'ไทย' },
-    { code: 'vi', flag: '🇻🇳', name: 'Tiếng Việt' },
-    { code: 'hi', flag: '🇮🇳', name: 'हिन्दी' },
-    { code: 'ar', flag: '🇸🇦', name: 'العربية' },
-    { code: 'tr', flag: '🇹🇷', name: 'Türkçe' },
-    { code: 'fr', flag: '🇫🇷', name: 'Français' },
-    { code: 'es', flag: '🇪🇸', name: 'Español' },
-    { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
-    { code: 'ru', flag: '🇷🇺', name: 'Русский' },
-    { code: 'pt', flag: '🇵🇹', name: 'Português' }
-  ];
-
-  // Get current language from googtrans cookie
-  function getCurrentLang() {
-    var match = document.cookie.match(/googtrans=\/[a-z-]+\/([a-z-]+)/i);
-    return match ? match[1] : '';
-  }
-
-  // Lazy-load Google Translate Element API (only when translation is needed)
-  function loadGoogleTranslateAPI() {
-    if (document.getElementById('google-translate-script')) return; // already loaded
-    window.googleTranslateElementInit = function() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'id',
-        autoDisplay: false
-      }, 'google_translate_element');
-    };
-    var s = document.createElement('script');
-    s.id = 'google-translate-script';
-    s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    document.body.appendChild(s);
-  }
-
-  // Also check if we're still on translate.goog (legacy/bookmarked links)
-  var isOnProxy = location.hostname.includes('.translate.goog');
-  var currentLang = getCurrentLang();
-
-  // Only load Google Translate API if there's an active translation cookie
-  if (currentLang) {
-    loadGoogleTranslateAPI();
-  }
-
-  // Build custom dropdown
-  dropdown.innerHTML = languages.map(lang => {
-    const isActive = lang.code === currentLang || (lang.code === '' && !currentLang && !isOnProxy);
-    return '<button class="lang-option' + (isActive ? ' active' : '') + '" data-lang="' + lang.code + '">' +
-      '<span class="lang-flag">' + lang.flag + '</span>' +
-      '<span class="lang-name">' + lang.name + '</span>' +
-      '</button>';
-  }).join('');
-
-  // Toggle dropdown
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    dropdown.classList.toggle('show');
-  });
-
-  // Close on outside click
-  document.addEventListener('click', function(e) {
-    if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.classList.remove('show');
-    }
-  });
-
-  // Handle language selection
-  dropdown.addEventListener('click', function(e) {
-    var option = e.target.closest('.lang-option');
-    if (!option) return;
-    var langCode = option.dataset.lang;
-    dropdown.classList.remove('show');
-
-    var originalUrl = 'https://indonesiabrothers.github.io/';
-
-    if (isOnProxy) {
-      // If currently on proxy, redirect back to original site first
-      if (langCode !== '') {
-        document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
-      }
-      window.location.href = originalUrl;
-      return;
-    }
-
-    if (langCode === '') {
-      // Go back to original (remove translation)
-      document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = 'googtrans=;path=/;domain=' + location.hostname + ';expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      window.location.reload();
-    } else {
-      // Set Google Translate cookie and reload — API will load on next page load
-      document.cookie = 'googtrans=/id/' + langCode + ';path=/;';
-      document.cookie = 'googtrans=/id/' + langCode + ';path=/;domain=' + location.hostname + ';';
-      window.location.reload();
-    }
-  });
-
-  // Hide Google Translate injected UI elements (banner bar, etc.)
-  function hideGoogleTranslateUI() {
-    var selectors = 'body > .skiptranslate, .goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, #goog-gt-tt';
-    document.querySelectorAll(selectors).forEach(function(el) {
-      el.style.setProperty('display', 'none', 'important');
-    });
-    document.body.style.setProperty('top', '0', 'important');
-  }
-
-  if (currentLang) {
-    // Only run hide logic when translation is active
-    hideGoogleTranslateUI();
-    setTimeout(hideGoogleTranslateUI, 500);
-    setTimeout(hideGoogleTranslateUI, 1500);
-    setTimeout(hideGoogleTranslateUI, 3000);
-    var gtObserver = new MutationObserver(hideGoogleTranslateUI);
-    gtObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-  }
 }
 
 // ============================================
@@ -947,7 +954,7 @@ function renderMembers() {
 
   // Update count
   if (countDisplay) {
-    countDisplay.innerHTML = `Showing <span>${filtered.length}</span> of <span>${members.length}</span> warriors`;
+    countDisplay.innerHTML = `${t("showing","Showing")} <span>${filtered.length}</span> ${t("of","of")} <span>${members.length}</span> ${t("warriors","warriors")}`;
   }
 
   // Render
@@ -955,7 +962,7 @@ function renderMembers() {
     grid.innerHTML = `
       <div class="no-results">
         <div class="icon">🔍</div>
-        <p>No warriors found matching your search.</p>
+        <p>${t("no_results","No warriors found matching your search.")}</p>
       </div>
     `;
     return;
@@ -977,15 +984,15 @@ function renderMembers() {
         ${roleHTML}
         <div class="member-stats">
           <div class="member-stat">
-            <span class="member-stat-label">Power</span>
+            <span class="member-stat-label">${t("stat_power","Power")}</span>
             <span class="member-stat-value notranslate">${escapeHtml(member.power)}</span>
           </div>
           <div class="member-stat">
-            <span class="member-stat-label">Level</span>
+            <span class="member-stat-label">${t("stat_level","Level")}</span>
             <span class="member-stat-value notranslate">${member.level}</span>
           </div>
           <div class="member-stat">
-            <span class="member-stat-label">Title</span>
+            <span class="member-stat-label">${t("stat_title","Title")}</span>
             ${(hofTitles[member.name] || []).length > 0
               ? (hofTitles[member.name]).map(function(t) { return '<span class="member-stat-value member-weekly-title">' + t + '</span>'; }).join('')
               : '<span class="member-stat-value">—</span>'}
@@ -1182,7 +1189,7 @@ function initTrainLottery() {
     const count = Math.min(pickCount, pool.length);
     isSpinning = true;
     spinBtn.classList.add("spinning");
-    spinBtn.querySelector(".spin-btn-text").textContent = "\u23F3 SPINNING...";
+    spinBtn.querySelector(".spin-btn-text").textContent = t("spinning","\u23F3 SPINNING...");
     resultsContainer.innerHTML = "";
 
     // Winners selected with weighted cryptographic randomness
@@ -1218,7 +1225,7 @@ function initTrainLottery() {
         slotFrame.className = "slot-frame";
         isSpinning = false;
         spinBtn.classList.remove("spinning");
-        spinBtn.querySelector(".spin-btn-text").textContent = "\u26A1 SPIN \u26A1";
+        spinBtn.querySelector(".spin-btn-text").textContent = t("spin_btn","\u26A1 SPIN \u26A1");
         return;
       }
       const winner = winners[wIdx];
@@ -1271,7 +1278,7 @@ function initTrainLottery() {
             const roleTag = winner.role ? " \u00B7 " + winner.role : "";
             const titleCount = (hofTitles[winner.name] || []).length;
             const hofBadge = titleCount > 0 ? '<span class="result-hof-badge">\uD83C\uDFC6 HoF Bonus</span>' : '';
-            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name notranslate">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + rankLabels[winner.rank] + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
+            card.innerHTML = '<div class="result-number">' + (wIdx+1) + '</div><div class="result-info"><div class="result-name notranslate">\uD83C\uDFAF ' + winner.name + hofBadge + '</div><div class="result-rank">' + winner.rank + ' \u00B7 ' + getRankLabel(winner.rank) + roleTag + '</div></div><div class="result-power">' + (winner.power || "N/A") + '</div>';
             const sparkleCount = window.innerWidth <= 768 ? 0 : 2;
             for (let s = 0; s < sparkleCount; s++) {
               const sparkle = document.createElement("div");
@@ -1302,7 +1309,7 @@ function initTrainLottery() {
                 slotFrame.className = "slot-frame";
                 isSpinning = false;
                 spinBtn.classList.remove("spinning");
-                spinBtn.querySelector(".spin-btn-text").textContent = "\u26A1 SPIN \u26A1";
+                spinBtn.querySelector(".spin-btn-text").textContent = t("spin_btn","\u26A1 SPIN \u26A1");
                 addHistory(winners);
               }, 1500);
             }
@@ -1543,7 +1550,7 @@ async function initHofImprove() {
       const top10 = improvements.slice(0, 10);
       
       if (top10.length === 0) {
-        container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement minggu ini.</div>';
+        container.innerHTML = '<div class="hof-improve-no-data">' + t('hof_no_improve','Belum ada data improvement minggu ini.') + '</div>';
         return;
       }
       
@@ -1620,7 +1627,7 @@ async function initHofImprove() {
       const top10 = improvements.slice(0, 10);
       
       if (top10.length === 0) {
-        container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.</div>';
+        container.innerHTML = '<div class="hof-improve-no-data">' + t('hof_no_improve_upload','Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.') + '</div>';
         return;
       }
       
@@ -1669,7 +1676,7 @@ async function initHofImprove() {
       }, rows2.length * 80 + 200);
     }
   } catch(err) {
-    container.innerHTML = '<div class="hof-improve-no-data">Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.</div>';
+    container.innerHTML = '<div class="hof-improve-no-data">' + t('hof_no_improve_upload','Belum ada data improvement. Upload 2 minggu data power untuk melihat perbandingan.') + '</div>';
   }
 }
 
@@ -1700,7 +1707,7 @@ async function initHofDonation() {
       .slice(0, 10);
     
     if (sorted.length === 0) {
-      container.innerHTML = '<div class="hof-lb-no-data">Belum ada data donasi minggu ini.<br>Data akan muncul setelah admin menginput data donasi.</div>';
+      container.innerHTML = '<div class="hof-lb-no-data">' + t('hof_no_donation_long','Belum ada data donasi minggu ini.<br>Data akan muncul setelah admin menginput data donasi.') + '</div>';
       return;
     }
     
@@ -1738,7 +1745,7 @@ async function initHofDonation() {
     }, 100);
     
   } catch(err) {
-    container.innerHTML = '<div class="hof-lb-no-data">Belum ada data donasi minggu ini.</div>';
+    container.innerHTML = '<div class="hof-lb-no-data">' + t('hof_no_donation','Belum ada data donasi minggu ini.') + '</div>';
   }
 }
 
@@ -1763,7 +1770,7 @@ async function initHofDuel() {
       .slice(0, 10);
     
     if (sorted.length === 0) {
-      container.innerHTML = '<div class="hof-lb-no-data">Belum ada data Duel Aliansi minggu ini.<br>Data akan muncul setelah admin menginput poin duel.</div>';
+      container.innerHTML = '<div class="hof-lb-no-data">' + t('hof_no_duel_long','Belum ada data Duel Aliansi minggu ini.<br>Data akan muncul setelah admin menginput poin duel.') + '</div>';
       return;
     }
     
@@ -1801,7 +1808,7 @@ async function initHofDuel() {
     }, 100);
     
   } catch(err) {
-    container.innerHTML = '<div class="hof-lb-no-data">Belum ada data Duel Aliansi minggu ini.</div>';
+    container.innerHTML = '<div class="hof-lb-no-data">' + t('hof_no_duel','Belum ada data Duel Aliansi minggu ini.') + '</div>';
   }
 }
 

@@ -288,126 +288,7 @@ ul { list-style: none; }
 }
 
 /* Hamburger */
-/* ── Google Translate Widget ── */
-.nav-translate {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
-}
 
-.translate-btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: var(--transition-fast);
-  -webkit-appearance: none;
-  appearance: none;
-}
-.translate-btn:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,138,149,0.4);
-  box-shadow: 0 0 12px rgba(255,138,149,0.15);
-}
-.translate-icon {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-/* Hide Google Translate Element API UI - we use our own custom dropdown */
-#google_translate_element,
-.goog-te-gadget,
-.goog-te-banner-frame,
-#goog-gt-tt,
-.goog-te-balloon-frame,
-.VIpgJd-ZVi9od-ORHb-OEVmcd,
-body > .skiptranslate,
-iframe.goog-te-banner-frame {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  overflow: hidden !important;
-}
-body {
-  top: 0 !important;
-}
-.translated-ltr,
-.translated-rtl {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* Custom Translate Dropdown */
-.translate-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  display: none;
-  z-index: 9999;
-  background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 6px;
-  min-width: 180px;
-  max-height: 360px;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  backdrop-filter: blur(12px);
-}
-.translate-dropdown.show {
-  display: block;
-  animation: fadeInDrop 0.2s ease;
-}
-@keyframes fadeInDrop {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.translate-dropdown .lang-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-family: var(--font-primary);
-  color: var(--text-secondary);
-  transition: all 0.15s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-}
-.translate-dropdown .lang-option:hover {
-  background: rgba(255,23,68,0.12);
-  color: var(--text-primary);
-}
-.translate-dropdown .lang-option.active {
-  background: rgba(255,23,68,0.18);
-  color: var(--red-primary);
-  font-weight: 600;
-}
-.translate-dropdown .lang-option .lang-flag {
-  font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
-}
-.translate-dropdown .lang-option .lang-name {
-  flex: 1;
-}
-.translate-dropdown::-webkit-scrollbar {
-  width: 4px;
-}
-.translate-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
-  border-radius: 4px;
-}
 
 .nav-toggle {
   display: none;
@@ -4206,3 +4087,142 @@ body {
   .hof-lb-bar-wrap { display: none; }
   .hof-lb-value { flex: 0 0 100%; min-width: auto; font-size: 0.85rem; text-align: right; padding-left: 40px; }
 }
+
+/* ============================================
+   LANGUAGE SELECTOR (Inside Burger Menu)
+   ============================================ */
+.nav-lang-item {
+  position: relative;
+  list-style: none;
+}
+.nav-lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: center;
+}
+.nav-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(0, 194, 255, 0.3);
+  color: #fff;
+}
+.nav-lang-btn.open {
+  background: rgba(0, 194, 255, 0.08);
+  border-color: rgba(0, 194, 255, 0.4);
+}
+.lang-globe {
+  font-size: 1.1em;
+}
+.lang-arrow {
+  transition: transform 0.3s ease;
+  font-size: 0.85em;
+}
+.nav-lang-btn.open .lang-arrow {
+  transform: rotate(180deg);
+}
+.nav-lang-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 18, 0.97);
+  border: 1px solid rgba(0, 194, 255, 0.2);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 200px;
+  max-height: 350px;
+  overflow-y: auto;
+  z-index: 1000;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+.nav-lang-dropdown.open {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lang-option {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 8px 12px;
+  text-align: left;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.lang-option:hover {
+  background: rgba(0, 194, 255, 0.1);
+  color: #fff;
+}
+.lang-option.active {
+  background: rgba(0, 194, 255, 0.15);
+  color: #00c2ff;
+  font-weight: 600;
+}
+
+/* Desktop: show language selector in navbar */
+@media (min-width: 769px) {
+  .nav-lang-item {
+    margin-left: 12px;
+  }
+  .nav-lang-btn {
+    padding: 6px 12px;
+    font-size: 0.88rem;
+  }
+  .nav-lang-dropdown {
+    bottom: auto;
+    top: calc(100% + 6px);
+    right: 0;
+    left: auto;
+    transform: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Mobile: adjust for burger menu */
+@media (max-width: 768px) {
+  .nav-lang-item {
+    padding: 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 8px;
+  }
+  .nav-lang-dropdown {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin-top: 6px;
+    max-height: 250px;
+    box-shadow: none;
+  }
+}
+
+/* Language dropdown scrollbar */
+.nav-lang-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+.nav-lang-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav-lang-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0, 194, 255, 0.3);
+  border-radius: 4px;
+}
+
