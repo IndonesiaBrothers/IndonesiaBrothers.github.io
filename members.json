@@ -71,8 +71,8 @@
   },
   {
     "name": "SpiritBoy",
-    "power": "104.2M",
-    "level": 30,
+    "power": "109.3M",
+    "level": "30",
     "rank": "R3",
     "role": ""
   },
@@ -85,8 +85,8 @@
   },
   {
     "name": "Conquérors",
-    "power": "78.6M",
-    "level": 29,
+    "power": "66.6M",
+    "level": "30",
     "rank": "R3",
     "role": ""
   },
@@ -99,8 +99,8 @@
   },
   {
     "name": "Pasopeso",
-    "power": "67.0M",
-    "level": 29,
+    "power": "75.6M",
+    "level": "29",
     "rank": "R3",
     "role": ""
   },
@@ -120,8 +120,8 @@
   },
   {
     "name": "ExpertMurderer",
-    "power": "64.5M",
-    "level": 28,
+    "power": "63.9M",
+    "level": "29",
     "rank": "R3",
     "role": ""
   },
@@ -155,8 +155,8 @@
   },
   {
     "name": "Mustafa 1734",
-    "power": "60.3M",
-    "level": 28,
+    "power": "69.2M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
@@ -183,8 +183,8 @@
   },
   {
     "name": "rFz",
-    "power": "60.5M",
-    "level": 28,
+    "power": "63.2M",
+    "level": "29",
     "rank": "R3",
     "role": ""
   },
@@ -197,8 +197,8 @@
   },
   {
     "name": "Dedo31",
-    "power": "56.5M",
-    "level": 28,
+    "power": "60.0M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
@@ -239,22 +239,22 @@
   },
   {
     "name": "BABY MONSTER",
-    "power": "56.3M",
-    "level": 28,
+    "power": "53.7M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
   {
     "name": "MTMBoy",
-    "power": "57.5M",
-    "level": 27,
+    "power": "53.9M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
   {
     "name": "AsPeNdOS",
     "power": "53.0M",
-    "level": 27,
+    "level": "27",
     "rank": "R3",
     "role": ""
   },
@@ -288,22 +288,22 @@
   },
   {
     "name": "BLi",
-    "power": "50.1M",
-    "level": 27,
+    "power": "44.1M",
+    "level": "27",
     "rank": "R3",
     "role": ""
   },
   {
     "name": "riyanris",
-    "power": "53.6M",
-    "level": 27,
+    "power": "64.0M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
   {
     "name": "Andre Qbz",
-    "power": "54.6M",
-    "level": 27,
+    "power": "61.2M",
+    "level": "27",
     "rank": "R3",
     "role": ""
   },
@@ -323,15 +323,15 @@
   },
   {
     "name": "Lexxxi",
-    "power": "44.7M",
-    "level": 26,
+    "power": "53.3M",
+    "level": "27",
     "rank": "R3",
     "role": ""
   },
   {
     "name": "ITS ME MAMUN",
-    "power": "37.8M",
-    "level": 27,
+    "power": "52.5M",
+    "level": "28",
     "rank": "R3",
     "role": ""
   },
@@ -365,8 +365,8 @@
   },
   {
     "name": "kapralBoy",
-    "power": "36.3M",
-    "level": 26,
+    "power": "34.4M",
+    "level": "27",
     "rank": "R3",
     "role": ""
   },
@@ -393,7 +393,7 @@
   },
   {
     "name": "Turkish Boy",
-    "power": "57.9M",
+    "power": "61.2M",
     "level": "28",
     "rank": "R2",
     "role": ""
@@ -407,8 +407,8 @@
   },
   {
     "name": "Saint Heavenn",
-    "power": "50.9M",
-    "level": 27,
+    "power": "63.7M",
+    "level": "27",
     "rank": "R2",
     "role": ""
   },
@@ -449,7 +449,7 @@
   },
   {
     "name": "J4xzzBoy",
-    "power": "50.6M",
+    "power": "45.5M",
     "level": "26",
     "rank": "R2",
     "role": ""
@@ -470,15 +470,15 @@
   },
   {
     "name": "Ucilboy",
-    "power": "48.7M",
-    "level": 27,
+    "power": "57.5M",
+    "level": "28",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "cloudies",
-    "power": "48.6M",
-    "level": 28,
+    "power": "61.8M",
+    "level": "28",
     "rank": "R2",
     "role": ""
   },
@@ -505,8 +505,8 @@
   },
   {
     "name": "sukim59",
-    "power": "47.6M",
-    "level": 27,
+    "power": "51.4M",
+    "level": "27",
     "rank": "R2",
     "role": ""
   },
@@ -526,22 +526,22 @@
   },
   {
     "name": "ARZA BOY",
-    "power": "40.6M",
-    "level": 28,
+    "power": "43.8M",
+    "level": "28",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "BALLEX",
-    "power": "46.1M",
-    "level": 28,
+    "power": "43.2M",
+    "level": "28",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "Ropikkoh",
-    "power": "39.9M",
-    "level": "26",
+    "power": "50.9M",
+    "level": "27",
     "rank": "R2",
     "role": ""
   },
@@ -554,28 +554,28 @@
   },
   {
     "name": "TH3F00L",
-    "power": "45.8M",
+    "power": "49.4M",
     "level": "28",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "kamg jago",
-    "power": "47.0M",
+    "power": "54.9M",
     "level": "27",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "My Jang Wonyoung",
-    "power": "47.5M",
+    "power": "41.9M",
     "level": "28",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "black sailes",
-    "power": "53.9M",
+    "power": "57.1M",
     "level": "27",
     "rank": "R2",
     "role": ""
@@ -589,7 +589,7 @@
   },
   {
     "name": "Lonelyboy",
-    "power": "48.5M",
+    "power": "56.7M",
     "level": "27",
     "rank": "R2",
     "role": ""
@@ -631,15 +631,15 @@
   },
   {
     "name": "FATIH",
-    "power": "42,9M",
-    "level": "28",
+    "power": "101.1M",
+    "level": "29",
     "rank": "R2",
     "role": ""
   },
   {
     "name": "L Ziya 7",
-    "power": "32.6M",
-    "level": "25",
+    "power": "37.7M",
+    "level": "26",
     "rank": "R2",
     "role": ""
   },
@@ -652,14 +652,14 @@
   },
   {
     "name": "aarestu",
-    "power": "38.3M",
+    "power": "49.9M",
     "level": "26",
     "rank": "R1",
     "role": ""
   },
   {
     "name": "SEVEEN",
-    "power": "59.8M",
+    "power": "58.2M",
     "level": "28",
     "rank": "R1",
     "role": ""
