@@ -603,8 +603,8 @@
   },
   {
     "name": "MASS BOY",
-    "power": "43,0M",
-    "level": "26",
+    "power": "43.0M",
+    "level": 26,
     "rank": "R2",
     "role": ""
   },
