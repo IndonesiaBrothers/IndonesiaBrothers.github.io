@@ -253,8 +253,8 @@
   },
   {
     "name": "Rembol03",
-    "power": "52,0M",
-    "level": "26",
+    "power": "52.0M",
+    "level": 26,
     "rank": "R3",
     "role": ""
   },
