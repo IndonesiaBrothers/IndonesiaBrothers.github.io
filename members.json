@@ -1,14 +1,14 @@
 [
   {
-    "name": "Scythe7FN",
-    "power": "69.3M",
+    "name": "La Fayette ᴵᴰˢ",
+    "power": "161,2M",
     "level": 30,
     "rank": "R5",
     "role": "Leader"
   },
   {
     "name": "JubekBoy",
-    "power": "247.4M",
+    "power": "302,5M",
     "level": "30",
     "rank": "R4",
     "role": "Warlord"
@@ -22,8 +22,8 @@
   },
   {
     "name": "NOX RAVEN",
-    "power": "74.8M",
-    "level": "29",
+    "power": "107.3M",
+    "level": "30",
     "rank": "R4",
     "role": ""
   },
@@ -57,8 +57,8 @@
   },
   {
     "name": "Leilzx",
-    "power": "43.4M",
-    "level": "27",
+    "power": "89.2M",
+    "level": "30",
     "rank": "R4",
     "role": ""
   },
@@ -134,8 +134,8 @@
   },
   {
     "name": "dev28",
-    "power": "74.2M",
-    "level": "29",
+    "power": "105,4M",
+    "level": "30",
     "rank": "R3",
     "role": ""
   },
@@ -575,8 +575,8 @@
   },
   {
     "name": "RjBoy",
-    "power": "48.3M",
-    "level": 27,
+    "power": "140.0M",
+    "level": "30",
     "rank": "R2",
     "role": ""
   },
@@ -673,8 +673,8 @@
   },
   {
     "name": "Dark Orca",
-    "power": "50.2M",
-    "level": "28",
+    "power": "83.0M",
+    "level": "30",
     "rank": "R4",
     "role": ""
   },
@@ -689,6 +689,34 @@
     "name": "kev",
     "power": "57.9M",
     "level": "27",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "JuAn IDs",
+    "power": "96,9M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "r F z IDs",
+    "power": "95,8M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "LUNAR IDs",
+    "power": "113,9M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Gwyneee",
+    "power": "114,0M",
+    "level": "30",
     "rank": "R1",
     "role": "Member"
   }
