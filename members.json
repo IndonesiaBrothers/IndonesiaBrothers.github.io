@@ -16,7 +16,7 @@
   {
     "name": "NOX RAVEN",
     "power": "107.3M",
-    "level": "30",
+    "level": 30,
     "rank": "R4",
     "role": ""
   },
@@ -36,42 +36,175 @@
   },
   {
     "name": "JuAn IDs",
-    "power": "96,9M",
+    "power": "81.5M",
     "level": "30",
-    "rank": "R1",
-    "role": "Member"
+    "rank": "R4",
+    "role": ""
   },
   {
-    "name": "Coboy",
+    "name": "Coboyᴵᴰˢ",
     "power": "140.0M",
-    "level": "30",
-    "rank": "R1",
-    "role": "Member"
+    "level": 30,
+    "rank": "R4",
+    "role": ""
   },
   {
     "name": "r F z IDs",
     "power": "95,8M",
-    "level": "30",
-    "rank": "R1",
-    "role": "Member"
+    "level": 30,
+    "rank": "R4",
+    "role": ""
   },
   {
-    "name": "LUNAR IDs",
+    "name": "LUNAR ᴵᴰˢ",
     "power": "113,9M",
-    "level": "30",
-    "rank": "R1",
-    "role": "Member"
+    "level": 30,
+    "rank": "R4",
+    "role": ""
   },
   {
-    "name": "Gwyneee",
+    "name": "Gwyneeeᴵᴰˢ",
     "power": "114,0M",
+    "level": 30,
+    "rank": "R4",
+    "role": ""
+  },
+  {
+    "name": "Dev28 ᴵᴰˢ",
+    "power": "105,4M",
+    "level": 30,
+    "rank": "R4",
+    "role": ""
+  },
+  {
+    "name": "Rubylopp",
+    "power": "96,8M",
     "level": "30",
     "rank": "R1",
     "role": "Member"
   },
   {
-    "name": "Dev28 IDs",
-    "power": "105,4M",
+    "name": "ZENconie",
+    "power": "72,2M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Pasopeso",
+    "power": "94,5M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "KingGinz",
+    "power": "85,5M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Bliii21",
+    "power": "100.8M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "NAPAPIDA",
+    "power": "98.9M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "tokyovibess",
+    "power": "88.7M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "KingtazboyIDs",
+    "power": "103.7M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "AYAM SAKIT",
+    "power": "103,0M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Huxnana",
+    "power": "74,8M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Diabloss",
+    "power": "91,1M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "TAKA",
+    "power": "116,7M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Tiffany1004",
+    "power": "88.4M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "iDiL",
+    "power": "98.5M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "BANSHEE",
+    "power": "101.4M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Tenka",
+    "power": "90,7M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "The Imitation",
+    "power": "80,3M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "cc galon°Ds",
+    "power": "83,5M",
+    "level": "30",
+    "rank": "R1",
+    "role": "Member"
+  },
+  {
+    "name": "Roberto °Ds",
+    "power": "100,7M",
     "level": "30",
     "rank": "R1",
     "role": "Member"
